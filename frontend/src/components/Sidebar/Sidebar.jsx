@@ -52,7 +52,7 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
                 onClick={() => handleNavigation('cadastro-residentes')}
                 title="Cadastro de Residentes"
               >
-                <i className="bi bi-people me-2"></i>
+                <i className="bi bi-person-plus me-2"></i>
                 {isOpen && <span>Cadastro de Residentes</span>}
               </button>
             </li>
@@ -63,8 +63,36 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
                 onClick={() => handleNavigation('cadastro-profissionais')}
                 title="Cadastro de Profissionais"
               >
-                <i className="bi bi-person-badge me-2"></i>
+                <i className="bi bi-person-plus-fill me-2"></i>
                 {isOpen && <span>Cadastro de Profissionais</span>}
+              </button>
+            </li>
+            
+            {isOpen && (
+              <li className="nav-item mt-3">
+                <h6 className="sidebar-heading px-3 text-muted">LISTAGENS</h6>
+              </li>
+            )}
+            
+            <li className="nav-item">
+              <button 
+                className="nav-link" 
+                onClick={() => handleNavigation('listagem-residentes')}
+                title="Listagem de Residentes"
+              >
+                <i className="bi bi-people me-2"></i>
+                {isOpen && <span>Listagem de Residentes</span>}
+              </button>
+            </li>
+            
+            <li className="nav-item">
+              <button 
+                className="nav-link" 
+                onClick={() => handleNavigation('listagem-profissionais')}
+                title="Listagem de Profissionais"
+              >
+                <i className="bi bi-person-badge me-2"></i>
+                {isOpen && <span>Listagem de Profissionais</span>}
               </button>
             </li>
             

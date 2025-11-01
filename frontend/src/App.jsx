@@ -3,6 +3,9 @@ import './App.css'
 import Header from './components/Header/Header'
 import Sidebar from './components/Sidebar/Sidebar'
 import CadastroResidentes from './components/Cadastros/CadastroResidentes'
+import CadastroProfissionais from './components/Cadastros/CadastroProfissionais'
+import ListagemResidentes from './components/Listagens/ListagemResidentes'
+import ListagemProfissionais from './components/Listagens/ListagemProfissionais'
 
 function App() {
     const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -12,6 +15,12 @@ function App() {
       switch(currentPage) {
         case 'cadastro-residentes':
           return <CadastroResidentes />
+        case 'cadastro-profissionais':
+          return <CadastroProfissionais />
+        case 'listagem-residentes':
+          return <ListagemResidentes />
+        case 'listagem-profissionais':
+          return <ListagemProfissionais />
         case 'dashboard':
         default:
           return (
@@ -44,7 +53,12 @@ function App() {
                         Cadastro de Profissionais
                       </h5>
                       <p className="card-text">Gerencie o cadastro de profissionais</p>
-                      <button className="btn btn-success btn-sm">Acessar</button>
+                      <button 
+                        onClick={() => setCurrentPage('cadastro-profissionais')} 
+                        className="btn btn-success btn-sm"
+                      >
+                        Acessar
+                      </button>
                     </div>
                   </div>
                 </div>

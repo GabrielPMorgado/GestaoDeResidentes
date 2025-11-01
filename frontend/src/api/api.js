@@ -31,7 +31,11 @@ export const listarResidentes = async (filtros = {}) => {
     const response = await api.get('/residentes', { params: filtros });
     return response.data;
   } catch (error) {
-    throw error.response?.data || { message: 'Erro ao listar residentes' };
+    console.error('Erro na API listarResidentes:', error);
+    if (error.response?.data) {
+      throw error.response.data;
+    }
+    throw { success: false, message: error.message || 'Erro ao listar residentes' };
   }
 };
 
@@ -79,6 +83,86 @@ export const deletarResidente = async (id) => {
 export const obterEstatisticas = async () => {
   try {
     const response = await api.get('/residentes/estatisticas');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao buscar estatísticas' };
+  }
+};
+
+// ============================================
+// PROFISSIONAIS
+// ============================================
+
+// Criar novo profissional
+export const criarProfissional = async (dados) => {
+  try {
+    const response = await api.post('/profissionais', dados);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao cadastrar profissional' };
+  }
+};
+
+// Listar profissionais
+export const listarProfissionais = async (filtros = {}) => {
+  try {
+    console.log('Chamando API listarProfissionais com filtros:', filtros);
+    const response = await api.get('/profissionais', { params: filtros });
+    console.log('Resposta listarProfissionais:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('Erro na API listarProfissionais:', error);
+    if (error.response?.data) {
+      throw error.response.data;
+    }
+    throw { success: false, message: error.message || 'Erro ao listar profissionais' };
+  }
+};
+
+// Buscar profissional por ID
+export const buscarProfissionalPorId = async (id) => {
+  try {
+    const response = await api.get(`/profissionais/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao buscar profissional' };
+  }
+};
+
+// Buscar profissional por CPF
+export const buscarProfissionalPorCpf = async (cpf) => {
+  try {
+    const response = await api.get(`/profissionais/cpf/${cpf}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao buscar profissional' };
+  }
+};
+
+// Atualizar profissional
+export const atualizarProfissional = async (id, dados) => {
+  try {
+    const response = await api.put(`/profissionais/${id}`, dados);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao atualizar profissional' };
+  }
+};
+
+// Deletar profissional (inativar)
+export const deletarProfissional = async (id) => {
+  try {
+    const response = await api.delete(`/profissionais/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao deletar profissional' };
+  }
+};
+
+// Estatísticas de profissionais
+export const obterEstatisticasProfissionais = async () => {
+  try {
+    const response = await api.get('/profissionais/estatisticas/geral');
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'Erro ao buscar estatísticas' };

@@ -4,6 +4,7 @@ require('dotenv').config();
 
 const sequelize = require('./config/db');
 const residentesRoutes = require('./routes/residentes');
+const profissionaisRoutes = require('./routes/profissionais');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -19,13 +20,15 @@ app.get('/', (req, res) => {
     message: '🏠 API Sistema Residencial - Online',
     version: '1.0.0',
     endpoints: {
-      residentes: '/api/residentes'
+      residentes: '/api/residentes',
+      profissionais: '/api/profissionais'
     }
   });
 });
 
 // Rotas
 app.use('/api/residentes', residentesRoutes);
+app.use('/api/profissionais', profissionaisRoutes);
 
 // Rota 404
 app.use((req, res) => {
