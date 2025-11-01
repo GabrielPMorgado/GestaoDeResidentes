@@ -1,0 +1,105 @@
+﻿import './Sidebar.css'
+
+function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
+  const toggleSidebar = () => {
+    setIsOpen(!isOpen)
+  }
+
+  const handleNavigation = (page) => {
+    console.log('Navegando para:', page)
+    setCurrentPage(page)
+  }
+
+  return (
+    <>
+      <aside className={`sidebar bg-light border-end ${isOpen ? 'open' : 'closed'}`}>
+        <div className="sidebar-header p-3 border-bottom d-flex justify-content-between align-items-center">
+          <h5 className="mb-0">
+            <i className="bi bi-list-ul me-2"></i>
+            {isOpen && <span>Menu Principal</span>}
+          </h5>
+          <button 
+            className="btn btn-sm btn-outline-secondary border-0" 
+            onClick={toggleSidebar}
+            title={isOpen ? "Fechar menu" : "Abrir menu"}
+          >
+            <i className={`bi ${isOpen ? 'bi-chevron-left' : 'bi-chevron-right'}`}></i>
+          </button>
+        </div>
+        
+        <nav className="sidebar-nav">
+          <ul className="nav flex-column">
+            <li className="nav-item">
+              <button 
+                className="nav-link active" 
+                onClick={() => handleNavigation('dashboard')}
+                title="Dashboard"
+              >
+                <i className="bi bi-house-door me-2"></i>
+                {isOpen && <span>Dashboard</span>}
+              </button>
+            </li>
+            
+            {isOpen && (
+              <li className="nav-item mt-3">
+                <h6 className="sidebar-heading px-3 text-muted">CADASTROS</h6>
+              </li>
+            )}
+            
+            <li className="nav-item">
+              <button 
+                className="nav-link" 
+                onClick={() => handleNavigation('cadastro-residentes')}
+                title="Cadastro de Residentes"
+              >
+                <i className="bi bi-people me-2"></i>
+                {isOpen && <span>Cadastro de Residentes</span>}
+              </button>
+            </li>
+            
+            <li className="nav-item">
+              <button 
+                className="nav-link" 
+                onClick={() => handleNavigation('cadastro-profissionais')}
+                title="Cadastro de Profissionais"
+              >
+                <i className="bi bi-person-badge me-2"></i>
+                {isOpen && <span>Cadastro de Profissionais</span>}
+              </button>
+            </li>
+            
+            {isOpen && (
+              <li className="nav-item mt-3">
+                <h6 className="sidebar-heading px-3 text-muted">RELATÓRIOS</h6>
+              </li>
+            )}
+            
+            <li className="nav-item">
+              <button 
+                className="nav-link" 
+                onClick={() => handleNavigation('relatorios')}
+                title="Relatórios"
+              >
+                <i className="bi bi-file-earmark-text me-2"></i>
+                {isOpen && <span>Relatórios</span>}
+              </button>
+            </li>
+            
+            <li className="nav-item">
+              <button 
+                className="nav-link" 
+                onClick={() => handleNavigation('estatisticas')}
+                title="Estatísticas"
+              >
+                <i className="bi bi-graph-up me-2"></i>
+                {isOpen && <span>Estatísticas</span>}
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </aside>
+    </>
+  )
+}
+
+export default Sidebar
