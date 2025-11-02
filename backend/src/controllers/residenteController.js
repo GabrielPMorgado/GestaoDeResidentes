@@ -61,12 +61,14 @@ exports.listar = async (req, res) => {
     
     res.json({
       success: true,
-      data: rows,
-      pagination: {
-        total: count,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(count / limit)
+      data: {
+        residentes: rows,
+        pagination: {
+          totalItens: count,
+          paginaAtual: parseInt(page),
+          itensPorPagina: parseInt(limit),
+          totalPaginas: Math.ceil(count / limit)
+        }
       }
     });
   } catch (error) {

@@ -169,4 +169,103 @@ export const obterEstatisticasProfissionais = async () => {
   }
 };
 
+// ============================================
+// AGENDAMENTOS
+// ============================================
+
+// Criar novo agendamento
+export const criarAgendamento = async (dados) => {
+  try {
+    const response = await api.post('/agendamentos', dados);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao criar agendamento' };
+  }
+};
+
+// Listar agendamentos
+export const listarAgendamentos = async (filtros = {}) => {
+  try {
+    const response = await api.get('/agendamentos', { params: filtros });
+    return response.data;
+  } catch (error) {
+    console.error('Erro na API listarAgendamentos:', error);
+    if (error.response?.data) {
+      throw error.response.data;
+    }
+    throw { success: false, message: error.message || 'Erro ao listar agendamentos' };
+  }
+};
+
+// Buscar agendamento por ID
+export const buscarAgendamentoPorId = async (id) => {
+  try {
+    const response = await api.get(`/agendamentos/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao buscar agendamento' };
+  }
+};
+
+// Buscar agendamentos por residente
+export const buscarAgendamentosPorResidente = async (residente_id) => {
+  try {
+    const response = await api.get(`/agendamentos/residente/${residente_id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao buscar agendamentos do residente' };
+  }
+};
+
+// Buscar agendamentos por profissional
+export const buscarAgendamentosPorProfissional = async (profissional_id) => {
+  try {
+    const response = await api.get(`/agendamentos/profissional/${profissional_id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao buscar agendamentos do profissional' };
+  }
+};
+
+// Atualizar agendamento
+export const atualizarAgendamento = async (id, dados) => {
+  try {
+    const response = await api.put(`/agendamentos/${id}`, dados);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao atualizar agendamento' };
+  }
+};
+
+// Cancelar agendamento
+export const cancelarAgendamento = async (id, dados) => {
+  try {
+    const response = await api.put(`/agendamentos/${id}/cancelar`, dados);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao cancelar agendamento' };
+  }
+};
+
+// Confirmar agendamento
+export const confirmarAgendamento = async (id) => {
+  try {
+    const response = await api.put(`/agendamentos/${id}/confirmar`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao confirmar agendamento' };
+  }
+};
+
+// Estatísticas de agendamentos
+export const obterEstatisticasAgendamentos = async () => {
+  try {
+    const response = await api.get('/agendamentos/estatisticas/geral');
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao buscar estatísticas' };
+  }
+};
+
 export default api;
+

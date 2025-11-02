@@ -5,6 +5,19 @@ require('dotenv').config();
 const sequelize = require('./config/db');
 const residentesRoutes = require('./routes/residentes');
 const profissionaisRoutes = require('./routes/profissionais');
+const agendamentosRoutes = require('./routes/agendamentos');
+
+// Importar models para definir relacionamentos
+const Residente = require('./models/Residente');
+const Profissional = require('./models/Profissional');
+const Agendamento = require('./models/Agendamento');
+
+// Definir relacionamentos
+Residente.hasMany(Agendamento, { foreignKey: 'residente_id', as: 'agendamentos' });
+Agendamento.belongsTo(Residente, { foreignKey: 'residente_id', as: 'Residente' });
+
+Profissional.hasMany(Agendamento, { foreignKey: 'profissional_id', as: 'agendamentos' });
+Agendamento.belongsTo(Profissional, { foreignKey: 'profissional_id', as: 'Profissional' });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,7 +34,8 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     endpoints: {
       residentes: '/api/residentes',
-      profissionais: '/api/profissionais'
+      profissionais: '/api/profissionais',
+      agendamentos: '/api/agendamentos'
     }
   });
 });
@@ -29,6 +43,7 @@ app.get('/', (req, res) => {
 // Rotas
 app.use('/api/residentes', residentesRoutes);
 app.use('/api/profissionais', profissionaisRoutes);
+app.use('/api/agendamentos', agendamentosRoutes);
 
 // Rota 404
 app.use((req, res) => {

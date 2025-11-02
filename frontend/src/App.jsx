@@ -4,8 +4,10 @@ import Header from './components/Header/Header'
 import Sidebar from './components/Sidebar/Sidebar'
 import CadastroResidentes from './components/Cadastros/CadastroResidentes'
 import CadastroProfissionais from './components/Cadastros/CadastroProfissionais'
+import CadastroAgendamento from './components/Cadastros/CadastroAgendamento'
 import ListagemResidentes from './components/Listagens/ListagemResidentes'
 import ListagemProfissionais from './components/Listagens/ListagemProfissionais'
+import ListagemAgendamentos from './components/Listagens/ListagemAgendamentos'
 
 function App() {
     const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -17,10 +19,14 @@ function App() {
           return <CadastroResidentes />
         case 'cadastro-profissionais':
           return <CadastroProfissionais />
+        case 'cadastro-agendamento':
+          return <CadastroAgendamento />
         case 'listagem-residentes':
           return <ListagemResidentes />
         case 'listagem-profissionais':
           return <ListagemProfissionais />
+        case 'listagem-agendamentos':
+          return <ListagemAgendamentos />
         case 'dashboard':
         default:
           return (

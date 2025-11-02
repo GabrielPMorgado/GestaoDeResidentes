@@ -98,6 +98,34 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
             
             {isOpen && (
               <li className="nav-item mt-3">
+                <h6 className="sidebar-heading px-3 text-muted">AGENDAMENTOS</h6>
+              </li>
+            )}
+            
+            <li className="nav-item">
+              <button 
+                className="nav-link" 
+                onClick={() => handleNavigation('cadastro-agendamento')}
+                title="Novo Agendamento"
+              >
+                <i className="bi bi-calendar-plus me-2"></i>
+                {isOpen && <span>Novo Agendamento</span>}
+              </button>
+            </li>
+            
+            <li className="nav-item">
+              <button 
+                className="nav-link" 
+                onClick={() => handleNavigation('listagem-agendamentos')}
+                title="Listagem de Agendamentos"
+              >
+                <i className="bi bi-calendar-check me-2"></i>
+                {isOpen && <span>Listagem de Agendamentos</span>}
+              </button>
+            </li>
+            
+            {isOpen && (
+              <li className="nav-item mt-3">
                 <h6 className="sidebar-heading px-3 text-muted">RELATÓRIOS</h6>
               </li>
             )}

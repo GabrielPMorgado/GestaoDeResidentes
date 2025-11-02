@@ -46,11 +46,11 @@ function ListagemResidentes() {
       console.log('Resposta da API:', response)
       
       if (response && response.success) {
-        setResidentes(response.data || [])
+        setResidentes(response.data?.residentes || [])
         setPaginacao({
-          total: response.pagination?.total || 0,
-          paginas: response.pagination?.totalPages || 0,
-          paginaAtual: response.pagination?.page || 1
+          total: response.data?.pagination?.totalItens || 0,
+          paginas: response.data?.pagination?.totalPaginas || 0,
+          paginaAtual: response.data?.pagination?.paginaAtual || 1
         })
       } else {
         throw new Error(response?.message || 'Erro ao carregar residentes')
