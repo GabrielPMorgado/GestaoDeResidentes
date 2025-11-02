@@ -12,10 +12,9 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
 
   return (
     <>
-      <aside className={`sidebar bg-light border-end ${isOpen ? 'open' : 'closed'}`}>
+      <aside className={`sidebar border-end ${isOpen ? 'open' : 'closed'}`}>
         <div className="sidebar-header p-3 border-bottom d-flex justify-content-between align-items-center">
           <h5 className="mb-0">
-            <i className="bi bi-list-ul me-2"></i>
             {isOpen && <span>Menu Principal</span>}
           </h5>
           <button 
@@ -33,16 +32,16 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
               <button 
                 className="nav-link active" 
                 onClick={() => handleNavigation('dashboard')}
-                title="Dashboard"
+                title="Início"
               >
                 <i className="bi bi-house-door me-2"></i>
-                {isOpen && <span>Dashboard</span>}
+                {isOpen && <span>Início</span>}
               </button>
             </li>
             
             {isOpen && (
               <li className="nav-item mt-3">
-                <h6 className="sidebar-heading px-3 text-muted">CADASTROS</h6>
+                <h6 className="sidebar-heading px-3 text-white">CADASTROS</h6>
               </li>
             )}
             
@@ -70,7 +69,7 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
             
             {isOpen && (
               <li className="nav-item mt-3">
-                <h6 className="sidebar-heading px-3 text-muted">LISTAGENS</h6>
+                <h6 className="sidebar-heading px-3 text-white">LISTAGENS</h6>
               </li>
             )}
             
@@ -98,7 +97,7 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
             
             {isOpen && (
               <li className="nav-item mt-3">
-                <h6 className="sidebar-heading px-3 text-muted">AGENDAMENTOS</h6>
+                <h6 className="sidebar-heading px-3 text-white">AGENDAMENTOS</h6>
               </li>
             )}
             
@@ -126,7 +125,7 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
             
             {isOpen && (
               <li className="nav-item mt-3">
-                <h6 className="sidebar-heading px-3 text-muted">RELATÓRIOS</h6>
+                <h6 className="sidebar-heading px-3 text-white">RELATÓRIOS</h6>
               </li>
             )}
             
