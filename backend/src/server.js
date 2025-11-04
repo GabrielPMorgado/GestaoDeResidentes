@@ -6,11 +6,13 @@ const sequelize = require('./config/db');
 const residentesRoutes = require('./routes/residentes');
 const profissionaisRoutes = require('./routes/profissionais');
 const agendamentosRoutes = require('./routes/agendamentos');
+const historicoConsultasRoutes = require('./routes/historicoConsultas');
 
 // Importar models para definir relacionamentos
 const Residente = require('./models/Residente');
 const Profissional = require('./models/Profissional');
 const Agendamento = require('./models/Agendamento');
+const HistoricoConsulta = require('./models/HistoricoConsulta');
 
 // Definir relacionamentos
 Residente.hasMany(Agendamento, { foreignKey: 'residente_id', as: 'agendamentos' });
@@ -18,6 +20,16 @@ Agendamento.belongsTo(Residente, { foreignKey: 'residente_id', as: 'Residente' }
 
 Profissional.hasMany(Agendamento, { foreignKey: 'profissional_id', as: 'agendamentos' });
 Agendamento.belongsTo(Profissional, { foreignKey: 'profissional_id', as: 'Profissional' });
+
+// Relacionamentos de HistoricoConsulta
+Residente.hasMany(HistoricoConsulta, { foreignKey: 'residente_id', as: 'historico_consultas' });
+HistoricoConsulta.belongsTo(Residente, { foreignKey: 'residente_id', as: 'residente' });
+
+Profissional.hasMany(HistoricoConsulta, { foreignKey: 'profissional_id', as: 'historico_consultas' });
+HistoricoConsulta.belongsTo(Profissional, { foreignKey: 'profissional_id', as: 'profissional' });
+
+Agendamento.hasMany(HistoricoConsulta, { foreignKey: 'agendamento_id', as: 'historico_consultas' });
+HistoricoConsulta.belongsTo(Agendamento, { foreignKey: 'agendamento_id', as: 'agendamento' });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -35,7 +47,8 @@ app.get('/', (req, res) => {
     endpoints: {
       residentes: '/api/residentes',
       profissionais: '/api/profissionais',
-      agendamentos: '/api/agendamentos'
+      agendamentos: '/api/agendamentos',
+      historicoConsultas: '/api/historico-consultas'
     }
   });
 });
@@ -44,6 +57,7 @@ app.get('/', (req, res) => {
 app.use('/api/residentes', residentesRoutes);
 app.use('/api/profissionais', profissionaisRoutes);
 app.use('/api/agendamentos', agendamentosRoutes);
+app.use('/api/historico-consultas', historicoConsultasRoutes);
 
 // Rota 404
 app.use((req, res) => {

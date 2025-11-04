@@ -267,5 +267,58 @@ export const obterEstatisticasAgendamentos = async () => {
   }
 };
 
-export default api;
+// ============================================
+// HISTÓRICO DE CONSULTAS
+// ============================================
 
+// Listar histórico de consultas de um residente
+export const listarHistoricoConsultas = async (residenteId, filtros = {}) => {
+  try {
+    const response = await api.get(`/historico-consultas/residente/${residenteId}`, { params: filtros });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao buscar histórico de consultas' };
+  }
+};
+
+// Criar nova consulta no histórico
+export const criarHistoricoConsulta = async (dados) => {
+  try {
+    const response = await api.post('/historico-consultas', dados);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao registrar consulta' };
+  }
+};
+
+// Obter detalhes de uma consulta
+export const obterHistoricoConsulta = async (id) => {
+  try {
+    const response = await api.get(`/historico-consultas/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao buscar consulta' };
+  }
+};
+
+// Atualizar consulta do histórico
+export const atualizarHistoricoConsulta = async (id, dados) => {
+  try {
+    const response = await api.put(`/historico-consultas/${id}`, dados);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao atualizar consulta' };
+  }
+};
+
+// Deletar consulta do histórico
+export const deletarHistoricoConsulta = async (id) => {
+  try {
+    const response = await api.delete(`/historico-consultas/${id}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao deletar consulta' };
+  }
+};
+
+export default api;
