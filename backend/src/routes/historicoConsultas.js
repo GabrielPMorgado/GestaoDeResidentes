@@ -4,6 +4,7 @@ const historicoConsultaController = require('../controllers/historicoConsultaCon
 
 // Rotas de histórico de consultas
 router.get('/residente/:residente_id', historicoConsultaController.listarHistoricoResidente)
+router.get('/profissional/:profissional_id', historicoConsultaController.listarHistoricoProfissional)
 router.post('/', historicoConsultaController.criarHistoricoConsulta)
 router.get('/:id', historicoConsultaController.obterHistoricoConsulta)
 router.put('/:id', historicoConsultaController.atualizarHistoricoConsulta)

@@ -50,6 +50,132 @@ function CadastroProfissionais() {
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [errors, setErrors] = useState({})
+
+  // Validação do Step 1 - Dados Pessoais
+  const validateStep1 = () => {
+    const newErrors = {}
+
+    if (!formData.nome_completo || formData.nome_completo.trim().length < 3) {
+      newErrors.nome_completo = 'Nome completo deve ter pelo menos 3 caracteres'
+    }
+
+    if (!formData.cpf) {
+      newErrors.cpf = 'CPF é obrigatório'
+    } else if (!/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(formData.cpf) && !/^\d{11}$/.test(formData.cpf)) {
+      newErrors.cpf = 'CPF inválido. Use formato: 000.000.000-00'
+    }
+
+    if (!formData.data_nascimento) {
+      newErrors.data_nascimento = 'Data de nascimento é obrigatória'
+    } else {
+      const idade = new Date().getFullYear() - new Date(formData.data_nascimento).getFullYear()
+      if (idade < 18 || idade > 100) {
+        newErrors.data_nascimento = 'Profissional deve ter entre 18 e 100 anos'
+      }
+    }
+
+    if (!formData.sexo) {
+      newErrors.sexo = 'Sexo é obrigatório'
+    }
+
+    if (formData.telefone && !/^\(\d{2}\)\s?\d{4,5}-\d{4}$/.test(formData.telefone) && !/^\d{10,11}$/.test(formData.telefone)) {
+      newErrors.telefone = 'Telefone inválido. Use formato: (00) 0000-0000'
+    }
+
+    if (formData.celular && !/^\(\d{2}\)\s?\d{4,5}-\d{4}$/.test(formData.celular) && !/^\d{10,11}$/.test(formData.celular)) {
+      newErrors.celular = 'Celular inválido. Use formato: (00) 00000-0000'
+    }
+
+    if (!formData.email) {
+      newErrors.email = 'Email é obrigatório'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Email inválido'
+    }
+
+    return newErrors
+  }
+
+  // Validação do Step 2 - Endereço
+  const validateStep2 = () => {
+    const newErrors = {}
+
+    if (!formData.cep) {
+      newErrors.cep = 'CEP é obrigatório'
+    } else if (!/^\d{5}-?\d{3}$/.test(formData.cep)) {
+      newErrors.cep = 'CEP inválido. Use formato: 00000-000'
+    }
+
+    if (!formData.logradouro || formData.logradouro.trim().length < 3) {
+      newErrors.logradouro = 'Logradouro é obrigatório'
+    }
+
+    if (!formData.numero) {
+      newErrors.numero = 'Número é obrigatório'
+    }
+
+    if (!formData.bairro || formData.bairro.trim().length < 2) {
+      newErrors.bairro = 'Bairro é obrigatório'
+    }
+
+    if (!formData.cidade || formData.cidade.trim().length < 2) {
+      newErrors.cidade = 'Cidade é obrigatória'
+    }
+
+    if (!formData.estado) {
+      newErrors.estado = 'Estado é obrigatório'
+    }
+
+    return newErrors
+  }
+
+  // Validação do Step 3 - Dados Profissionais
+  const validateStep3 = () => {
+    const newErrors = {}
+
+    if (!formData.profissao || formData.profissao.trim().length < 3) {
+      newErrors.profissao = 'Profissão é obrigatória'
+    }
+
+    if (!formData.registro_profissional || formData.registro_profissional.trim().length < 3) {
+      newErrors.registro_profissional = 'Registro profissional é obrigatório (CRM, COREN, etc.)'
+    }
+
+    if (!formData.especialidade || formData.especialidade.trim().length < 3) {
+      newErrors.especialidade = 'Especialidade é obrigatória'
+    }
+
+    if (!formData.data_admissao) {
+      newErrors.data_admissao = 'Data de admissão é obrigatória'
+    }
+
+    if (!formData.cargo || formData.cargo.trim().length < 3) {
+      newErrors.cargo = 'Cargo é obrigatório'
+    }
+
+    if (!formData.turno) {
+      newErrors.turno = 'Turno é obrigatório'
+    }
+
+    return newErrors
+  }
+
+  // Validação do Step 4 - Contato de Emergência e Documentos
+  const validateStep4 = () => {
+    const newErrors = {}
+
+    if (!formData.nome_emergencia || formData.nome_emergencia.trim().length < 3) {
+      newErrors.nome_emergencia = 'Nome do contato de emergência é obrigatório'
+    }
+
+    if (!formData.telefone_emergencia) {
+      newErrors.telefone_emergencia = 'Telefone de emergência é obrigatório'
+    } else if (!/^\(\d{2}\)\s?\d{4,5}-\d{4}$/.test(formData.telefone_emergencia) && !/^\d{10,11}$/.test(formData.telefone_emergencia)) {
+      newErrors.telefone_emergencia = 'Telefone inválido. Use formato: (00) 00000-0000'
+    }
+
+    return newErrors
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -57,10 +183,44 @@ function CadastroProfissionais() {
       ...prev,
       [name]: value
     }))
+    // Limpar erro do campo quando o usuário digitar
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }))
+    }
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Validar todos os steps antes de enviar
+    const step1Errors = validateStep1()
+    const step2Errors = validateStep2()
+    const step3Errors = validateStep3()
+    const step4Errors = validateStep4()
+    
+    const allErrors = { ...step1Errors, ...step2Errors, ...step3Errors, ...step4Errors }
+    
+    if (Object.keys(allErrors).length > 0) {
+      setErrors(allErrors)
+      alert('❌ Por favor, corrija os erros no formulário antes de enviar.')
+      
+      // Navegar para o primeiro step com erro
+      if (Object.keys(step1Errors).length > 0) {
+        setCurrentStep(1)
+      } else if (Object.keys(step2Errors).length > 0) {
+        setCurrentStep(2)
+      } else if (Object.keys(step3Errors).length > 0) {
+        setCurrentStep(3)
+      } else if (Object.keys(step4Errors).length > 0) {
+        setCurrentStep(4)
+      }
+      
+      return
+    }
+    
     setLoading(true)
     setError(null)
     
@@ -118,15 +278,39 @@ function CadastroProfissionais() {
       observacoes: ''
     })
     setError(null)
+    setErrors({})
     setCurrentStep(1)
   }
 
   const nextStep = () => {
-    if (currentStep < 4) setCurrentStep(currentStep + 1)
+    // Validar o step atual antes de avançar
+    let stepErrors = {}
+    
+    if (currentStep === 1) {
+      stepErrors = validateStep1()
+    } else if (currentStep === 2) {
+      stepErrors = validateStep2()
+    } else if (currentStep === 3) {
+      stepErrors = validateStep3()
+    }
+    
+    if (Object.keys(stepErrors).length > 0) {
+      setErrors(stepErrors)
+      alert('❌ Por favor, corrija os erros antes de continuar.')
+      return
+    }
+    
+    if (currentStep < 4) {
+      setCurrentStep(currentStep + 1)
+      setErrors({})
+    }
   }
 
   const prevStep = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1)
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
+      setErrors({})
+    }
   }
 
   return (
@@ -216,14 +400,16 @@ function CadastroProfissionais() {
                       </label>
                       <input
                         type="text"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.nome_completo ? 'is-invalid' : ''}`}
                         id="nome_completo"
                         name="nome_completo"
                         value={formData.nome_completo}
                         onChange={handleChange}
                         placeholder="Digite o nome completo"
-                        required
                       />
+                      {errors.nome_completo && (
+                        <div className="invalid-feedback">{errors.nome_completo}</div>
+                      )}
                     </div>
 
                     <div className="col-md-4">
@@ -233,13 +419,15 @@ function CadastroProfissionais() {
                       </label>
                       <input
                         type="date"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.data_nascimento ? 'is-invalid' : ''}`}
                         id="data_nascimento"
                         name="data_nascimento"
                         value={formData.data_nascimento}
                         onChange={handleChange}
-                        required
                       />
+                      {errors.data_nascimento && (
+                        <div className="invalid-feedback">{errors.data_nascimento}</div>
+                      )}
                     </div>
 
                     <div className="col-md-4">
@@ -249,14 +437,16 @@ function CadastroProfissionais() {
                       </label>
                       <input
                         type="text"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.cpf ? 'is-invalid' : ''}`}
                         id="cpf"
                         name="cpf"
                         value={formData.cpf}
                         onChange={handleChange}
                         placeholder="000.000.000-00"
-                        required
                       />
+                      {errors.cpf && (
+                        <div className="invalid-feedback">{errors.cpf}</div>
+                      )}
                     </div>
 
                     <div className="col-md-4">
@@ -281,18 +471,20 @@ function CadastroProfissionais() {
                         Sexo *
                       </label>
                       <select
-                        className="form-select form-select-lg"
+                        className={`form-select form-select-lg ${errors.sexo ? 'is-invalid' : ''}`}
                         id="sexo"
                         name="sexo"
                         value={formData.sexo}
                         onChange={handleChange}
-                        required
                       >
                         <option value="">Selecione...</option>
                         <option value="masculino">Masculino</option>
                         <option value="feminino">Feminino</option>
                         <option value="outro">Outro</option>
                       </select>
+                      {errors.sexo && (
+                        <div className="invalid-feedback">{errors.sexo}</div>
+                      )}
                     </div>
 
                     <div className="col-md-4">
@@ -323,30 +515,35 @@ function CadastroProfissionais() {
                       </label>
                       <input
                         type="tel"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.telefone ? 'is-invalid' : ''}`}
                         id="telefone"
                         name="telefone"
                         value={formData.telefone}
                         onChange={handleChange}
                         placeholder="(00) 0000-0000"
                       />
+                      {errors.telefone && (
+                        <div className="invalid-feedback">{errors.telefone}</div>
+                      )}
                     </div>
 
                     <div className="col-md-4">
                       <label htmlFor="celular" className="form-label">
                         <i className="bi bi-phone me-1"></i>
-                        Celular *
+                        Celular
                       </label>
                       <input
                         type="tel"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.celular ? 'is-invalid' : ''}`}
                         id="celular"
                         name="celular"
                         value={formData.celular}
                         onChange={handleChange}
                         placeholder="(00) 00000-0000"
-                        required
                       />
+                      {errors.celular && (
+                        <div className="invalid-feedback">{errors.celular}</div>
+                      )}
                     </div>
 
                     <div className="col-md-4">
@@ -356,14 +553,16 @@ function CadastroProfissionais() {
                       </label>
                       <input
                         type="email"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.email ? 'is-invalid' : ''}`}
                         id="email"
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
                         placeholder="email@exemplo.com"
-                        required
                       />
+                      {errors.email && (
+                        <div className="invalid-feedback">{errors.email}</div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -385,49 +584,58 @@ function CadastroProfissionais() {
                     <div className="col-md-3">
                       <label htmlFor="cep" className="form-label">
                         <i className="bi bi-mailbox me-1"></i>
-                        CEP
+                        CEP *
                       </label>
                       <input
                         type="text"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.cep ? 'is-invalid' : ''}`}
                         id="cep"
                         name="cep"
                         value={formData.cep}
                         onChange={handleChange}
                         placeholder="00000-000"
                       />
+                      {errors.cep && (
+                        <div className="invalid-feedback">{errors.cep}</div>
+                      )}
                     </div>
 
                     <div className="col-md-7">
                       <label htmlFor="logradouro" className="form-label">
                         <i className="bi bi-signpost me-1"></i>
-                        Logradouro
+                        Logradouro *
                       </label>
                       <input
                         type="text"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.logradouro ? 'is-invalid' : ''}`}
                         id="logradouro"
                         name="logradouro"
                         value={formData.logradouro}
                         onChange={handleChange}
                         placeholder="Rua, Avenida, etc."
                       />
+                      {errors.logradouro && (
+                        <div className="invalid-feedback">{errors.logradouro}</div>
+                      )}
                     </div>
 
                     <div className="col-md-2">
                       <label htmlFor="numero" className="form-label">
                         <i className="bi bi-hash me-1"></i>
-                        Número
+                        Número *
                       </label>
                       <input
                         type="text"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.numero ? 'is-invalid' : ''}`}
                         id="numero"
                         name="numero"
                         value={formData.numero}
                         onChange={handleChange}
                         placeholder="123"
                       />
+                      {errors.numero && (
+                        <div className="invalid-feedback">{errors.numero}</div>
+                      )}
                     </div>
 
                     <div className="col-md-6">
@@ -449,42 +657,48 @@ function CadastroProfissionais() {
                     <div className="col-md-6">
                       <label htmlFor="bairro" className="form-label">
                         <i className="bi bi-pin-map me-1"></i>
-                        Bairro
+                        Bairro *
                       </label>
                       <input
                         type="text"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.bairro ? 'is-invalid' : ''}`}
                         id="bairro"
                         name="bairro"
                         value={formData.bairro}
                         onChange={handleChange}
                         placeholder="Nome do bairro"
                       />
+                      {errors.bairro && (
+                        <div className="invalid-feedback">{errors.bairro}</div>
+                      )}
                     </div>
 
                     <div className="col-md-8">
                       <label htmlFor="cidade" className="form-label">
                         <i className="bi bi-building-fill me-1"></i>
-                        Cidade
+                        Cidade *
                       </label>
                       <input
                         type="text"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.cidade ? 'is-invalid' : ''}`}
                         id="cidade"
                         name="cidade"
                         value={formData.cidade}
                         onChange={handleChange}
                         placeholder="Nome da cidade"
                       />
+                      {errors.cidade && (
+                        <div className="invalid-feedback">{errors.cidade}</div>
+                      )}
                     </div>
 
                     <div className="col-md-4">
                       <label htmlFor="estado" className="form-label">
                         <i className="bi bi-map me-1"></i>
-                        Estado
+                        Estado *
                       </label>
                       <select
-                        className="form-select form-select-lg"
+                        className={`form-select form-select-lg ${errors.estado ? 'is-invalid' : ''}`}
                         id="estado"
                         name="estado"
                         value={formData.estado}
@@ -519,6 +733,9 @@ function CadastroProfissionais() {
                         <option value="SE">SE</option>
                         <option value="TO">TO</option>
                       </select>
+                      {errors.estado && (
+                        <div className="invalid-feedback">{errors.estado}</div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -543,12 +760,11 @@ function CadastroProfissionais() {
                         Profissão *
                       </label>
                       <select
-                        className="form-select form-select-lg"
+                        className={`form-select form-select-lg ${errors.profissao ? 'is-invalid' : ''}`}
                         id="profissao"
                         name="profissao"
                         value={formData.profissao}
                         onChange={handleChange}
-                        required
                       >
                         <option value="">Selecione...</option>
                         <option value="medico">Médico(a)</option>
@@ -566,38 +782,47 @@ function CadastroProfissionais() {
                         <option value="seguranca">Segurança</option>
                         <option value="outro">Outro</option>
                       </select>
+                      {errors.profissao && (
+                        <div className="invalid-feedback">{errors.profissao}</div>
+                      )}
                     </div>
 
                     <div className="col-md-6">
                       <label htmlFor="registro_profissional" className="form-label">
                         <i className="bi bi-award me-1"></i>
-                        Registro Profissional
+                        Registro Profissional *
                       </label>
                       <input
                         type="text"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.registro_profissional ? 'is-invalid' : ''}`}
                         id="registro_profissional"
                         name="registro_profissional"
                         value={formData.registro_profissional}
                         onChange={handleChange}
                         placeholder="CRM, COREN, CRO, etc."
                       />
+                      {errors.registro_profissional && (
+                        <div className="invalid-feedback">{errors.registro_profissional}</div>
+                      )}
                     </div>
 
                     <div className="col-md-6">
                       <label htmlFor="especialidade" className="form-label">
                         <i className="bi bi-mortarboard me-1"></i>
-                        Especialidade
+                        Especialidade *
                       </label>
                       <input
                         type="text"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.especialidade ? 'is-invalid' : ''}`}
                         id="especialidade"
                         name="especialidade"
                         value={formData.especialidade}
                         onChange={handleChange}
                         placeholder="Ex: Geriatria, Cardiologia, etc."
                       />
+                      {errors.especialidade && (
+                        <div className="invalid-feedback">{errors.especialidade}</div>
+                      )}
                     </div>
 
                     <div className="col-md-6">
@@ -607,13 +832,15 @@ function CadastroProfissionais() {
                       </label>
                       <input
                         type="date"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.data_admissao ? 'is-invalid' : ''}`}
                         id="data_admissao"
                         name="data_admissao"
                         value={formData.data_admissao}
                         onChange={handleChange}
-                        required
                       />
+                      {errors.data_admissao && (
+                        <div className="invalid-feedback">{errors.data_admissao}</div>
+                      )}
                     </div>
 
                     <div className="col-md-4">
@@ -623,14 +850,16 @@ function CadastroProfissionais() {
                       </label>
                       <input
                         type="text"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.cargo ? 'is-invalid' : ''}`}
                         id="cargo"
                         name="cargo"
                         value={formData.cargo}
                         onChange={handleChange}
                         placeholder="Ex: Enfermeiro Chefe"
-                        required
                       />
+                      {errors.cargo && (
+                        <div className="invalid-feedback">{errors.cargo}</div>
+                      )}
                     </div>
 
                     <div className="col-md-4">
@@ -663,12 +892,11 @@ function CadastroProfissionais() {
                         Turno de Trabalho *
                       </label>
                       <select
-                        className="form-select form-select-lg"
+                        className={`form-select form-select-lg ${errors.turno ? 'is-invalid' : ''}`}
                         id="turno"
                         name="turno"
                         value={formData.turno}
                         onChange={handleChange}
-                        required
                       >
                         <option value="">Selecione...</option>
                         <option value="manha">Manhã (6h-14h)</option>
@@ -678,6 +906,9 @@ function CadastroProfissionais() {
                         <option value="plantao_12h">Plantão 12h</option>
                         <option value="plantao_24h">Plantão 24h</option>
                       </select>
+                      {errors.turno && (
+                        <div className="invalid-feedback">{errors.turno}</div>
+                      )}
                     </div>
 
                     <div className="col-md-6">

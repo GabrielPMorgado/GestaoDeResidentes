@@ -29,6 +29,94 @@ function CadastroResidentes() {
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [errors, setErrors] = useState({})
+
+  const validateStep1 = () => {
+    const newErrors = {}
+
+    if (!formData.nome_completo.trim()) {
+      newErrors.nome_completo = 'Nome completo é obrigatório'
+    } else if (formData.nome_completo.trim().length < 3) {
+      newErrors.nome_completo = 'Nome deve ter pelo menos 3 caracteres'
+    }
+
+    if (!formData.cpf.trim()) {
+      newErrors.cpf = 'CPF é obrigatório'
+    } else if (!/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(formData.cpf) && !/^\d{11}$/.test(formData.cpf)) {
+      newErrors.cpf = 'CPF inválido (use formato: 000.000.000-00 ou 11 dígitos)'
+    }
+
+    if (!formData.data_nascimento) {
+      newErrors.data_nascimento = 'Data de nascimento é obrigatória'
+    } else {
+      const birthDate = new Date(formData.data_nascimento)
+      const today = new Date()
+      const age = today.getFullYear() - birthDate.getFullYear()
+      if (age < 0 || age > 150) {
+        newErrors.data_nascimento = 'Data de nascimento inválida'
+      }
+    }
+
+    if (!formData.sexo) {
+      newErrors.sexo = 'Sexo é obrigatório'
+    }
+
+    if (formData.telefone && !/^\(\d{2}\)\s?\d{4,5}-\d{4}$/.test(formData.telefone) && !/^\d{10,11}$/.test(formData.telefone)) {
+      newErrors.telefone = 'Telefone inválido (use formato: (00) 00000-0000)'
+    }
+
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'E-mail inválido'
+    }
+
+    return newErrors
+  }
+
+  const validateStep2 = () => {
+    const newErrors = {}
+
+    if (!formData.cep.trim()) {
+      newErrors.cep = 'CEP é obrigatório'
+    } else if (!/^\d{5}-?\d{3}$/.test(formData.cep)) {
+      newErrors.cep = 'CEP inválido (use formato: 00000-000)'
+    }
+
+    if (!formData.logradouro.trim()) {
+      newErrors.logradouro = 'Logradouro é obrigatório'
+    }
+
+    if (!formData.numero.trim()) {
+      newErrors.numero = 'Número é obrigatório'
+    }
+
+    if (!formData.bairro.trim()) {
+      newErrors.bairro = 'Bairro é obrigatório'
+    }
+
+    if (!formData.cidade.trim()) {
+      newErrors.cidade = 'Cidade é obrigatória'
+    }
+
+    if (!formData.estado) {
+      newErrors.estado = 'Estado é obrigatório'
+    }
+
+    return newErrors
+  }
+
+  const validateStep3 = () => {
+    const newErrors = {}
+
+    if (formData.email_responsavel && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email_responsavel)) {
+      newErrors.email_responsavel = 'E-mail do responsável inválido'
+    }
+
+    if (formData.telefone_responsavel && !/^\(\d{2}\)\s?\d{4,5}-\d{4}$/.test(formData.telefone_responsavel) && !/^\d{10,11}$/.test(formData.telefone_responsavel)) {
+      newErrors.telefone_responsavel = 'Telefone do responsável inválido'
+    }
+
+    return newErrors
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -36,12 +124,40 @@ function CadastroResidentes() {
       ...prev,
       [name]: value
     }))
-    // Limpar erro ao digitar
+    // Limpar erro do campo ao digitar
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }))
+    }
     if (error) setError(null)
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    
+    // Validar todos os steps antes de enviar
+    const step1Errors = validateStep1()
+    const step2Errors = validateStep2()
+    const step3Errors = validateStep3()
+    
+    const allErrors = { ...step1Errors, ...step2Errors, ...step3Errors }
+    
+    if (Object.keys(allErrors).length > 0) {
+      setErrors(allErrors)
+      alert('❌ Por favor, corrija os erros no formulário antes de enviar.')
+      // Voltar para o primeiro step com erro
+      if (Object.keys(step1Errors).length > 0) {
+        setCurrentStep(1)
+      } else if (Object.keys(step2Errors).length > 0) {
+        setCurrentStep(2)
+      } else {
+        setCurrentStep(3)
+      }
+      return
+    }
+    
     setLoading(true)
     setError(null)
 
@@ -87,15 +203,37 @@ function CadastroResidentes() {
       observacoes: ''
     })
     setError(null)
+    setErrors({})
     setCurrentStep(1)
   }
 
   const nextStep = () => {
-    if (currentStep < 3) setCurrentStep(currentStep + 1)
+    // Validar step atual antes de avançar
+    let stepErrors = {}
+    
+    if (currentStep === 1) {
+      stepErrors = validateStep1()
+    } else if (currentStep === 2) {
+      stepErrors = validateStep2()
+    }
+    
+    if (Object.keys(stepErrors).length > 0) {
+      setErrors(stepErrors)
+      alert('❌ Por favor, corrija os erros antes de avançar.')
+      return
+    }
+    
+    if (currentStep < 3) {
+      setCurrentStep(currentStep + 1)
+      setErrors({})
+    }
   }
 
   const prevStep = () => {
-    if (currentStep > 1) setCurrentStep(currentStep - 1)
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1)
+      setErrors({})
+    }
   }
 
   return (
@@ -173,7 +311,7 @@ function CadastroResidentes() {
                       </label>
                       <input
                         type="text"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.nome_completo ? 'is-invalid' : ''}`}
                         id="nome_completo"
                         name="nome_completo"
                         value={formData.nome_completo}
@@ -181,6 +319,9 @@ function CadastroResidentes() {
                         placeholder="Digite o nome completo"
                         required
                       />
+                      {errors.nome_completo && (
+                        <div className="invalid-feedback">{errors.nome_completo}</div>
+                      )}
                     </div>
 
                     <div className="col-md-4">
@@ -190,13 +331,16 @@ function CadastroResidentes() {
                       </label>
                       <input
                         type="date"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.data_nascimento ? 'is-invalid' : ''}`}
                         id="data_nascimento"
                         name="data_nascimento"
                         value={formData.data_nascimento}
                         onChange={handleChange}
                         required
                       />
+                      {errors.data_nascimento && (
+                        <div className="invalid-feedback">{errors.data_nascimento}</div>
+                      )}
                     </div>
 
                     <div className="col-md-4">
@@ -206,7 +350,7 @@ function CadastroResidentes() {
                       </label>
                       <input
                         type="text"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.cpf ? 'is-invalid' : ''}`}
                         id="cpf"
                         name="cpf"
                         value={formData.cpf}
@@ -214,6 +358,9 @@ function CadastroResidentes() {
                         placeholder="000.000.000-00"
                         required
                       />
+                      {errors.cpf && (
+                        <div className="invalid-feedback">{errors.cpf}</div>
+                      )}
                     </div>
 
                     <div className="col-md-4">
@@ -238,7 +385,7 @@ function CadastroResidentes() {
                         Sexo *
                       </label>
                       <select
-                        className="form-select form-select-lg"
+                        className={`form-select form-select-lg ${errors.sexo ? 'is-invalid' : ''}`}
                         id="sexo"
                         name="sexo"
                         value={formData.sexo}
@@ -250,6 +397,9 @@ function CadastroResidentes() {
                         <option value="feminino">Feminino</option>
                         <option value="outro">Outro</option>
                       </select>
+                      {errors.sexo && (
+                        <div className="invalid-feedback">{errors.sexo}</div>
+                      )}
                     </div>
 
                     <div className="col-md-4">
@@ -276,18 +426,20 @@ function CadastroResidentes() {
                     <div className="col-md-4">
                       <label htmlFor="telefone" className="form-label">
                         <i className="bi bi-telephone me-1"></i>
-                        Telefone *
+                        Telefone
                       </label>
                       <input
                         type="tel"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.telefone ? 'is-invalid' : ''}`}
                         id="telefone"
                         name="telefone"
                         value={formData.telefone}
                         onChange={handleChange}
                         placeholder="(00) 00000-0000"
-                        required
                       />
+                      {errors.telefone && (
+                        <div className="invalid-feedback">{errors.telefone}</div>
+                      )}
                     </div>
 
                     <div className="col-md-4">
@@ -297,13 +449,16 @@ function CadastroResidentes() {
                       </label>
                       <input
                         type="email"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.email ? 'is-invalid' : ''}`}
                         id="email"
                         name="email"
                         value={formData.email}
                         onChange={handleChange}
-                        placeholder="email@exemplo.com"
+                        placeholder="seuemail@exemplo.com"
                       />
+                      {errors.email && (
+                        <div className="invalid-feedback">{errors.email}</div>
+                      )}
                     </div>
 
                     <div className="col-md-4">
@@ -345,7 +500,7 @@ function CadastroResidentes() {
                       </label>
                       <input
                         type="text"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.cep ? 'is-invalid' : ''}`}
                         id="cep"
                         name="cep"
                         value={formData.cep}
@@ -353,22 +508,29 @@ function CadastroResidentes() {
                         placeholder="00000-000"
                         required
                       />
+                      {errors.cep && (
+                        <div className="invalid-feedback">{errors.cep}</div>
+                      )}
                     </div>
 
                     <div className="col-md-7">
                       <label htmlFor="logradouro" className="form-label">
                         <i className="bi bi-signpost me-1"></i>
-                        Logradouro
+                        Logradouro *
                       </label>
                       <input
                         type="text"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.logradouro ? 'is-invalid' : ''}`}
                         id="logradouro"
                         name="logradouro"
                         value={formData.logradouro}
                         onChange={handleChange}
                         placeholder="Rua, Avenida, etc."
+                        required
                       />
+                      {errors.logradouro && (
+                        <div className="invalid-feedback">{errors.logradouro}</div>
+                      )}
                     </div>
 
                     <div className="col-md-2">
@@ -378,7 +540,7 @@ function CadastroResidentes() {
                       </label>
                       <input
                         type="text"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.numero ? 'is-invalid' : ''}`}
                         id="numero"
                         name="numero"
                         value={formData.numero}
@@ -386,6 +548,9 @@ function CadastroResidentes() {
                         placeholder="123"
                         required
                       />
+                      {errors.numero && (
+                        <div className="invalid-feedback">{errors.numero}</div>
+                      )}
                     </div>
 
                     <div className="col-md-6">
@@ -411,7 +576,7 @@ function CadastroResidentes() {
                       </label>
                       <input
                         type="text"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.bairro ? 'is-invalid' : ''}`}
                         id="bairro"
                         name="bairro"
                         value={formData.bairro}
@@ -419,6 +584,9 @@ function CadastroResidentes() {
                         placeholder="Nome do bairro"
                         required
                       />
+                      {errors.bairro && (
+                        <div className="invalid-feedback">{errors.bairro}</div>
+                      )}
                     </div>
 
                     <div className="col-md-8">
@@ -428,7 +596,7 @@ function CadastroResidentes() {
                       </label>
                       <input
                         type="text"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.cidade ? 'is-invalid' : ''}`}
                         id="cidade"
                         name="cidade"
                         value={formData.cidade}
@@ -436,6 +604,9 @@ function CadastroResidentes() {
                         placeholder="Nome da cidade"
                         required
                       />
+                      {errors.cidade && (
+                        <div className="invalid-feedback">{errors.cidade}</div>
+                      )}
                     </div>
 
                     <div className="col-md-4">
@@ -444,7 +615,7 @@ function CadastroResidentes() {
                         Estado *
                       </label>
                       <select
-                        className="form-select form-select-lg"
+                        className={`form-select form-select-lg ${errors.estado ? 'is-invalid' : ''}`}
                         id="estado"
                         name="estado"
                         value={formData.estado}
@@ -480,6 +651,9 @@ function CadastroResidentes() {
                         <option value="SE">SE</option>
                         <option value="TO">TO</option>
                       </select>
+                      {errors.estado && (
+                        <div className="invalid-feedback">{errors.estado}</div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -534,18 +708,20 @@ function CadastroResidentes() {
                     <div className="col-md-3">
                       <label htmlFor="telefone_responsavel" className="form-label">
                         <i className="bi bi-phone-vibrate me-1"></i>
-                        Telefone *
+                        Telefone
                       </label>
                       <input
                         type="tel"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.telefone_responsavel ? 'is-invalid' : ''}`}
                         id="telefone_responsavel"
                         name="telefone_responsavel"
                         value={formData.telefone_responsavel}
                         onChange={handleChange}
                         placeholder="(00) 00000-0000"
-                        required
                       />
+                      {errors.telefone_responsavel && (
+                        <div className="invalid-feedback">{errors.telefone_responsavel}</div>
+                      )}
                     </div>
 
                     <div className="col-md-6">
@@ -555,13 +731,16 @@ function CadastroResidentes() {
                       </label>
                       <input
                         type="email"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.email_responsavel ? 'is-invalid' : ''}`}
                         id="email_responsavel"
                         name="email_responsavel"
                         value={formData.email_responsavel}
                         onChange={handleChange}
                         placeholder="email@exemplo.com"
                       />
+                      {errors.email_responsavel && (
+                        <div className="invalid-feedback">{errors.email_responsavel}</div>
+                      )}
                     </div>
 
                     <div className="col-12">

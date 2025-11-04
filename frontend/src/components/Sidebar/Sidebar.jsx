@@ -125,6 +125,34 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
             
             {isOpen && (
               <li className="nav-item mt-3">
+                <h6 className="sidebar-heading px-3 text-white">INATIVOS</h6>
+              </li>
+            )}
+            
+            <li className="nav-item">
+              <button 
+                className="nav-link" 
+                onClick={() => handleNavigation('residentes-inativos')}
+                title="Residentes Inativos"
+              >
+                <i className="bi bi-person-x me-2"></i>
+                {isOpen && <span>Residentes Inativos</span>}
+              </button>
+            </li>
+            
+            <li className="nav-item">
+              <button 
+                className="nav-link" 
+                onClick={() => handleNavigation('profissionais-inativos')}
+                title="Profissionais Inativos"
+              >
+                <i className="bi bi-person-slash me-2"></i>
+                {isOpen && <span>Profissionais Inativos</span>}
+              </button>
+            </li>
+            
+            {isOpen && (
+              <li className="nav-item mt-3">
                 <h6 className="sidebar-heading px-3 text-white">RELATÓRIOS</h6>
               </li>
             )}

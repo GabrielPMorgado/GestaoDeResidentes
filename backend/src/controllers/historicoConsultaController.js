@@ -272,3 +272,68 @@ exports.deletarHistoricoConsulta = async (req, res) => {
     })
   }
 }
+
+// Listar histórico de consultas de um profissional
+exports.listarHistoricoProfissional = async (req, res) => {
+  try {
+    const { profissional_id } = req.params
+    const { page = 1, limit = 10, residente_id, data_inicio, data_fim } = req.query
+
+    const offset = (page - 1) * limit
+
+    // Construir filtros
+    const where = { profissional_id }
+
+    if (residente_id) {
+      where.residente_id = residente_id
+    }
+
+    if (data_inicio && data_fim) {
+      where.data_consulta = {
+        [Op.between]: [new Date(data_inicio), new Date(data_fim)]
+      }
+    } else if (data_inicio) {
+      where.data_consulta = {
+        [Op.gte]: new Date(data_inicio)
+      }
+    } else if (data_fim) {
+      where.data_consulta = {
+        [Op.lte]: new Date(data_fim)
+      }
+    }
+
+    const { count, rows: consultas } = await HistoricoConsulta.findAndCountAll({
+      where,
+      include: [
+        {
+          model: Residente,
+          as: 'residente',
+          attributes: ['id', 'nome_completo', 'cpf', 'email']
+        }
+      ],
+      order: [['data_consulta', 'DESC']],
+      limit: parseInt(limit),
+      offset: parseInt(offset)
+    })
+
+    res.json({
+      success: true,
+      data: {
+        consultas,
+        pagination: {
+          totalItens: count,
+          totalPaginas: Math.ceil(count / limit),
+          paginaAtual: parseInt(page),
+          itensPorPagina: parseInt(limit)
+        }
+      }
+    })
+  } catch (error) {
+    console.error('Erro ao listar histórico do profissional:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao listar histórico de consultas do profissional',
+      error: error.message
+    })
+  }
+}

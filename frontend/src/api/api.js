@@ -240,7 +240,7 @@ export const atualizarAgendamento = async (id, dados) => {
 // Cancelar agendamento
 export const cancelarAgendamento = async (id, dados) => {
   try {
-    const response = await api.put(`/agendamentos/${id}/cancelar`, dados);
+    const response = await api.patch(`/agendamentos/${id}/cancelar`, dados);
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'Erro ao cancelar agendamento' };
@@ -250,7 +250,7 @@ export const cancelarAgendamento = async (id, dados) => {
 // Confirmar agendamento
 export const confirmarAgendamento = async (id) => {
   try {
-    const response = await api.put(`/agendamentos/${id}/confirmar`);
+    const response = await api.patch(`/agendamentos/${id}/confirmar`);
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'Erro ao confirmar agendamento' };
@@ -278,6 +278,16 @@ export const listarHistoricoConsultas = async (residenteId, filtros = {}) => {
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'Erro ao buscar histórico de consultas' };
+  }
+};
+
+// Listar histórico de consultas de um profissional
+export const listarHistoricoConsultasProfissional = async (profissionalId, filtros = {}) => {
+  try {
+    const response = await api.get(`/historico-consultas/profissional/${profissionalId}`, { params: filtros });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao buscar histórico de consultas do profissional' };
   }
 };
 

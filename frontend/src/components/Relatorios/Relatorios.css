@@ -1,0 +1,388 @@
+.relatorios-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  background-color: #f8f9fa;
+}
+
+.relatorios-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #dee2e6;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.relatorios-header h2 {
+  color: #495057;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+  font-size: 1.75rem;
+}
+
+.relatorios-header h2 i {
+  color: #6c757d;
+  margin-right: 0.5rem;
+  font-size: 1.5rem;
+}
+
+.relatorios-header p {
+  color: #6c757d;
+  font-size: 0.95rem;
+}
+
+.relatorios-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.relatorios-actions .btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  font-size: 0.9rem;
+  padding: 0.5rem 1rem;
+}
+
+.relatorios-actions .btn:hover {
+  opacity: 0.9;
+}
+
+/* Cards de Resumo */
+.relatorio-card {
+  background: white;
+  border-radius: 4px;
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.15s ease;
+  border: 1px solid #e9ecef;
+}
+
+.relatorio-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.relatorio-card .card-icon {
+  font-size: 2.5rem;
+  opacity: 0.12;
+  min-width: 60px;
+  text-align: center;
+  color: #6c757d;
+}
+
+.relatorio-card .card-content {
+  flex: 1;
+}
+
+.relatorio-card .card-content h3 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0;
+  color: #495057;
+}
+
+.relatorio-card .card-content p {
+  margin: 0.25rem 0 0.5rem 0;
+  color: #6c757d;
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.relatorio-card .card-content small {
+  color: #adb5bd;
+  font-size: 0.8rem;
+}
+
+/* Cards Detalhados */
+.card {
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  background: white;
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  color: #495057;
+  border-bottom: 1px solid #dee2e6;
+  padding: 1rem 1.5rem;
+  border-radius: 0;
+}
+
+.card-header h5 {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  font-size: 1rem;
+  margin: 0;
+  color: #495057;
+}
+
+.card-header h5 i {
+  margin-right: 0.5rem;
+  color: #6c757d;
+}
+
+.card-body {
+  padding: 1.5rem;
+  background: white;
+}
+
+.card-body h6 {
+  color: #495057;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* Progress Groups */
+.progress-group {
+  margin-bottom: 1.25rem;
+}
+
+.progress-group span {
+  font-size: 0.875rem;
+  color: #495057;
+  font-weight: 500;
+}
+
+.progress {
+  height: 10px;
+  border-radius: 3px;
+  background-color: #e9ecef;
+  overflow: hidden;
+}
+
+.progress-bar {
+  transition: width 0.4s ease;
+  border-radius: 3px;
+}
+
+/* Faixa Etária Cards */
+.faixa-etaria-card {
+  background: #f8f9fa;
+  color: #495057;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.15s ease;
+}
+
+.faixa-etaria-card:hover {
+  background: #e9ecef;
+}
+
+.faixa-etaria-card i {
+  font-size: 2.5rem;
+  opacity: 0.4;
+  margin-bottom: 0.75rem;
+  color: #6c757d;
+}
+
+.faixa-etaria-card h4 {
+  font-size: 2rem;
+  font-weight: 600;
+  margin: 0.5rem 0;
+  color: #495057;
+}
+
+.faixa-etaria-card p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+/* Indicadores de Performance */
+.indicador-card {
+  background: white;
+  border-radius: 4px;
+  padding: 1.5rem;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.15s ease;
+  border: 1px solid #e9ecef;
+}
+
+.indicador-card:hover {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.indicador-card i {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.7;
+}
+
+.indicador-card h4 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #495057;
+  margin: 0.5rem 0;
+}
+
+.indicador-card p {
+  margin: 0;
+  color: #6c757d;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+/* Rodapé do Relatório */
+.relatorio-footer {
+  background: white;
+  border-radius: 4px;
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-top: 1.5rem;
+  border: 1px solid #e9ecef;
+}
+
+.relatorio-footer p {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 400;
+  color: #6c757d;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.relatorio-footer i {
+  color: #6c757d;
+}
+
+/* Loading State */
+.spinner-border {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.text-center.py-5 p {
+  color: #6c757d;
+  font-weight: 400;
+}
+
+/* Print Styles */
+@media print {
+  .relatorios-actions,
+  .relatorios-header button {
+    display: none !important;
+  }
+
+  .relatorios-container {
+    padding: 1rem;
+    background: white;
+  }
+
+  .card {
+    page-break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+
+  .relatorio-card {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+
+  .card-header {
+    background: #f8f9fa !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .relatorios-container {
+    padding: 1rem;
+  }
+
+  .relatorios-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .relatorios-header h2 {
+    font-size: 1.4rem;
+  }
+
+  .relatorios-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .relatorios-actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .relatorio-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .relatorio-card .card-icon {
+    font-size: 2rem;
+  }
+
+  .relatorio-card .card-content h3 {
+    font-size: 1.75rem;
+  }
+
+  .faixa-etaria-card {
+    margin-bottom: 1rem;
+  }
+
+  .indicador-card {
+    margin-bottom: 1rem;
+  }
+
+  .card-body {
+    padding: 1.25rem;
+  }
+
+  .row.g-4 {
+    gap: 1rem !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .relatorios-header h2 {
+    font-size: 1.25rem;
+  }
+
+  .relatorio-card .card-content h3 {
+    font-size: 1.5rem;
+  }
+
+  .faixa-etaria-card h4 {
+    font-size: 1.75rem;
+  }
+
+  .indicador-card h4 {
+    font-size: 1.5rem;
+  }
+
+  .card-body h6 {
+    font-size: 0.9rem;
+  }
+}

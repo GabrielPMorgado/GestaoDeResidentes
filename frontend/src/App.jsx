@@ -8,6 +8,9 @@ import CadastroAgendamento from './components/Cadastros/CadastroAgendamento'
 import ListagemResidentes from './components/Listagens/ListagemResidentes'
 import ListagemProfissionais from './components/Listagens/ListagemProfissionais'
 import ListagemAgendamentos from './components/Listagens/ListagemAgendamentos'
+import ResidentesInativos from './components/Listagens/ResidentesInativos'
+import ProfissionaisInativos from './components/Listagens/ProfissionaisInativos'
+import Relatorios from './components/Relatorios/Relatorios'
 
 function App() {
     const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -27,6 +30,12 @@ function App() {
           return <ListagemProfissionais />
         case 'listagem-agendamentos':
           return <ListagemAgendamentos />
+        case 'residentes-inativos':
+          return <ResidentesInativos />
+        case 'profissionais-inativos':
+          return <ProfissionaisInativos />
+        case 'relatorios':
+          return <Relatorios />
         case 'dashboard':
         default:
           return (
@@ -76,7 +85,12 @@ function App() {
                         Relatórios
                       </h5>
                       <p className="card-text">Visualize relatórios e estatísticas</p>
-                      <button className="btn btn-info btn-sm">Acessar</button>
+                      <button 
+                        onClick={() => setCurrentPage('relatorios')} 
+                        className="btn btn-info btn-sm"
+                      >
+                        Acessar
+                      </button>
                     </div>
                   </div>
                 </div>

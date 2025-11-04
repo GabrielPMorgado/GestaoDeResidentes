@@ -5,7 +5,8 @@ import {
   obterEstatisticasAgendamentos,
   confirmarAgendamento,
   cancelarAgendamento,
-  buscarAgendamentoPorId
+  buscarAgendamentoPorId,
+  atualizarAgendamento
 } from '../../api/api'
 
 function ListagemAgendamentos() {
@@ -24,6 +25,7 @@ function ListagemAgendamentos() {
   const [totalPaginas, setTotalPaginas] = useState(1)
   const [totalItens, setTotalItens] = useState(0)
   const [detalhesModal, setDetalhesModal] = useState(null)
+  const [editarModal, setEditarModal] = useState(null)
 
   useEffect(() => {
     carregarDados()
@@ -87,12 +89,18 @@ function ListagemAgendamentos() {
   }
 
   const handleConfirmar = async (id) => {
-    if (!confirm('Deseja confirmar este agendamento?')) return
+    if (!window.confirm('Deseja confirmar este agendamento?')) return
 
     try {
-      await confirmarAgendamento(id)
-      alert('✅ Agendamento confirmado com sucesso!')
-      carregarDados()
+      const response = await confirmarAgendamento(id)
+      console.log('Resposta confirmar:', response)
+      
+      if (response.success) {
+        alert('✅ Agendamento confirmado com sucesso!')
+        carregarDados()
+      } else {
+        throw new Error(response.message || 'Erro ao confirmar agendamento')
+      }
     } catch (error) {
       console.error('Erro ao confirmar:', error)
       alert('❌ ' + (error.message || 'Erro ao confirmar agendamento'))
@@ -100,19 +108,24 @@ function ListagemAgendamentos() {
   }
 
   const handleCancelar = async (id) => {
-    const motivo = prompt('Digite o motivo do cancelamento:')
+    const motivo = window.prompt('Digite o motivo do cancelamento:')
     if (!motivo) return
 
-    const canceladoPor = prompt('Cancelado por (nome):')
+    const canceladoPor = window.prompt('Cancelado por (nome):')
     if (!canceladoPor) return
 
     try {
-      await cancelarAgendamento(id, {
+      const response = await cancelarAgendamento(id, {
         motivo_cancelamento: motivo,
         cancelado_por: canceladoPor
       })
-      alert('✅ Agendamento cancelado com sucesso!')
-      carregarDados()
+      
+      if (response.success) {
+        alert('✅ Agendamento cancelado com sucesso!')
+        carregarDados()
+      } else {
+        throw new Error(response.message || 'Erro ao cancelar agendamento')
+      }
     } catch (error) {
       console.error('Erro ao cancelar:', error)
       alert('❌ ' + (error.message || 'Erro ao cancelar agendamento'))
@@ -128,6 +141,74 @@ function ListagemAgendamentos() {
     } catch (error) {
       console.error('Erro ao buscar detalhes:', error)
       alert('Erro ao buscar detalhes do agendamento')
+    }
+  }
+
+  const abrirModalEditar = async (id) => {
+    try {
+      const response = await buscarAgendamentoPorId(id)
+      if (response.success) {
+        setEditarModal(response.data)
+      }
+    } catch (error) {
+      console.error('Erro ao buscar agendamento:', error)
+      alert('Erro ao buscar agendamento para edição')
+    }
+  }
+
+  const handleSalvarEdicao = async () => {
+    try {
+      const dados = {
+        data_agendamento: editarModal.data_agendamento,
+        hora_inicio: editarModal.hora_inicio,
+        hora_fim: editarModal.hora_fim,
+        tipo_atendimento: editarModal.tipo_atendimento,
+        observacoes: editarModal.observacoes
+      }
+      
+      await atualizarAgendamento(editarModal.id, dados)
+      alert('✅ Agendamento atualizado com sucesso!')
+      setEditarModal(null)
+      carregarDados()
+    } catch (error) {
+      console.error('Erro ao atualizar:', error)
+      alert('❌ ' + (error.message || 'Erro ao atualizar agendamento'))
+    }
+  }
+
+  const handleIniciarAtendimento = async (id) => {
+    if (!window.confirm('Deseja iniciar este atendimento?')) return
+
+    try {
+      const response = await atualizarAgendamento(id, { status: 'em_andamento' })
+      
+      if (response.success) {
+        alert('✅ Atendimento iniciado!')
+        carregarDados()
+      } else {
+        throw new Error(response.message || 'Erro ao iniciar atendimento')
+      }
+    } catch (error) {
+      console.error('Erro ao iniciar atendimento:', error)
+      alert('❌ ' + (error.message || 'Erro ao iniciar atendimento'))
+    }
+  }
+
+  const handleConcluirAtendimento = async (id) => {
+    if (!window.confirm('Deseja concluir este atendimento?')) return
+
+    try {
+      const response = await atualizarAgendamento(id, { status: 'concluido' })
+      
+      if (response.success) {
+        alert('✅ Atendimento concluído!')
+        carregarDados()
+      } else {
+        throw new Error(response.message || 'Erro ao concluir atendimento')
+      }
+    } catch (error) {
+      console.error('Erro ao concluir atendimento:', error)
+      alert('❌ ' + (error.message || 'Erro ao concluir atendimento'))
     }
   }
 
@@ -219,7 +300,7 @@ function ListagemAgendamentos() {
                   <i className="bi bi-calendar-plus"></i>
                 </div>
                 <div className="stat-info">
-                  <h3>{estatisticas.por_status?.agendado || 0}</h3>
+                  <h3>{estatisticas.agendados || 0}</h3>
                   <p>Agendados</p>
                 </div>
               </div>
@@ -230,7 +311,7 @@ function ListagemAgendamentos() {
                   <i className="bi bi-calendar-check-fill"></i>
                 </div>
                 <div className="stat-info">
-                  <h3>{estatisticas.por_status?.confirmado || 0}</h3>
+                  <h3>{estatisticas.confirmados || 0}</h3>
                   <p>Confirmados</p>
                 </div>
               </div>
@@ -241,7 +322,7 @@ function ListagemAgendamentos() {
                   <i className="bi bi-check-circle-fill"></i>
                 </div>
                 <div className="stat-info">
-                  <h3>{estatisticas.por_status?.concluido || 0}</h3>
+                  <h3>{estatisticas.concluidos || 0}</h3>
                   <p>Concluídos</p>
                 </div>
               </div>
@@ -367,24 +448,55 @@ function ListagemAgendamentos() {
                         <td className="text-center">
                           <div className="btn-group btn-group-sm">
                             <button
-                              className="btn btn-info"
+                              className="btn btn-outline-primary"
                               onClick={() => verDetalhes(agendamento.id)}
                               title="Ver detalhes"
                             >
                               <i className="bi bi-eye"></i>
                             </button>
+                            
                             {agendamento.status === 'agendado' && (
+                              <>
+                                <button
+                                  className="btn btn-outline-warning"
+                                  onClick={() => abrirModalEditar(agendamento.id)}
+                                  title="Editar"
+                                >
+                                  <i className="bi bi-pencil"></i>
+                                </button>
+                                <button
+                                  className="btn btn-outline-success"
+                                  onClick={() => handleConfirmar(agendamento.id)}
+                                  title="Confirmar"
+                                >
+                                  <i className="bi bi-check-circle"></i>
+                                </button>
+                              </>
+                            )}
+                            
+                            {agendamento.status === 'confirmado' && (
                               <button
-                                className="btn btn-success"
-                                onClick={() => handleConfirmar(agendamento.id)}
-                                title="Confirmar"
+                                className="btn btn-outline-info"
+                                onClick={() => handleIniciarAtendimento(agendamento.id)}
+                                title="Iniciar Atendimento"
                               >
-                                <i className="bi bi-check-circle"></i>
+                                <i className="bi bi-play-circle"></i>
                               </button>
                             )}
+                            
+                            {agendamento.status === 'em_andamento' && (
+                              <button
+                                className="btn btn-outline-success"
+                                onClick={() => handleConcluirAtendimento(agendamento.id)}
+                                title="Concluir"
+                              >
+                                <i className="bi bi-check2-circle"></i>
+                              </button>
+                            )}
+                            
                             {(agendamento.status === 'agendado' || agendamento.status === 'confirmado') && (
                               <button
-                                className="btn btn-danger"
+                                className="btn btn-outline-danger"
                                 onClick={() => handleCancelar(agendamento.id)}
                                 title="Cancelar"
                               >
@@ -533,6 +645,97 @@ function ListagemAgendamentos() {
               <button className="btn btn-secondary" onClick={() => setDetalhesModal(null)}>
                 Fechar
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Edição */}
+      {editarModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={() => setEditarModal(null)}>
+          <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content">
+              <div className="modal-header bg-warning">
+                <h5 className="modal-title">
+                  <i className="bi bi-pencil-square me-2"></i>
+                  Editar Agendamento
+                </h5>
+                <button type="button" className="btn-close" onClick={() => setEditarModal(null)}></button>
+              </div>
+              <div className="modal-body">
+                <form>
+                  <div className="row g-3">
+                    <div className="col-12">
+                      <label className="form-label text-muted small">Residente</label>
+                      <p className="fw-bold">{editarModal.Residente?.nome_completo}</p>
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label text-muted small">Profissional</label>
+                      <p className="fw-bold">{editarModal.Profissional?.nome_completo}</p>
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label">Data *</label>
+                      <input
+                        type="date"
+                        className="form-control"
+                        value={editarModal.data_agendamento}
+                        onChange={(e) => setEditarModal({...editarModal, data_agendamento: e.target.value})}
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label">Hora Início *</label>
+                      <input
+                        type="time"
+                        className="form-control"
+                        value={editarModal.hora_inicio}
+                        onChange={(e) => setEditarModal({...editarModal, hora_inicio: e.target.value})}
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label">Hora Fim *</label>
+                      <input
+                        type="time"
+                        className="form-control"
+                        value={editarModal.hora_fim}
+                        onChange={(e) => setEditarModal({...editarModal, hora_fim: e.target.value})}
+                      />
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label">Tipo de Atendimento *</label>
+                      <select
+                        className="form-select"
+                        value={editarModal.tipo_atendimento}
+                        onChange={(e) => setEditarModal({...editarModal, tipo_atendimento: e.target.value})}
+                      >
+                        <option value="consulta">Consulta</option>
+                        <option value="fisioterapia">Fisioterapia</option>
+                        <option value="psicologia">Psicologia</option>
+                        <option value="nutricao">Nutrição</option>
+                        <option value="outro">Outro</option>
+                      </select>
+                    </div>
+                    <div className="col-12">
+                      <label className="form-label">Observações</label>
+                      <textarea
+                        className="form-control"
+                        rows="3"
+                        value={editarModal.observacoes || ''}
+                        onChange={(e) => setEditarModal({...editarModal, observacoes: e.target.value})}
+                      ></textarea>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setEditarModal(null)}>
+                  <i className="bi bi-x-circle me-2"></i>
+                  Cancelar
+                </button>
+                <button type="button" className="btn btn-warning" onClick={handleSalvarEdicao}>
+                  <i className="bi bi-check-circle me-2"></i>
+                  Salvar Alterações
+                </button>
+              </div>
             </div>
           </div>
         </div>

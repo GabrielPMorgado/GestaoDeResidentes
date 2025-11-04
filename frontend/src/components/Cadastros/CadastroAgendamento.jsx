@@ -21,6 +21,7 @@ function CadastroAgendamento() {
   const [loading, setLoading] = useState(false)
   const [loadingData, setLoadingData] = useState(true)
   const [error, setError] = useState(null)
+  const [errors, setErrors] = useState({})
 
   // Carregar residentes e profissionais ao montar o componente
   useEffect(() => {
@@ -60,52 +61,60 @@ function CadastroAgendamento() {
       ...prev,
       [name]: value
     }))
+    // Limpar erro do campo específico quando usuário digitar
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }))
+    }
     if (error) setError(null)
   }
 
   const validarFormulario = () => {
+    const newErrors = {}
+    
     if (!formData.residente_id) {
-      setError('Selecione um residente')
-      return false
+      newErrors.residente_id = 'Selecione um residente'
     }
     if (!formData.profissional_id) {
-      setError('Selecione um profissional')
-      return false
+      newErrors.profissional_id = 'Selecione um profissional'
     }
     if (!formData.data_agendamento) {
-      setError('Informe a data do agendamento')
-      return false
+      newErrors.data_agendamento = 'Informe a data do agendamento'
+    } else {
+      // Validar se data não está no passado
+      const hoje = new Date()
+      hoje.setHours(0, 0, 0, 0)
+      const dataAgendamento = new Date(formData.data_agendamento + 'T00:00:00')
+      
+      if (dataAgendamento < hoje) {
+        newErrors.data_agendamento = 'A data do agendamento não pode ser no passado'
+      }
     }
+    
     if (!formData.hora_inicio) {
-      setError('Informe a hora de início')
-      return false
+      newErrors.hora_inicio = 'Informe a hora de início'
     }
     if (!formData.hora_fim) {
-      setError('Informe a hora de término')
-      return false
+      newErrors.hora_fim = 'Informe a hora de término'
+    } else if (formData.hora_inicio && formData.hora_fim <= formData.hora_inicio) {
+      newErrors.hora_fim = 'A hora de término deve ser posterior à hora de início'
     }
+    
     if (!formData.tipo_atendimento) {
-      setError('Selecione o tipo de atendimento')
-      return false
+      newErrors.tipo_atendimento = 'Selecione o tipo de atendimento'
     }
-    if (!formData.titulo) {
-      setError('Informe o título do agendamento')
-      return false
+    if (!formData.titulo || formData.titulo.trim().length < 3) {
+      newErrors.titulo = 'Informe o título do agendamento (mínimo 3 caracteres)'
     }
     
-    // Validar se hora_fim > hora_inicio
-    if (formData.hora_fim <= formData.hora_inicio) {
-      setError('A hora de término deve ser posterior à hora de início')
-      return false
-    }
+    setErrors(newErrors)
     
-    // Validar se data não está no passado
-    const hoje = new Date()
-    hoje.setHours(0, 0, 0, 0)
-    const dataAgendamento = new Date(formData.data_agendamento + 'T00:00:00')
-    
-    if (dataAgendamento < hoje) {
-      setError('A data do agendamento não pode ser no passado')
+    // Se houver erros, mostrar alert com o primeiro erro
+    if (Object.keys(newErrors).length > 0) {
+      const primeiroErro = Object.values(newErrors)[0]
+      setError(primeiroErro)
       return false
     }
     
@@ -141,6 +150,7 @@ function CadastroAgendamento() {
         local: '',
         observacoes: ''
       })
+      setErrors({})
     } catch (err) {
       console.error('Erro ao criar agendamento:', err)
       const mensagem = err.message || 'Erro ao criar agendamento. Tente novamente.'
@@ -165,6 +175,7 @@ function CadastroAgendamento() {
       observacoes: ''
     })
     setError(null)
+    setErrors({})
   }
 
   if (loadingData) {
@@ -211,11 +222,10 @@ function CadastroAgendamento() {
                         Residente
                       </label>
                       <select
-                        className="form-select"
+                        className={`form-select ${errors.residente_id ? 'is-invalid' : ''}`}
                         name="residente_id"
                         value={formData.residente_id}
                         onChange={handleChange}
-                        required
                       >
                         <option value="">Selecione o residente...</option>
                         {residentes.map(residente => (
@@ -224,6 +234,9 @@ function CadastroAgendamento() {
                           </option>
                         ))}
                       </select>
+                      {errors.residente_id && (
+                        <div className="invalid-feedback">{errors.residente_id}</div>
+                      )}
                     </div>
 
                     {/* Profissional */}
@@ -233,11 +246,10 @@ function CadastroAgendamento() {
                         Profissional
                       </label>
                       <select
-                        className="form-select"
+                        className={`form-select ${errors.profissional_id ? 'is-invalid' : ''}`}
                         name="profissional_id"
                         value={formData.profissional_id}
                         onChange={handleChange}
-                        required
                       >
                         <option value="">Selecione o profissional...</option>
                         {profissionais.map(profissional => (
@@ -246,6 +258,9 @@ function CadastroAgendamento() {
                           </option>
                         ))}
                       </select>
+                      {errors.profissional_id && (
+                        <div className="invalid-feedback">{errors.profissional_id}</div>
+                      )}
                     </div>
 
                     {/* Data */}
@@ -256,13 +271,15 @@ function CadastroAgendamento() {
                       </label>
                       <input
                         type="date"
-                        className="form-control"
+                        className={`form-control ${errors.data_agendamento ? 'is-invalid' : ''}`}
                         name="data_agendamento"
                         value={formData.data_agendamento}
                         onChange={handleChange}
                         min={new Date().toISOString().split('T')[0]}
-                        required
                       />
+                      {errors.data_agendamento && (
+                        <div className="invalid-feedback">{errors.data_agendamento}</div>
+                      )}
                     </div>
 
                     {/* Hora Início */}
@@ -273,12 +290,14 @@ function CadastroAgendamento() {
                       </label>
                       <input
                         type="time"
-                        className="form-control"
+                        className={`form-control ${errors.hora_inicio ? 'is-invalid' : ''}`}
                         name="hora_inicio"
                         value={formData.hora_inicio}
                         onChange={handleChange}
-                        required
                       />
+                      {errors.hora_inicio && (
+                        <div className="invalid-feedback">{errors.hora_inicio}</div>
+                      )}
                     </div>
 
                     {/* Hora Fim */}
@@ -289,12 +308,14 @@ function CadastroAgendamento() {
                       </label>
                       <input
                         type="time"
-                        className="form-control"
+                        className={`form-control ${errors.hora_fim ? 'is-invalid' : ''}`}
                         name="hora_fim"
                         value={formData.hora_fim}
                         onChange={handleChange}
-                        required
                       />
+                      {errors.hora_fim && (
+                        <div className="invalid-feedback">{errors.hora_fim}</div>
+                      )}
                     </div>
 
                     {/* Tipo de Atendimento */}
@@ -304,11 +325,10 @@ function CadastroAgendamento() {
                         Tipo de Atendimento
                       </label>
                       <select
-                        className="form-select"
+                        className={`form-select ${errors.tipo_atendimento ? 'is-invalid' : ''}`}
                         name="tipo_atendimento"
                         value={formData.tipo_atendimento}
                         onChange={handleChange}
-                        required
                       >
                         <option value="">Selecione o tipo...</option>
                         <option value="consulta_medica">Consulta Médica</option>
@@ -320,6 +340,9 @@ function CadastroAgendamento() {
                         <option value="assistencia_social">Assistência Social</option>
                         <option value="outro">Outro</option>
                       </select>
+                      {errors.tipo_atendimento && (
+                        <div className="invalid-feedback">{errors.tipo_atendimento}</div>
+                      )}
                     </div>
 
                     {/* Local */}
@@ -346,13 +369,15 @@ function CadastroAgendamento() {
                       </label>
                       <input
                         type="text"
-                        className="form-control"
+                        className={`form-control ${errors.titulo ? 'is-invalid' : ''}`}
                         name="titulo"
                         value={formData.titulo}
                         onChange={handleChange}
                         placeholder="Ex: Consulta de rotina, Sessão de fisioterapia..."
-                        required
                       />
+                      {errors.titulo && (
+                        <div className="invalid-feedback">{errors.titulo}</div>
+                      )}
                     </div>
 
                     {/* Descrição */}

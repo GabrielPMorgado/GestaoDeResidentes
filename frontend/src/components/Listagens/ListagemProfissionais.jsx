@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { listarProfissionais, deletarProfissional, obterEstatisticasProfissionais } from '../../api/api'
+import { listarProfissionais, deletarProfissional, obterEstatisticasProfissionais, atualizarProfissional, listarHistoricoConsultasProfissional } from '../../api/api'
 import './ListagemProfissionais.css'
 
 function ListagemProfissionais() {
@@ -7,6 +7,14 @@ function ListagemProfissionais() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [estatisticas, setEstatisticas] = useState(null)
+  
+  // Modals
+  const [showVisualizarModal, setShowVisualizarModal] = useState(false)
+  const [showEditarModal, setShowEditarModal] = useState(false)
+  const [showHistoricoModal, setShowHistoricoModal] = useState(false)
+  const [profissionalSelecionado, setProfissionalSelecionado] = useState(null)
+  const [historicoConsultas, setHistoricoConsultas] = useState([])
+  const [loadingHistorico, setLoadingHistorico] = useState(false)
   
   // Filtros
   const [filtros, setFiltros] = useState({
@@ -103,6 +111,67 @@ function ListagemProfissionais() {
       console.error('Erro ao inativar profissional:', err)
       alert('❌ ' + (err.message || 'Erro ao inativar profissional'))
     }
+  }
+
+  // Visualizar profissional
+  const handleVisualizar = async (profissional) => {
+    setProfissionalSelecionado(profissional)
+    setShowVisualizarModal(true)
+  }
+
+  // Editar profissional
+  const handleEditar = async (profissional) => {
+    setProfissionalSelecionado(profissional)
+    setShowEditarModal(true)
+  }
+
+  // Salvar edição
+  const handleSalvarEdicao = async () => {
+    try {
+      const response = await atualizarProfissional(profissionalSelecionado.id, profissionalSelecionado)
+      
+      if (response.success) {
+        alert('✅ Profissional atualizado com sucesso!')
+        setShowEditarModal(false)
+        carregarProfissionais()
+      } else {
+        throw new Error(response.message || 'Erro ao atualizar profissional')
+      }
+    } catch (err) {
+      console.error('Erro ao atualizar profissional:', err)
+      alert('❌ ' + (err.message || 'Erro ao atualizar profissional'))
+    }
+  }
+
+  // Ver histórico de consultas
+  const handleVerHistorico = async (profissional) => {
+    setProfissionalSelecionado(profissional)
+    setShowHistoricoModal(true)
+    setLoadingHistorico(true)
+    
+    try {
+      const response = await listarHistoricoConsultasProfissional(profissional.id)
+      
+      if (response.success) {
+        setHistoricoConsultas(response.data?.consultas || [])
+      } else {
+        throw new Error(response.message || 'Erro ao carregar histórico')
+      }
+    } catch (err) {
+      console.error('Erro ao carregar histórico:', err)
+      setHistoricoConsultas([])
+    } finally {
+      setLoadingHistorico(false)
+    }
+  }
+
+  // Fechar modals
+  const handleFecharModals = () => {
+    setShowVisualizarModal(false)
+    setShowEditarModal(false)
+    setShowHistoricoModal(false)
+    setProfissionalSelecionado(null)
+    setHistoricoConsultas([])
   }
 
   // Aplicar filtros
@@ -438,12 +507,21 @@ function ListagemProfissionais() {
                               <button 
                                 className="btn btn-sm btn-outline-primary"
                                 title="Visualizar"
+                                onClick={() => handleVisualizar(profissional)}
                               >
                                 <i className="bi bi-eye"></i>
                               </button>
                               <button 
+                                className="btn btn-sm btn-outline-info"
+                                title="Histórico"
+                                onClick={() => handleVerHistorico(profissional)}
+                              >
+                                <i className="bi bi-clock-history"></i>
+                              </button>
+                              <button 
                                 className="btn btn-sm btn-outline-warning"
                                 title="Editar"
+                                onClick={() => handleEditar(profissional)}
                               >
                                 <i className="bi bi-pencil"></i>
                               </button>
@@ -524,6 +602,318 @@ function ListagemProfissionais() {
           </div>
         </div>
       </div>
+
+      {/* Modal Visualizar */}
+      {showVisualizarModal && profissionalSelecionado && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={handleFecharModals}>
+          <div className="modal-dialog modal-lg modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content">
+              <div className="modal-header bg-primary text-white">
+                <h5 className="modal-title">
+                  <i className="bi bi-person-badge me-2"></i>
+                  Detalhes do Profissional
+                </h5>
+                <button type="button" className="btn-close btn-close-white" onClick={handleFecharModals}></button>
+              </div>
+              <div className="modal-body">
+                <div className="row g-3">
+                  <div className="col-md-12">
+                    <h6 className="text-primary mb-3">
+                      <i className="bi bi-person-fill me-2"></i>
+                      Dados Pessoais
+                    </h6>
+                  </div>
+                  <div className="col-md-8">
+                    <label className="form-label text-muted small">Nome Completo</label>
+                    <p className="fw-bold">{profissionalSelecionado.nome_completo}</p>
+                  </div>
+                  <div className="col-md-4">
+                    <label className="form-label text-muted small">CPF</label>
+                    <p className="fw-bold">{formatarCPF(profissionalSelecionado.cpf)}</p>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted small">Profissão</label>
+                    <p><span className={getBadgeProfissao(profissionalSelecionado.profissao)}>{profissionalSelecionado.profissao}</span></p>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted small">Status</label>
+                    <p><span className={getBadgeStatus(profissionalSelecionado.status)}>{profissionalSelecionado.status}</span></p>
+                  </div>
+                  
+                  <div className="col-md-12 mt-4">
+                    <h6 className="text-primary mb-3">
+                      <i className="bi bi-briefcase-fill me-2"></i>
+                      Informações Profissionais
+                    </h6>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted small">Registro Profissional</label>
+                    <p className="fw-bold">{profissionalSelecionado.registro_profissional || '-'}</p>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted small">Especialidade</label>
+                    <p className="fw-bold">{profissionalSelecionado.especialidade || '-'}</p>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted small">Cargo</label>
+                    <p className="fw-bold">{profissionalSelecionado.cargo || '-'}</p>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted small">Departamento</label>
+                    <p className="fw-bold">{profissionalSelecionado.departamento || '-'}</p>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted small">Data de Admissão</label>
+                    <p className="fw-bold">{formatarData(profissionalSelecionado.data_admissao)}</p>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted small">Salário</label>
+                    <p className="fw-bold">
+                      {profissionalSelecionado.salario 
+                        ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(profissionalSelecionado.salario)
+                        : '-'
+                      }
+                    </p>
+                  </div>
+                  
+                  <div className="col-md-12 mt-4">
+                    <h6 className="text-primary mb-3">
+                      <i className="bi bi-telephone-fill me-2"></i>
+                      Contato
+                    </h6>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted small">Telefone</label>
+                    <p className="fw-bold">{profissionalSelecionado.telefone || '-'}</p>
+                  </div>
+                  <div className="col-md-6">
+                    <label className="form-label text-muted small">Email</label>
+                    <p className="fw-bold">{profissionalSelecionado.email || '-'}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={handleFecharModals}>
+                  <i className="bi bi-x-circle me-2"></i>
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Editar */}
+      {showEditarModal && profissionalSelecionado && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={handleFecharModals}>
+          <div className="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content">
+              <div className="modal-header bg-warning">
+                <h5 className="modal-title">
+                  <i className="bi bi-pencil-square me-2"></i>
+                  Editar Profissional
+                </h5>
+                <button type="button" className="btn-close" onClick={handleFecharModals}></button>
+              </div>
+              <div className="modal-body">
+                <form>
+                  <div className="row g-3">
+                    <div className="col-md-8">
+                      <label className="form-label">Nome Completo *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={profissionalSelecionado.nome_completo}
+                        onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, nome_completo: e.target.value})}
+                      />
+                    </div>
+                    <div className="col-md-4">
+                      <label className="form-label">CPF *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={profissionalSelecionado.cpf}
+                        onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, cpf: e.target.value})}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Profissão *</label>
+                      <select
+                        className="form-select"
+                        value={profissionalSelecionado.profissao || ''}
+                        onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, profissao: e.target.value})}
+                      >
+                        <option value="">Selecione...</option>
+                        <option value="medico">Médico</option>
+                        <option value="enfermeiro">Enfermeiro</option>
+                        <option value="fisioterapeuta">Fisioterapeuta</option>
+                        <option value="psicologo">Psicólogo</option>
+                        <option value="nutricionista">Nutricionista</option>
+                        <option value="cuidador">Cuidador</option>
+                      </select>
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Registro Profissional</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={profissionalSelecionado.registro_profissional || ''}
+                        onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, registro_profissional: e.target.value})}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Especialidade</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={profissionalSelecionado.especialidade || ''}
+                        onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, especialidade: e.target.value})}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Cargo</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={profissionalSelecionado.cargo || ''}
+                        onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, cargo: e.target.value})}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Departamento</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={profissionalSelecionado.departamento || ''}
+                        onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, departamento: e.target.value})}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Telefone *</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={profissionalSelecionado.telefone || ''}
+                        onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, telefone: e.target.value})}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Email</label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        value={profissionalSelecionado.email || ''}
+                        onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, email: e.target.value})}
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label">Status</label>
+                      <select
+                        className="form-select"
+                        value={profissionalSelecionado.status}
+                        onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, status: e.target.value})}
+                      >
+                        <option value="ativo">Ativo</option>
+                        <option value="inativo">Inativo</option>
+                        <option value="licenca">Licença</option>
+                        <option value="ferias">Férias</option>
+                      </select>
+                    </div>
+                  </div>
+                </form>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={handleFecharModals}>
+                  <i className="bi bi-x-circle me-2"></i>
+                  Cancelar
+                </button>
+                <button type="button" className="btn btn-warning" onClick={handleSalvarEdicao}>
+                  <i className="bi bi-check-circle me-2"></i>
+                  Salvar Alterações
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Histórico de Consultas */}
+      {showHistoricoModal && profissionalSelecionado && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={handleFecharModals}>
+          <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content">
+              <div className="modal-header bg-info text-white">
+                <h5 className="modal-title">
+                  <i className="bi bi-clock-history me-2"></i>
+                  Histórico de Consultas - {profissionalSelecionado.nome_completo}
+                </h5>
+                <button type="button" className="btn-close btn-close-white" onClick={handleFecharModals}></button>
+              </div>
+              <div className="modal-body">
+                {loadingHistorico ? (
+                  <div className="text-center py-5">
+                    <div className="spinner-border text-info" role="status">
+                      <span className="visually-hidden">Carregando...</span>
+                    </div>
+                    <p className="mt-3 text-muted">Carregando histórico...</p>
+                  </div>
+                ) : historicoConsultas.length === 0 ? (
+                  <div className="text-center py-5">
+                    <i className="bi bi-inbox fs-1 text-muted"></i>
+                    <p className="mt-3 text-muted">Nenhuma consulta registrada para este profissional</p>
+                  </div>
+                ) : (
+                  <div className="table-responsive">
+                    <table className="table table-hover">
+                      <thead className="table-light">
+                        <tr>
+                          <th>Data</th>
+                          <th>Residente</th>
+                          <th>CPF Residente</th>
+                          <th>Tipo</th>
+                          <th>Diagnóstico</th>
+                          <th>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {historicoConsultas.map((consulta) => (
+                          <tr key={consulta.id}>
+                            <td>{formatarData(consulta.data_consulta)}</td>
+                            <td>
+                              <strong>{consulta.residente?.nome_completo || '-'}</strong>
+                              <div className="small text-muted">{consulta.residente?.email || ''}</div>
+                            </td>
+                            <td>
+                              <small className="text-muted">
+                                {formatarCPF(consulta.residente?.cpf)}
+                              </small>
+                            </td>
+                            <td>{consulta.tipo_consulta || '-'}</td>
+                            <td>
+                              <div className="text-truncate" style={{maxWidth: '200px'}} title={consulta.diagnostico}>
+                                {consulta.diagnostico || '-'}
+                              </div>
+                            </td>
+                            <td>
+                              <span className="badge bg-success">{consulta.status}</span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={handleFecharModals}>
+                  <i className="bi bi-x-circle me-2"></i>
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
