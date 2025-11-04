@@ -254,13 +254,6 @@ function ListagemProfissionais() {
             </h2>
             <p className="text-muted mb-0">Gerenciamento completo dos profissionais cadastrados</p>
           </div>
-          <button 
-            className="btn btn-success btn-lg"
-            onClick={() => window.location.href = '#/cadastro-profissionais'}
-          >
-            <i className="bi bi-plus-circle me-2"></i>
-            Novo Profissional
-          </button>
         </div>
 
         {/* Estatísticas */}

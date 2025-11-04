@@ -237,21 +237,12 @@ function ListagemResidentes() {
     <div className="listagem-residentes">
       <div className="container-fluid py-4">
         {/* Header */}
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <div>
-            <h2 className="mb-1">
-              <i className="bi bi-people-fill text-primary me-2"></i>
-              Listagem de Residentes
-            </h2>
-            <p className="text-muted mb-0">Gerenciamento completo dos residentes cadastrados</p>
-          </div>
-          <button 
-            className="btn btn-primary btn-lg"
-            onClick={() => window.location.href = '#/cadastro-residentes'}
-          >
-            <i className="bi bi-plus-circle me-2"></i>
-            Novo Residente
-          </button>
+        <div className="mb-4">
+          <h2 className="mb-1">
+            <i className="bi bi-people-fill text-primary me-2"></i>
+            Listagem de Residentes
+          </h2>
+          <p className="text-muted mb-0">Gerenciamento completo dos residentes cadastrados</p>
         </div>
 
         {/* Estatísticas */}

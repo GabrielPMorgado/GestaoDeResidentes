@@ -1,7 +1,10 @@
 .cadastro-agendamento {
   padding: 2rem;
   background-color: #f8f9fa;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .page-header {
@@ -18,11 +21,17 @@
   border: none;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  margin-bottom: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .card-body {
   padding: 2rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .form-label {

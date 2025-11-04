@@ -5,8 +5,11 @@
 .cadastro-residentes {
   animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   background: #f8f9fa;
-  min-height: 100vh;
+  height: 100vh;
   padding: 2rem 1rem;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes fadeInUp {
@@ -25,7 +28,8 @@
    ============================================ */
 
 .cadastro-header {
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
+  flex-shrink: 0;
 }
 
 .cadastro-header h2 {
@@ -54,11 +58,12 @@
 
 .progress-steps {
   background: #ffffff;
-  padding: 2rem;
+  padding: 1.5rem;
   border-radius: 16px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   border: 1px solid #e9ecef;
+  flex-shrink: 0;
 }
 
 .step-item {
@@ -189,6 +194,10 @@
   background: #ffffff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
 }
 
 .cadastro-residentes .card:hover {
@@ -197,7 +206,9 @@
 }
 
 .cadastro-residentes .card-body {
-  padding: 2rem;
+  padding: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .cadastro-residentes .card h4 {
@@ -281,11 +292,12 @@
 
 .form-navigation {
   background: #ffffff;
-  padding: 1.5rem;
+  padding: 1rem 1.5rem;
   border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   border: 1px solid #e9ecef;
-  margin-top: 2rem;
+  margin-top: 1rem;
+  flex-shrink: 0;
 }
 
 .form-navigation .btn {
