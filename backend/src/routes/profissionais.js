@@ -18,6 +18,9 @@ router.get('/cpf/:cpf', profissionalController.buscarPorCpf);
 // Rota para atualizar profissional
 router.put('/:id', validarAtualizarProfissional, profissionalController.atualizar);
 
+// Rota para deletar profissional permanentemente (hard delete)
+router.delete('/:id/permanente', profissionalController.deletarPermanente);
+
 // Rota para deletar profissional (soft delete)
 router.delete('/:id', profissionalController.deletar);
 

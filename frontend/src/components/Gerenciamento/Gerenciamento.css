@@ -1,0 +1,284 @@
+/* ============================================
+   GERENCIAMENTO - EXCLUSÃO PERMANENTE
+   ============================================ */
+
+.gerenciamento-container {
+  animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #f8f9fa;
+  min-height: 100vh;
+  padding: 2rem 0;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================
+   HEADER E ALERTAS
+   ============================================ */
+
+.gerenciamento-container h2 {
+  font-weight: 700;
+  color: #2c3e50;
+  font-size: 2rem;
+  display: flex;
+  align-items: center;
+}
+
+.gerenciamento-container .alert-danger {
+  border-left: 4px solid #dc3545;
+  background: #fff5f5;
+  border-radius: 12px;
+}
+
+/* ============================================
+   CARDS E BOTÕES
+   ============================================ */
+
+.gerenciamento-container .card {
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.gerenciamento-container .card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.gerenciamento-container .btn-group {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.gerenciamento-container .btn-group .btn {
+  border-radius: 0;
+  transition: all 0.3s ease;
+}
+
+.gerenciamento-container .btn-group .btn:first-child {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
+
+.gerenciamento-container .btn-group .btn:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+
+.gerenciamento-container .btn-danger {
+  background: #dc3545;
+  border-color: #dc3545;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.gerenciamento-container .btn-danger:hover {
+  background: #c82333;
+  border-color: #bd2130;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+}
+
+.gerenciamento-container .btn-outline-danger {
+  border-width: 2px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.gerenciamento-container .btn-outline-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.2);
+}
+
+/* ============================================
+   INPUT DE BUSCA
+   ============================================ */
+
+.gerenciamento-container .input-group {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.gerenciamento-container .input-group-text {
+  background: white;
+  border: 1px solid #ced4da;
+  border-right: none;
+}
+
+.gerenciamento-container .input-group .form-control {
+  border-left: none;
+  padding: 0.75rem 1rem;
+}
+
+.gerenciamento-container .input-group .form-control:focus {
+  border-color: #ced4da;
+  box-shadow: none;
+}
+
+/* ============================================
+   TABELA
+   ============================================ */
+
+.gerenciamento-container .table-responsive {
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.gerenciamento-container .table {
+  margin-bottom: 0;
+}
+
+.gerenciamento-container .table thead {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.gerenciamento-container .table-danger th {
+  color: white;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  letter-spacing: 0.5px;
+  padding: 1rem;
+  border: none;
+}
+
+.gerenciamento-container .table tbody tr {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.gerenciamento-container .table tbody tr:hover {
+  background: #fff5f5;
+}
+
+.gerenciamento-container .table tbody tr.table-danger {
+  background: #ffe6e6 !important;
+  border-left: 4px solid #dc3545;
+}
+
+.gerenciamento-container .table tbody td {
+  padding: 1rem;
+  vertical-align: middle;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.gerenciamento-container .form-check-input {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  border-width: 2px;
+}
+
+.gerenciamento-container .form-check-input:checked {
+  background-color: #dc3545;
+  border-color: #dc3545;
+}
+
+.gerenciamento-container .badge {
+  padding: 0.5rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 8px;
+}
+
+/* ============================================
+   FOOTER DA TABELA
+   ============================================ */
+
+.gerenciamento-container .card-footer {
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+}
+
+/* ============================================
+   ESTADOS VAZIOS
+   ============================================ */
+
+.gerenciamento-container .text-center.p-5 {
+  padding: 3rem !important;
+}
+
+.gerenciamento-container .text-center.p-5 i {
+  font-size: 4rem;
+  opacity: 0.3;
+}
+
+/* ============================================
+   RESPONSIVE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .gerenciamento-container {
+    padding: 1rem 0;
+  }
+  
+  .gerenciamento-container h2 {
+    font-size: 1.5rem;
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+  
+  .gerenciamento-container .btn-group {
+    flex-direction: column;
+  }
+  
+  .gerenciamento-container .btn-group .btn {
+    border-radius: 0 !important;
+  }
+  
+  .gerenciamento-container .btn-group .btn:first-child {
+    border-top-left-radius: 12px !important;
+    border-top-right-radius: 12px !important;
+  }
+  
+  .gerenciamento-container .btn-group .btn:last-child {
+    border-bottom-left-radius: 12px !important;
+    border-bottom-right-radius: 12px !important;
+  }
+  
+  .gerenciamento-container .table {
+    font-size: 0.875rem;
+  }
+  
+  .gerenciamento-container .table thead th {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.75rem;
+  }
+  
+  .gerenciamento-container .table tbody td {
+    padding: 0.75rem 0.5rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .gerenciamento-container .container-fluid {
+    padding: 1rem !important;
+  }
+  
+  .gerenciamento-container h2 {
+    font-size: 1.25rem;
+  }
+  
+  .gerenciamento-container .alert {
+    font-size: 0.875rem;
+  }
+  
+  .gerenciamento-container .table {
+    font-size: 0.8rem;
+  }
+  
+  .gerenciamento-container .badge {
+    padding: 0.35rem 0.65rem;
+    font-size: 0.75rem;
+  }
+}

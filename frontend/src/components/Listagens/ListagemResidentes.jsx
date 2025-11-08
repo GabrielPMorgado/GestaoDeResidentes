@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { listarResidentes, deletarResidente, obterEstatisticas, atualizarResidente, listarHistoricoConsultas } from '../../api/api'
+import { listarResidentes, deletarResidente, obterEstatisticas, atualizarResidente } from '../../api/api'
 import './ListagemResidentes.css'
 
-function ListagemResidentes() {
+function ListagemResidentes({ onVerHistorico }) {
   const [residentes, setResidentes] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -11,10 +11,7 @@ function ListagemResidentes() {
   // Modals
   const [showVisualizarModal, setShowVisualizarModal] = useState(false)
   const [showEditarModal, setShowEditarModal] = useState(false)
-  const [showHistoricoModal, setShowHistoricoModal] = useState(false)
   const [residenteSelecionado, setResidenteSelecionado] = useState(null)
-  const [historicoConsultas, setHistoricoConsultas] = useState([])
-  const [loadingHistorico, setLoadingHistorico] = useState(false)
   
   // Filtros
   const [filtros, setFiltros] = useState({
@@ -138,24 +135,9 @@ function ListagemResidentes() {
   }
 
   // Ver histórico de consultas
-  const handleVerHistorico = async (residente) => {
-    setResidenteSelecionado(residente)
-    setShowHistoricoModal(true)
-    setLoadingHistorico(true)
-    
-    try {
-      const response = await listarHistoricoConsultas(residente.id)
-      
-      if (response.success) {
-        setHistoricoConsultas(response.data?.consultas || [])
-      } else {
-        throw new Error(response.message || 'Erro ao carregar histórico')
-      }
-    } catch (err) {
-      console.error('Erro ao carregar histórico:', err)
-      setHistoricoConsultas([])
-    } finally {
-      setLoadingHistorico(false)
+  const handleVerHistorico = (residente) => {
+    if (onVerHistorico) {
+      onVerHistorico(residente)
     }
   }
 
@@ -163,9 +145,7 @@ function ListagemResidentes() {
   const handleFecharModals = () => {
     setShowVisualizarModal(false)
     setShowEditarModal(false)
-    setShowHistoricoModal(false)
     setResidenteSelecionado(null)
-    setHistoricoConsultas([])
   }
 
   // Aplicar filtros
@@ -830,82 +810,6 @@ function ListagemResidentes() {
                 <button type="button" className="btn btn-warning" onClick={handleSalvarEdicao}>
                   <i className="bi bi-check-circle me-2"></i>
                   Salvar Alterações
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Histórico de Consultas */}
-      {showHistoricoModal && residenteSelecionado && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={handleFecharModals}>
-          <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-content">
-              <div className="modal-header bg-info text-white">
-                <h5 className="modal-title">
-                  <i className="bi bi-clock-history me-2"></i>
-                  Histórico de Consultas - {residenteSelecionado.nome_completo}
-                </h5>
-                <button type="button" className="btn-close btn-close-white" onClick={handleFecharModals}></button>
-              </div>
-              <div className="modal-body">
-                {loadingHistorico ? (
-                  <div className="text-center py-5">
-                    <div className="spinner-border text-info" role="status">
-                      <span className="visually-hidden">Carregando...</span>
-                    </div>
-                    <p className="mt-3 text-muted">Carregando histórico...</p>
-                  </div>
-                ) : historicoConsultas.length === 0 ? (
-                  <div className="text-center py-5">
-                    <i className="bi bi-inbox fs-1 text-muted"></i>
-                    <p className="mt-3 text-muted">Nenhuma consulta registrada</p>
-                  </div>
-                ) : (
-                  <div className="table-responsive">
-                    <table className="table table-hover">
-                      <thead className="table-light">
-                        <tr>
-                          <th>Data</th>
-                          <th>Profissional</th>
-                          <th>Especialidade</th>
-                          <th>Tipo</th>
-                          <th>Diagnóstico</th>
-                          <th>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {historicoConsultas.map((consulta) => (
-                          <tr key={consulta.id}>
-                            <td>{formatarData(consulta.data_consulta)}</td>
-                            <td>
-                              <strong>{consulta.profissional?.nome_completo}</strong>
-                              <div className="small text-muted">{consulta.profissional?.registro_profissional}</div>
-                            </td>
-                            <td>
-                              <span className="badge bg-primary">{consulta.profissional?.especialidade}</span>
-                            </td>
-                            <td>{consulta.tipo_consulta || '-'}</td>
-                            <td>
-                              <div className="text-truncate" style={{maxWidth: '200px'}} title={consulta.diagnostico}>
-                                {consulta.diagnostico || '-'}
-                              </div>
-                            </td>
-                            <td>
-                              <span className="badge bg-success">{consulta.status}</span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={handleFecharModals}>
-                  <i className="bi bi-x-circle me-2"></i>
-                  Fechar
                 </button>
               </div>
             </div>

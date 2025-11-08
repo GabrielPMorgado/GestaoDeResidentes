@@ -79,6 +79,16 @@ export const deletarResidente = async (id) => {
   }
 };
 
+// Deletar residente permanentemente (remover do banco)
+export const deletarResidentePermanente = async (id) => {
+  try {
+    const response = await api.delete(`/residentes/${id}/permanente`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao deletar residente permanentemente' };
+  }
+};
+
 // Estatísticas
 export const obterEstatisticas = async () => {
   try {
@@ -156,6 +166,16 @@ export const deletarProfissional = async (id) => {
     return response.data;
   } catch (error) {
     throw error.response?.data || { message: 'Erro ao deletar profissional' };
+  }
+};
+
+// Deletar profissional permanentemente (remover do banco)
+export const deletarProfissionalPermanente = async (id) => {
+  try {
+    const response = await api.delete(`/profissionais/${id}/permanente`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || { message: 'Erro ao deletar profissional permanentemente' };
   }
 };
 

@@ -1,9 +1,62 @@
 const Residente = require('../models/Residente');
+const Profissional = require('../models/Profissional');
 const { Op } = require('sequelize');
 
 // Criar novo residente
 exports.criar = async (req, res) => {
   try {
+    const { cpf, rg } = req.body;
+
+    // Verificar se CPF já existe em residentes
+    const residenteExistente = await Residente.findOne({ 
+      where: { cpf } 
+    });
+    
+    if (residenteExistente) {
+      return res.status(400).json({
+        success: false,
+        message: 'CPF já cadastrado como residente!'
+      });
+    }
+
+    // Verificar se CPF já existe em profissionais
+    const profissionalExistente = await Profissional.findOne({ 
+      where: { cpf } 
+    });
+    
+    if (profissionalExistente) {
+      return res.status(400).json({
+        success: false,
+        message: 'CPF já cadastrado como profissional!'
+      });
+    }
+
+    // Verificar se RG já existe em residentes (se fornecido)
+    if (rg) {
+      const rgExistenteResidente = await Residente.findOne({ 
+        where: { rg } 
+      });
+      
+      if (rgExistenteResidente) {
+        return res.status(400).json({
+          success: false,
+          message: 'RG já cadastrado como residente!'
+        });
+      }
+
+      // Verificar se RG já existe em profissionais
+      const rgExistenteProfissional = await Profissional.findOne({ 
+        where: { rg } 
+      });
+      
+      if (rgExistenteProfissional) {
+        return res.status(400).json({
+          success: false,
+          message: 'RG já cadastrado como profissional!'
+        });
+      }
+    }
+
     const residente = await Residente.create(req.body);
     res.status(201).json({
       success: true,
@@ -13,11 +66,12 @@ exports.criar = async (req, res) => {
   } catch (error) {
     console.error('Erro ao criar residente:', error);
     
-    // Tratamento de erro de CPF duplicado
+    // Tratamento de erro de constraint única
     if (error.name === 'SequelizeUniqueConstraintError') {
+      const campo = error.errors[0]?.path || 'campo';
       return res.status(400).json({
         success: false,
-        message: 'CPF já cadastrado no sistema!'
+        message: `${campo.toUpperCase()} já cadastrado no sistema!`
       });
     }
     
@@ -139,6 +193,8 @@ exports.buscarPorCpf = async (req, res) => {
 exports.atualizar = async (req, res) => {
   try {
     const { id } = req.params;
+    const { cpf, rg } = req.body;
+    
     const residente = await Residente.findByPk(id);
     
     if (!residente) {
@@ -146,6 +202,66 @@ exports.atualizar = async (req, res) => {
         success: false,
         message: 'Residente não encontrado'
       });
+    }
+
+    // Verificar se o CPF está sendo alterado
+    if (cpf && cpf !== residente.cpf) {
+      // Verificar se o novo CPF já existe em outros residentes
+      const cpfExistenteResidente = await Residente.findOne({ 
+        where: { 
+          cpf,
+          id: { [Op.ne]: id } // Excluir o próprio residente
+        } 
+      });
+      
+      if (cpfExistenteResidente) {
+        return res.status(400).json({
+          success: false,
+          message: 'CPF já cadastrado como residente!'
+        });
+      }
+
+      // Verificar se o novo CPF já existe em profissionais
+      const cpfExistenteProfissional = await Profissional.findOne({ 
+        where: { cpf } 
+      });
+      
+      if (cpfExistenteProfissional) {
+        return res.status(400).json({
+          success: false,
+          message: 'CPF já cadastrado como profissional!'
+        });
+      }
+    }
+
+    // Verificar se o RG está sendo alterado
+    if (rg && rg !== residente.rg) {
+      // Verificar se o novo RG já existe em outros residentes
+      const rgExistenteResidente = await Residente.findOne({ 
+        where: { 
+          rg,
+          id: { [Op.ne]: id } // Excluir o próprio residente
+        } 
+      });
+      
+      if (rgExistenteResidente) {
+        return res.status(400).json({
+          success: false,
+          message: 'RG já cadastrado como residente!'
+        });
+      }
+
+      // Verificar se o novo RG já existe em profissionais
+      const rgExistenteProfissional = await Profissional.findOne({ 
+        where: { rg } 
+      });
+      
+      if (rgExistenteProfissional) {
+        return res.status(400).json({
+          success: false,
+          message: 'RG já cadastrado como profissional!'
+        });
+      }
     }
     
     await residente.update(req.body);
@@ -159,9 +275,10 @@ exports.atualizar = async (req, res) => {
     console.error('Erro ao atualizar residente:', error);
     
     if (error.name === 'SequelizeUniqueConstraintError') {
+      const campo = error.errors[0]?.path || 'campo';
       return res.status(400).json({
         success: false,
-        message: 'CPF já cadastrado no sistema!'
+        message: `${campo.toUpperCase()} já cadastrado no sistema!`
       });
     }
     
@@ -197,6 +314,46 @@ exports.deletar = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Erro ao inativar residente',
+      error: error.message
+    });
+  }
+};
+
+// Deletar residente permanentemente (hard delete - remove do banco)
+exports.deletarPermanente = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const residente = await Residente.findByPk(id);
+    
+    if (!residente) {
+      return res.status(404).json({
+        success: false,
+        message: 'Residente não encontrado'
+      });
+    }
+    
+    // Primeiro, deletar todos os históricos de consulta relacionados
+    await HistoricoConsulta.destroy({
+      where: { residente_id: id }
+    });
+    
+    // Depois, deletar todos os agendamentos relacionados
+    await Agendamento.destroy({
+      where: { residente_id: id }
+    });
+    
+    // Por fim, deletar o residente permanentemente do banco de dados
+    await residente.destroy();
+    
+    res.json({
+      success: true,
+      message: 'Residente e todos os registros relacionados foram deletados permanentemente do sistema!'
+    });
+  } catch (error) {
+    console.error('Erro ao deletar residente permanentemente:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao deletar residente permanentemente',
       error: error.message
     });
   }

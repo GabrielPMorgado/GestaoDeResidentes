@@ -256,8 +256,8 @@ function CadastroResidentes() {
 
           {/* Progress Steps */}
           <div className="progress-steps mb-4">
-            <div className="row">
-              <div className="col-md-4">
+            <div className="row g-3">
+              <div className="col-12 col-md-4">
                 <div className={`step-item ${currentStep >= 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}>
                   <div className="step-number">
                     {currentStep > 1 ? <i className="bi bi-check-lg"></i> : '1'}
@@ -268,7 +268,7 @@ function CadastroResidentes() {
                   </div>
                 </div>
               </div>
-              <div className="col-md-4">
+              <div className="col-12 col-md-4">
                 <div className={`step-item ${currentStep >= 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}>
                   <div className="step-number">
                     {currentStep > 2 ? <i className="bi bi-check-lg"></i> : '2'}
@@ -279,7 +279,7 @@ function CadastroResidentes() {
                   </div>
                 </div>
               </div>
-              <div className="col-md-4">
+              <div className="col-12 col-md-4">
                 <div className={`step-item ${currentStep >= 3 ? 'active' : ''} ${currentStep > 3 ? 'completed' : ''}`}>
                   <div className="step-number">3</div>
                   <div className="step-info">
@@ -304,7 +304,7 @@ function CadastroResidentes() {
                   </h4>
                   
                   <div className="row g-3">
-                    <div className="col-md-8">
+                    <div className="col-12 col-md-8">
                       <label htmlFor="nome_completo" className="form-label">
                         <i className="bi bi-person me-1"></i>
                         Nome Completo *
@@ -324,7 +324,7 @@ function CadastroResidentes() {
                       )}
                     </div>
 
-                    <div className="col-md-4">
+                    <div className="col-12 col-md-4">
                       <label htmlFor="data_nascimento" className="form-label">
                         <i className="bi bi-calendar-event me-1"></i>
                         Data de Nascimento *
@@ -343,7 +343,7 @@ function CadastroResidentes() {
                       )}
                     </div>
 
-                    <div className="col-md-4">
+                    <div className="col-12 col-sm-6 col-md-4">
                       <label htmlFor="cpf" className="form-label">
                         <i className="bi bi-card-text me-1"></i>
                         CPF *
@@ -363,7 +363,7 @@ function CadastroResidentes() {
                       )}
                     </div>
 
-                    <div className="col-md-4">
+                    <div className="col-12 col-sm-6 col-md-4">
                       <label htmlFor="rg" className="form-label">
                         <i className="bi bi-card-heading me-1"></i>
                         RG
@@ -379,7 +379,7 @@ function CadastroResidentes() {
                       />
                     </div>
 
-                    <div className="col-md-4">
+                    <div className="col-12 col-sm-6 col-md-4">
                       <label htmlFor="sexo" className="form-label">
                         <i className="bi bi-gender-ambiguous me-1"></i>
                         Sexo *
@@ -402,7 +402,7 @@ function CadastroResidentes() {
                       )}
                     </div>
 
-                    <div className="col-md-4">
+                    <div className="col-12 col-sm-6 col-md-4">
                       <label htmlFor="estado_civil" className="form-label">
                         <i className="bi bi-heart me-1"></i>
                         Estado Civil
@@ -423,7 +423,7 @@ function CadastroResidentes() {
                       </select>
                     </div>
 
-                    <div className="col-md-4">
+                    <div className="col-12 col-sm-6 col-md-4">
                       <label htmlFor="telefone" className="form-label">
                         <i className="bi bi-telephone me-1"></i>
                         Telefone
@@ -442,7 +442,7 @@ function CadastroResidentes() {
                       )}
                     </div>
 
-                    <div className="col-md-4">
+                    <div className="col-12 col-sm-6 col-md-4">
                       <label htmlFor="email" className="form-label">
                         <i className="bi bi-envelope me-1"></i>
                         E-mail
@@ -459,22 +459,6 @@ function CadastroResidentes() {
                       {errors.email && (
                         <div className="invalid-feedback">{errors.email}</div>
                       )}
-                    </div>
-
-                    <div className="col-md-4">
-                      <label htmlFor="email" className="form-label">
-                        <i className="bi bi-envelope me-1"></i>
-                        E-mail
-                      </label>
-                      <input
-                        type="email"
-                        className="form-control form-control-lg"
-                        id="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        placeholder="exemplo@email.com"
-                      />
                     </div>
                   </div>
                 </div>
@@ -493,7 +477,7 @@ function CadastroResidentes() {
                   </h4>
                   
                   <div className="row g-3">
-                    <div className="col-md-3">
+                    <div className="col-12 col-sm-6 col-md-3">
                       <label htmlFor="cep" className="form-label">
                         <i className="bi bi-mailbox me-1"></i>
                         CEP *
@@ -513,7 +497,7 @@ function CadastroResidentes() {
                       )}
                     </div>
 
-                    <div className="col-md-7">
+                    <div className="col-12 col-md-7">
                       <label htmlFor="logradouro" className="form-label">
                         <i className="bi bi-signpost me-1"></i>
                         Logradouro *
@@ -533,7 +517,7 @@ function CadastroResidentes() {
                       )}
                     </div>
 
-                    <div className="col-md-2">
+                    <div className="col-12 col-sm-6 col-md-2">
                       <label htmlFor="numero" className="form-label">
                         <i className="bi bi-hash me-1"></i>
                         Número *
@@ -553,7 +537,7 @@ function CadastroResidentes() {
                       )}
                     </div>
 
-                    <div className="col-md-6">
+                    <div className="col-12 col-md-6">
                       <label htmlFor="complemento" className="form-label">
                         <i className="bi bi-building me-1"></i>
                         Complemento
@@ -569,7 +553,7 @@ function CadastroResidentes() {
                       />
                     </div>
 
-                    <div className="col-md-6">
+                    <div className="col-12 col-md-6">
                       <label htmlFor="bairro" className="form-label">
                         <i className="bi bi-map me-1"></i>
                         Bairro *
@@ -589,7 +573,7 @@ function CadastroResidentes() {
                       )}
                     </div>
 
-                    <div className="col-md-8">
+                    <div className="col-12 col-sm-8 col-md-8">
                       <label htmlFor="cidade" className="form-label">
                         <i className="bi bi-building-fill-check me-1"></i>
                         Cidade *
@@ -609,7 +593,7 @@ function CadastroResidentes() {
                       )}
                     </div>
 
-                    <div className="col-md-4">
+                    <div className="col-12 col-sm-4 col-md-4">
                       <label htmlFor="estado" className="form-label">
                         <i className="bi bi-pin-map me-1"></i>
                         Estado *
@@ -672,7 +656,7 @@ function CadastroResidentes() {
                   </h4>
                   
                   <div className="row g-3">
-                    <div className="col-md-6">
+                    <div className="col-12 col-md-6">
                       <label htmlFor="nome_responsavel" className="form-label">
                         <i className="bi bi-person-badge me-1"></i>
                         Nome do Responsável *
@@ -689,7 +673,7 @@ function CadastroResidentes() {
                       />
                     </div>
 
-                    <div className="col-md-3">
+                    <div className="col-12 col-sm-6 col-md-3">
                       <label htmlFor="parentesco_responsavel" className="form-label">
                         <i className="bi bi-people me-1"></i>
                         Parentesco
@@ -705,7 +689,7 @@ function CadastroResidentes() {
                       />
                     </div>
 
-                    <div className="col-md-3">
+                    <div className="col-12 col-sm-6 col-md-3">
                       <label htmlFor="telefone_responsavel" className="form-label">
                         <i className="bi bi-phone-vibrate me-1"></i>
                         Telefone
@@ -724,7 +708,7 @@ function CadastroResidentes() {
                       )}
                     </div>
 
-                    <div className="col-md-6">
+                    <div className="col-12 col-md-6">
                       <label htmlFor="email_responsavel" className="form-label">
                         <i className="bi bi-envelope me-1"></i>
                         E-mail do Responsável

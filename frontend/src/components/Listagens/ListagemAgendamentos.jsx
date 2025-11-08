@@ -13,6 +13,7 @@ function ListagemAgendamentos() {
   const [agendamentos, setAgendamentos] = useState([])
   const [estatisticas, setEstatisticas] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [mostrarCancelados, setMostrarCancelados] = useState(false)
   const [filtros, setFiltros] = useState({
     status: '',
     tipo_atendimento: '',
@@ -30,7 +31,7 @@ function ListagemAgendamentos() {
   useEffect(() => {
     carregarDados()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paginaAtual, itensPorPagina, filtros])
+  }, [paginaAtual, itensPorPagina, filtros, mostrarCancelados])
 
   const carregarDados = async () => {
     try {
@@ -51,7 +52,18 @@ function ListagemAgendamentos() {
       console.log('Estatísticas Response:', estatisticasRes)
 
       if (agendamentosRes.success) {
-        setAgendamentos(agendamentosRes.data?.agendamentos || [])
+        let agendamentosData = agendamentosRes.data?.agendamentos || []
+        
+        // Filtrar baseado no estado de mostrarCancelados
+        if (mostrarCancelados) {
+          // Mostrar APENAS cancelados
+          agendamentosData = agendamentosData.filter(ag => ag.status === 'cancelado')
+        } else {
+          // Mostrar APENAS não cancelados
+          agendamentosData = agendamentosData.filter(ag => ag.status !== 'cancelado')
+        }
+        
+        setAgendamentos(agendamentosData)
         setPaginaAtual(agendamentosRes.data?.pagination?.paginaAtual || 1)
         setTotalPaginas(agendamentosRes.data?.pagination?.totalPaginas || 1)
         setTotalItens(agendamentosRes.data?.pagination?.totalItens || 0)
@@ -386,7 +398,7 @@ function ListagemAgendamentos() {
                   onChange={handleFiltroChange}
                 />
               </div>
-              <div className="col-md-3">
+              <div className="col-md-2">
                 <label className="form-label">Buscar</label>
                 <input
                   type="text"
@@ -404,6 +416,16 @@ function ListagemAgendamentos() {
                   title="Limpar filtros"
                 >
                   <i className="bi bi-x-circle"></i>
+                </button>
+              </div>
+              <div className="col-md-2 d-flex align-items-end">
+                <button
+                  className={`btn w-100 ${mostrarCancelados ? 'btn-warning' : 'btn-outline-warning'}`}
+                  onClick={() => setMostrarCancelados(!mostrarCancelados)}
+                  title={mostrarCancelados ? "Ocultar cancelados" : "Ver cancelados"}
+                >
+                  <i className="bi bi-eye-slash me-2"></i>
+                  {mostrarCancelados ? 'Ocultar Cancelados' : 'Ver Cancelados'}
                 </button>
               </div>
             </div>

@@ -5,11 +5,18 @@
 .cadastro-residentes {
   animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   background: #f8f9fa;
-  height: 100vh;
+  min-height: 100vh;
   padding: 2rem 1rem;
-  overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+.cadastro-residentes .container-fluid {
+  max-width: 100%;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
 }
 
 @keyframes fadeInUp {
@@ -190,14 +197,11 @@
 .cadastro-residentes .card {
   border-radius: 16px;
   border: 1px solid #e9ecef;
-  overflow: hidden;
+  overflow: visible;
   background: #ffffff;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
+  height: auto;
 }
 
 .cadastro-residentes .card:hover {
@@ -206,9 +210,7 @@
 }
 
 .cadastro-residentes .card-body {
-  padding: 1.5rem;
-  overflow-y: auto;
-  flex: 1;
+  padding: 2rem;
 }
 
 .cadastro-residentes .card h4 {
@@ -300,6 +302,18 @@
   flex-shrink: 0;
 }
 
+.form-navigation .d-flex {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.form-navigation .d-flex > div {
+  display: flex;
+  gap: 0.75rem;
+}
+
 .form-navigation .btn {
   padding: 0.75rem 2rem;
   font-weight: 600;
@@ -308,6 +322,7 @@
   text-transform: uppercase;
   font-size: 0.875rem;
   letter-spacing: 0.5px;
+  white-space: nowrap;
 }
 
 .form-navigation .btn:hover {
@@ -361,6 +376,42 @@
    RESPONSIVE DESIGN - ADAPTAÇÃO TOTAL
    ============================================ */
 
+/* Extra Large Screens (≥1400px) */
+@media (min-width: 1400px) {
+  .cadastro-residentes {
+    padding: 2.5rem 3rem;
+  }
+  
+  .cadastro-residentes .container-fluid {
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  
+  .cadastro-header h2 {
+    font-size: 2.5rem;
+  }
+  
+  .progress-steps {
+    padding: 2rem 3rem;
+  }
+  
+  .cadastro-residentes .card-body {
+    padding: 2.5rem 3rem;
+  }
+}
+
+/* Large Screens (≥1200px) */
+@media (min-width: 1200px) and (max-width: 1399px) {
+  .cadastro-residentes {
+    padding: 2rem 2rem;
+  }
+  
+  .cadastro-residentes .container-fluid {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+}
+
 /* Tablets grandes (≤1024px) */
 @media (max-width: 1024px) {
   .cadastro-residentes {
@@ -368,17 +419,21 @@
   }
   
   .cadastro-header h2 {
-    font-size: 2.25rem;
+    font-size: 1.85rem;
   }
   
   .progress-steps {
-    padding: 2rem;
+    padding: 1.5rem;
   }
   
   .step-number {
-    width: 56px;
-    height: 56px;
-    font-size: 1.5rem;
+    width: 52px;
+    height: 52px;
+    font-size: 1.35rem;
+  }
+  
+  .cadastro-residentes .card-body {
+    padding: 1.75rem;
   }
 }
 
@@ -389,28 +444,24 @@
   }
   
   .cadastro-header h2 {
-    font-size: 1.85rem;
-    flex-direction: column;
-    gap: 0.75rem;
+    font-size: 1.65rem;
+    gap: 0.5rem;
   }
   
   .cadastro-header h2 i {
-    font-size: 2.5rem;
+    font-size: 2rem;
   }
   
   .cadastro-header p {
-    font-size: 0.95rem;
-    padding: 0.6rem 1.25rem;
+    font-size: 0.9rem;
   }
   
   .progress-steps {
-    padding: 1.5rem 1rem;
+    padding: 1.25rem 1rem;
   }
   
   .step-item {
-    flex-direction: column;
-    text-align: center;
-    padding: 1rem;
+    padding: 0.75rem;
   }
   
   .step-item::before {
@@ -418,51 +469,43 @@
   }
   
   .step-number {
-    width: 52px;
-    height: 52px;
-    font-size: 1.4rem;
-    margin-bottom: 0.5rem;
-  }
-  
-  .step-info {
-    align-items: center;
+    width: 48px;
+    height: 48px;
+    font-size: 1.25rem;
   }
   
   .step-title {
-    font-size: 1rem;
+    font-size: 0.95rem;
   }
   
   .step-desc {
-    font-size: 0.825rem;
+    font-size: 0.8rem;
   }
   
   .cadastro-residentes .card {
-    border-radius: 20px;
+    border-radius: 14px;
   }
   
   .cadastro-residentes .card-body {
-    padding: 1.75rem 1.5rem;
+    padding: 1.5rem 1.25rem;
   }
   
   .cadastro-residentes .card h4 {
-    font-size: 1.35rem;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
+    font-size: 1.25rem;
   }
   
   .form-navigation {
-    padding: 1.5rem;
+    padding: 1.25rem;
+  }
+  
+  .form-navigation .d-flex {
+    flex-direction: column;
+    gap: 0.75rem;
   }
   
   .form-navigation .btn {
     width: 100%;
-    margin-bottom: 0.75rem;
-    padding: 0.95rem 2rem;
-  }
-  
-  .form-navigation .btn:last-child {
-    margin-bottom: 0;
+    padding: 0.875rem 1.5rem;
   }
 }
 
@@ -473,35 +516,41 @@
   }
   
   .cadastro-header h2 {
-    font-size: 1.65rem;
+    font-size: 1.5rem;
   }
   
   .cadastro-header h2 i {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
   
   .cadastro-header p {
-    font-size: 0.875rem;
-    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
   }
   
   .progress-steps {
-    padding: 1.25rem 0.75rem;
-    border-radius: 18px;
+    padding: 1rem 0.75rem;
+    border-radius: 12px;
   }
   
   .step-item {
-    padding: 0.75rem 0.5rem;
+    padding: 0.65rem 0.5rem;
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .step-info {
+    align-items: center;
   }
   
   .step-number {
-    width: 48px;
-    height: 48px;
-    font-size: 1.25rem;
+    width: 44px;
+    height: 44px;
+    font-size: 1.15rem;
+    margin-bottom: 0.35rem;
   }
   
   .step-title {
-    font-size: 0.925rem;
+    font-size: 0.875rem;
   }
   
   .step-desc {
@@ -509,106 +558,216 @@
   }
   
   .cadastro-residentes .card {
-    border-radius: 18px;
+    border-radius: 12px;
   }
   
   .cadastro-residentes .card-body {
-    padding: 1.5rem 1.25rem;
+    padding: 1.25rem 1rem;
   }
   
   .cadastro-residentes .card h4 {
-    font-size: 1.2rem;
-    padding-bottom: 1rem;
-    margin-bottom: 1.5rem;
+    font-size: 1.15rem;
+    padding-bottom: 0.875rem;
+    margin-bottom: 1.25rem;
   }
   
   .cadastro-residentes .form-label {
-    font-size: 0.875rem;
+    font-size: 0.85rem;
+    margin-bottom: 0.4rem;
   }
   
   .cadastro-residentes .form-control,
   .cadastro-residentes .form-select {
-    font-size: 0.95rem;
-    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    padding: 0.7rem 0.9rem;
   }
   
   .cadastro-residentes .form-control-lg {
-    font-size: 1rem;
-    padding: 0.875rem 1.125rem;
+    font-size: 0.95rem;
+    padding: 0.8rem 1rem;
   }
   
   .form-navigation {
-    padding: 1.25rem 1rem;
-    border-radius: 16px;
+    padding: 1rem 0.75rem;
+    border-radius: 12px;
   }
   
   .form-navigation .btn {
-    padding: 0.875rem 1.5rem;
-    font-size: 0.85rem;
-    letter-spacing: 0.6px;
+    padding: 0.8rem 1.25rem;
+    font-size: 0.825rem;
+    letter-spacing: 0.5px;
+  }
+  
+  /* Ajustar grid para mobile */
+  .cadastro-residentes .row > [class*="col-"] {
+    margin-bottom: 0.75rem;
   }
 }
 
 /* Extra small devices (≤380px) */
 @media (max-width: 380px) {
+  .cadastro-residentes {
+    padding: 0.5rem 0.35rem;
+  }
+  
   .cadastro-header h2 {
+    font-size: 1.35rem;
+  }
+  
+  .cadastro-header h2 i {
     font-size: 1.5rem;
   }
   
+  .cadastro-header p {
+    font-size: 0.8rem;
+  }
+  
   .progress-steps {
-    padding: 1rem 0.5rem;
+    padding: 0.875rem 0.5rem;
   }
   
   .step-number {
-    width: 44px;
-    height: 44px;
-    font-size: 1.1rem;
+    width: 40px;
+    height: 40px;
+    font-size: 1rem;
+  }
+  
+  .step-title {
+    font-size: 0.8rem;
+  }
+  
+  .step-desc {
+    font-size: 0.7rem;
   }
   
   .cadastro-residentes .card-body {
-    padding: 1.25rem 1rem;
+    padding: 1rem 0.75rem;
   }
   
   .cadastro-residentes .card h4 {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
   }
   
   .form-navigation .btn {
-    padding: 0.8rem 1.25rem;
-    font-size: 0.8rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.775rem;
   }
 }
 
 /* Landscape mode optimizations */
-@media (max-height: 600px) and (orientation: landscape) {
+@media (max-height: 700px) and (orientation: landscape) {
   .cadastro-residentes {
-    padding: 0.75rem 1rem;
+    padding: 1rem;
   }
   
   .cadastro-header {
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
   }
   
   .cadastro-header h2 {
     font-size: 1.5rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.35rem;
+  }
+  
+  .cadastro-header p {
+    font-size: 0.85rem;
   }
   
   .progress-steps {
-    padding: 1rem 1.5rem;
-    margin-bottom: 1rem;
+    padding: 1rem 1.25rem;
+    margin-bottom: 0.75rem;
   }
   
   .step-item {
-    padding: 0.75rem 1rem;
+    padding: 0.65rem 0.875rem;
   }
   
   .step-number {
-    width: 44px;
-    height: 44px;
+    width: 42px;
+    height: 42px;
+    font-size: 1.1rem;
   }
   
   .cadastro-residentes .card-body {
-    padding: 1.5rem;
+    padding: 1.25rem;
+  }
+  
+  .cadastro-residentes .card h4 {
+    font-size: 1.15rem;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1rem;
+  }
+  
+  .form-navigation {
+    padding: 1rem;
+    margin-top: 0.75rem;
+  }
+}
+
+/* Wide screen optimizations (≥1920px) */
+@media (min-width: 1920px) {
+  .cadastro-residentes .container-fluid {
+    max-width: 1800px;
+  }
+  
+  .cadastro-header h2 {
+    font-size: 2.75rem;
+  }
+  
+  .cadastro-header p {
+    font-size: 1.15rem;
+  }
+  
+  .progress-steps {
+    padding: 2.5rem 4rem;
+  }
+  
+  .step-number {
+    width: 64px;
+    height: 64px;
+    font-size: 1.75rem;
+  }
+  
+  .step-title {
+    font-size: 1.2rem;
+  }
+  
+  .step-desc {
+    font-size: 1rem;
+  }
+  
+  .cadastro-residentes .card-body {
+    padding: 3rem 4rem;
+  }
+  
+  .cadastro-residentes .card h4 {
+    font-size: 1.75rem;
+  }
+  
+  .cadastro-residentes .form-label {
+    font-size: 1.05rem;
+  }
+  
+  .cadastro-residentes .form-control,
+  .cadastro-residentes .form-select {
+    font-size: 1.05rem;
+  }
+}
+
+/* Print styles */
+@media print {
+  .cadastro-residentes {
+    padding: 0;
+    background: white;
+  }
+  
+  .progress-steps,
+  .form-navigation {
+    display: none;
+  }
+  
+  .cadastro-residentes .card {
+    box-shadow: none;
+    border: 1px solid #dee2e6;
   }
 }

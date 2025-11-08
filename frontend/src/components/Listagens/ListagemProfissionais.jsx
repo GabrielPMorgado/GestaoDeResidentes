@@ -602,66 +602,66 @@ function ListagemProfissionais() {
           <div className="modal-dialog modal-lg modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
             <div className="modal-content">
               <div className="modal-header bg-primary text-white">
-                <h5 className="modal-title">
+                <h5 className="modal-title w-100 text-center">
                   <i className="bi bi-person-badge me-2"></i>
                   Detalhes do Profissional
                 </h5>
-                <button type="button" className="btn-close btn-close-white" onClick={handleFecharModals}></button>
+                <button type="button" className="btn-close btn-close-white position-absolute end-0 me-3" onClick={handleFecharModals}></button>
               </div>
               <div className="modal-body">
                 <div className="row g-3">
-                  <div className="col-md-12">
+                  <div className="col-md-12 text-center">
                     <h6 className="text-primary mb-3">
                       <i className="bi bi-person-fill me-2"></i>
                       Dados Pessoais
                     </h6>
                   </div>
                   <div className="col-md-8">
-                    <label className="form-label text-muted small">Nome Completo</label>
-                    <p className="fw-bold">{profissionalSelecionado.nome_completo}</p>
+                    <label className="form-label text-muted small d-block text-center">Nome Completo</label>
+                    <p className="fw-bold text-center">{profissionalSelecionado.nome_completo}</p>
                   </div>
                   <div className="col-md-4">
-                    <label className="form-label text-muted small">CPF</label>
-                    <p className="fw-bold">{formatarCPF(profissionalSelecionado.cpf)}</p>
+                    <label className="form-label text-muted small d-block text-center">CPF</label>
+                    <p className="fw-bold text-center">{formatarCPF(profissionalSelecionado.cpf)}</p>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label text-muted small">Profissão</label>
-                    <p><span className={getBadgeProfissao(profissionalSelecionado.profissao)}>{profissionalSelecionado.profissao}</span></p>
+                    <label className="form-label text-muted small d-block text-center">Profissão</label>
+                    <p className="text-center"><span className={getBadgeProfissao(profissionalSelecionado.profissao)}>{profissionalSelecionado.profissao}</span></p>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label text-muted small">Status</label>
-                    <p><span className={getBadgeStatus(profissionalSelecionado.status)}>{profissionalSelecionado.status}</span></p>
+                    <label className="form-label text-muted small d-block text-center">Status</label>
+                    <p className="text-center"><span className={getBadgeStatus(profissionalSelecionado.status)}>{profissionalSelecionado.status}</span></p>
                   </div>
                   
-                  <div className="col-md-12 mt-4">
+                  <div className="col-md-12 mt-4 text-center">
                     <h6 className="text-primary mb-3">
                       <i className="bi bi-briefcase-fill me-2"></i>
                       Informações Profissionais
                     </h6>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label text-muted small">Registro Profissional</label>
-                    <p className="fw-bold">{profissionalSelecionado.registro_profissional || '-'}</p>
+                    <label className="form-label text-muted small d-block text-center">Registro Profissional</label>
+                    <p className="fw-bold text-center">{profissionalSelecionado.registro_profissional || '-'}</p>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label text-muted small">Especialidade</label>
-                    <p className="fw-bold">{profissionalSelecionado.especialidade || '-'}</p>
+                    <label className="form-label text-muted small d-block text-center">Especialidade</label>
+                    <p className="fw-bold text-center">{profissionalSelecionado.especialidade || '-'}</p>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label text-muted small">Cargo</label>
-                    <p className="fw-bold">{profissionalSelecionado.cargo || '-'}</p>
+                    <label className="form-label text-muted small d-block text-center">Cargo</label>
+                    <p className="fw-bold text-center">{profissionalSelecionado.cargo || '-'}</p>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label text-muted small">Departamento</label>
-                    <p className="fw-bold">{profissionalSelecionado.departamento || '-'}</p>
+                    <label className="form-label text-muted small d-block text-center">Departamento</label>
+                    <p className="fw-bold text-center">{profissionalSelecionado.departamento || '-'}</p>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label text-muted small">Data de Admissão</label>
-                    <p className="fw-bold">{formatarData(profissionalSelecionado.data_admissao)}</p>
+                    <label className="form-label text-muted small d-block text-center">Data de Admissão</label>
+                    <p className="fw-bold text-center">{formatarData(profissionalSelecionado.data_admissao)}</p>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label text-muted small">Salário</label>
-                    <p className="fw-bold">
+                    <label className="form-label text-muted small d-block text-center">Salário</label>
+                    <p className="fw-bold text-center">
                       {profissionalSelecionado.salario 
                         ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(profissionalSelecionado.salario)
                         : '-'
@@ -669,23 +669,23 @@ function ListagemProfissionais() {
                     </p>
                   </div>
                   
-                  <div className="col-md-12 mt-4">
+                  <div className="col-md-12 mt-4 text-center">
                     <h6 className="text-primary mb-3">
                       <i className="bi bi-telephone-fill me-2"></i>
                       Contato
                     </h6>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label text-muted small">Telefone</label>
-                    <p className="fw-bold">{profissionalSelecionado.telefone || '-'}</p>
+                    <label className="form-label text-muted small d-block text-center">Telefone</label>
+                    <p className="fw-bold text-center">{profissionalSelecionado.telefone || '-'}</p>
                   </div>
                   <div className="col-md-6">
-                    <label className="form-label text-muted small">Email</label>
-                    <p className="fw-bold">{profissionalSelecionado.email || '-'}</p>
+                    <label className="form-label text-muted small d-block text-center">Email</label>
+                    <p className="fw-bold text-center">{profissionalSelecionado.email || '-'}</p>
                   </div>
                 </div>
               </div>
-              <div className="modal-footer">
+              <div className="modal-footer justify-content-center">
                 <button type="button" className="btn btn-secondary" onClick={handleFecharModals}>
                   <i className="bi bi-x-circle me-2"></i>
                   Fechar
