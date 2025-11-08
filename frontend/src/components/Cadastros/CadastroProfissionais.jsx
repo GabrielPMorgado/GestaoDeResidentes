@@ -137,12 +137,12 @@ function CadastroProfissionais() {
       newErrors.profissao = 'Profissão é obrigatória'
     }
 
-    if (!formData.registro_profissional || formData.registro_profissional.trim().length < 3) {
-      newErrors.registro_profissional = 'Registro profissional é obrigatório (CRM, COREN, etc.)'
+    if (formData.registro_profissional && formData.registro_profissional.trim().length > 0 && formData.registro_profissional.trim().length < 3) {
+      newErrors.registro_profissional = 'Registro profissional deve ter pelo menos 3 caracteres'
     }
 
-    if (!formData.especialidade || formData.especialidade.trim().length < 3) {
-      newErrors.especialidade = 'Especialidade é obrigatória'
+    if (formData.especialidade && formData.especialidade.trim().length > 0 && formData.especialidade.trim().length < 3) {
+      newErrors.especialidade = 'Especialidade deve ter pelo menos 3 caracteres'
     }
 
     if (!formData.data_admissao) {
@@ -790,7 +790,7 @@ function CadastroProfissionais() {
                     <div className="col-md-6">
                       <label htmlFor="registro_profissional" className="form-label">
                         <i className="bi bi-award me-1"></i>
-                        Registro Profissional *
+                        Registro Profissional
                       </label>
                       <input
                         type="text"
@@ -809,7 +809,7 @@ function CadastroProfissionais() {
                     <div className="col-md-6">
                       <label htmlFor="especialidade" className="form-label">
                         <i className="bi bi-mortarboard me-1"></i>
-                        Especialidade *
+                        Especialidade
                       </label>
                       <input
                         type="text"

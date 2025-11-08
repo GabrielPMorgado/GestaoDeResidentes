@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { listarProfissionais, atualizarProfissional } from '../../api/api'
+import { listarProfissionais, atualizarProfissional, deletarProfissionalPermanente } from '../../api/api'
 import './ListagemProfissionais.css'
 
 function ProfissionaisInativos() {
@@ -73,6 +73,39 @@ function ProfissionaisInativos() {
     } catch (err) {
       console.error('Erro ao reativar profissional:', err)
       alert('❌ ' + (err.message || 'Erro ao reativar profissional'))
+    }
+  }
+
+  // Deletar profissional permanentemente
+  const handleDeletarPermanente = async (id, nome) => {
+    // Primeira confirmação
+    if (!window.confirm(`⚠️ ATENÇÃO! Tem certeza que deseja DELETAR PERMANENTEMENTE o profissional "${nome}"?\n\nEsta ação NÃO PODE SER DESFEITA e irá remover:\n- Todos os agendamentos\n- Todo o histórico de consultas\n- Todos os dados do profissional\n\nDeseja continuar?`)) {
+      return
+    }
+    
+    // Segunda confirmação - usuário precisa digitar "DELETAR"
+    const confirmacao = window.prompt('Para confirmar, digite: DELETAR')
+    
+    if (confirmacao !== 'DELETAR') {
+      alert('❌ Operação cancelada. Confirmação incorreta.')
+      return
+    }
+    
+    try {
+      console.log(`Tentando deletar profissional ID: ${id}`)
+      const response = await deletarProfissionalPermanente(id)
+      
+      console.log('Resposta da deleção:', response)
+      
+      if (response.success) {
+        alert('✅ Profissional deletado permanentemente do sistema!')
+        carregarProfissionais()
+      } else {
+        throw new Error(response.message || 'Erro ao deletar profissional')
+      }
+    } catch (err) {
+      console.error('Erro ao deletar profissional:', err)
+      alert('❌ ' + (err.message || 'Erro ao deletar profissional permanentemente'))
     }
   }
 
@@ -232,6 +265,14 @@ function ProfissionaisInativos() {
                               >
                                 <i className="bi bi-arrow-clockwise me-1"></i>
                                 Reativar
+                              </button>
+                              <button 
+                                className="btn btn-sm btn-outline-danger"
+                                title="Deletar Permanentemente"
+                                onClick={() => handleDeletarPermanente(profissional.id, profissional.nome_completo)}
+                              >
+                                <i className="bi bi-trash3 me-1"></i>
+                                Deletar
                               </button>
                             </div>
                           </td>

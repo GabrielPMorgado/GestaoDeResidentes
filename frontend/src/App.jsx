@@ -12,8 +12,7 @@ import ResidentesInativos from './components/Listagens/ResidentesInativos'
 import ProfissionaisInativos from './components/Listagens/ProfissionaisInativos'
 import HistoricoConsultasResidente from './components/Listagens/HistoricoConsultasResidente'
 import Relatorios from './components/Relatorios/Relatorios'
-import Gerenciamento from './components/Gerenciamento/Gerenciamento'
-import { residenteService, profissionalService, agendamentoService } from './services'
+  import { residenteService, profissionalService, agendamentoService } from './services'
 
 function App() {
     const [sidebarOpen, setSidebarOpen] = useState(true)
@@ -42,8 +41,19 @@ function App() {
 
         const hoje = new Date().toISOString().split('T')[0]
         
-        // Garantir que agendamentos é um array
-        const listaAgendamentos = Array.isArray(agendamentos) ? agendamentos : (agendamentos?.data || [])
+        // Garantir que agendamentos é um array - verificar múltiplas estruturas possíveis
+        let listaAgendamentos = []
+        
+        if (Array.isArray(agendamentos)) {
+          listaAgendamentos = agendamentos
+        } else if (agendamentos?.data) {
+          if (Array.isArray(agendamentos.data)) {
+            listaAgendamentos = agendamentos.data
+          } else if (agendamentos.data.agendamentos && Array.isArray(agendamentos.data.agendamentos)) {
+            listaAgendamentos = agendamentos.data.agendamentos
+          }
+        }
+        
         const agendamentosHoje = listaAgendamentos.filter(ag => ag.data === hoje)
 
         setStats({
@@ -88,8 +98,6 @@ function App() {
           ) : <ListagemResidentes />
         case 'relatorios':
           return <Relatorios />
-        case 'gerenciamento':
-          return <Gerenciamento />
         case 'dashboard':
         default:
           return (

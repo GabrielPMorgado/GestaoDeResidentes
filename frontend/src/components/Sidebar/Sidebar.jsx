@@ -167,23 +167,6 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
                 {isOpen && <span>Relatórios</span>}
               </button>
             </li>
-            
-            {isOpen && (
-              <li className="nav-item mt-3">
-                <h6 className="sidebar-heading px-3 text-white">GERENCIAMENTO</h6>
-              </li>
-            )}
-            
-            <li className="nav-item">
-              <button 
-                className="nav-link" 
-                onClick={() => handleNavigation('gerenciamento')}
-                title="Gerenciamento do Sistema"
-              >
-                <i className="bi bi-trash3 me-2"></i>
-                {isOpen && <span>Exclusão Permanente</span>}
-              </button>
-            </li>
           </ul>
         </nav>
       </aside>

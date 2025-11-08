@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { listarResidentes, atualizarResidente } from '../../api/api'
+import { listarResidentes, atualizarResidente, deletarResidentePermanente } from '../../api/api'
 import './ListagemResidentes.css'
 
 function ResidentesInativos() {
@@ -73,6 +73,39 @@ function ResidentesInativos() {
     } catch (err) {
       console.error('Erro ao reativar residente:', err)
       alert('❌ ' + (err.message || 'Erro ao reativar residente'))
+    }
+  }
+
+  // Deletar residente permanentemente
+  const handleDeletarPermanente = async (id, nome) => {
+    // Primeira confirmação
+    if (!window.confirm(`⚠️ ATENÇÃO! Tem certeza que deseja DELETAR PERMANENTEMENTE o residente "${nome}"?\n\nEsta ação NÃO PODE SER DESFEITA e irá remover:\n- Todos os agendamentos\n- Todo o histórico de consultas\n- Todos os dados do residente\n\nDeseja continuar?`)) {
+      return
+    }
+    
+    // Segunda confirmação - usuário precisa digitar "DELETAR"
+    const confirmacao = window.prompt('Para confirmar, digite: DELETAR')
+    
+    if (confirmacao !== 'DELETAR') {
+      alert('❌ Operação cancelada. Confirmação incorreta.')
+      return
+    }
+    
+    try {
+      console.log(`Tentando deletar residente ID: ${id}`)
+      const response = await deletarResidentePermanente(id)
+      
+      console.log('Resposta da deleção:', response)
+      
+      if (response.success) {
+        alert('✅ Residente deletado permanentemente do sistema!')
+        carregarResidentes()
+      } else {
+        throw new Error(response.message || 'Erro ao deletar residente')
+      }
+    } catch (err) {
+      console.error('Erro ao deletar residente:', err)
+      alert('❌ ' + (err.message || 'Erro ao deletar residente permanentemente'))
     }
   }
 
@@ -243,6 +276,14 @@ function ResidentesInativos() {
                               >
                                 <i className="bi bi-arrow-clockwise me-1"></i>
                                 Reativar
+                              </button>
+                              <button 
+                                className="btn btn-sm btn-outline-danger"
+                                title="Deletar Permanentemente"
+                                onClick={() => handleDeletarPermanente(residente.id, residente.nome_completo)}
+                              >
+                                <i className="bi bi-trash3 me-1"></i>
+                                Deletar
                               </button>
                             </div>
                           </td>

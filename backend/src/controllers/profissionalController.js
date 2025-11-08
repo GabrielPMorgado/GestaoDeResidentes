@@ -1,5 +1,7 @@
 const Profissional = require('../models/Profissional');
 const Residente = require('../models/Residente');
+const Agendamento = require('../models/Agendamento');
+const HistoricoConsulta = require('../models/HistoricoConsulta');
 const { Op } = require('sequelize');
 
 // Criar novo profissional
@@ -332,7 +334,11 @@ exports.deletar = async (req, res) => {
 exports.deletarPermanente = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log('=== DELETAR PROFISSIONAL PERMANENTE ===');
+    console.log('ID recebido:', id);
+    
     const profissional = await Profissional.findByPk(id);
+    console.log('Profissional encontrado:', profissional ? 'SIM' : 'NÃO');
     
     if (!profissional) {
       return res.status(404).json({
@@ -342,31 +348,38 @@ exports.deletarPermanente = async (req, res) => {
     }
     
     // Primeiro, deletar todos os históricos de consulta relacionados
-    await HistoricoConsulta.destroy({
+    console.log('Deletando históricos de consulta do profissional...');
+    const historicoDeletados = await HistoricoConsulta.destroy({
       where: { profissional_id: id }
     });
+    console.log('Históricos deletados:', historicoDeletados);
     
     // Depois, deletar todos os agendamentos relacionados
-    await Agendamento.destroy({
+    console.log('Deletando agendamentos do profissional...');
+    const agendamentosDeletados = await Agendamento.destroy({
       where: { profissional_id: id }
     });
+    console.log('Agendamentos deletados:', agendamentosDeletados);
     
     // Por fim, deletar o profissional permanentemente do banco de dados
+    console.log('Deletando profissional...');
     await profissional.destroy();
+    console.log('Profissional deletado com sucesso!');
     
     res.json({
       success: true,
       message: 'Profissional e todos os registros relacionados foram deletados permanentemente do sistema!'
     });
   } catch (error) {
-    console.error('Erro ao deletar profissional permanentemente:', error);
+    console.error('ERRO COMPLETO ao deletar profissional permanentemente:', error);
+    console.error('Stack trace:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Erro ao deletar profissional permanentemente',
       error: error.message
     });
   }
-};
+};;
 
 // Estatísticas
 exports.estatisticas = async (req, res) => {

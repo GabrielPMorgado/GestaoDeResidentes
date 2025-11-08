@@ -1,5 +1,7 @@
 const Residente = require('../models/Residente');
 const Profissional = require('../models/Profissional');
+const Agendamento = require('../models/Agendamento');
+const HistoricoConsulta = require('../models/HistoricoConsulta');
 const { Op } = require('sequelize');
 
 // Criar novo residente
@@ -323,7 +325,11 @@ exports.deletar = async (req, res) => {
 exports.deletarPermanente = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log('=== DELETAR PERMANENTE ===');
+    console.log('ID recebido:', id);
+    
     const residente = await Residente.findByPk(id);
+    console.log('Residente encontrado:', residente ? 'SIM' : 'NÃO');
     
     if (!residente) {
       return res.status(404).json({
@@ -333,17 +339,23 @@ exports.deletarPermanente = async (req, res) => {
     }
     
     // Primeiro, deletar todos os históricos de consulta relacionados
-    await HistoricoConsulta.destroy({
+    console.log('Deletando históricos de consulta...');
+    const historicoDeletados = await HistoricoConsulta.destroy({
       where: { residente_id: id }
     });
+    console.log('Históricos deletados:', historicoDeletados);
     
     // Depois, deletar todos os agendamentos relacionados
-    await Agendamento.destroy({
+    console.log('Deletando agendamentos...');
+    const agendamentosDeletados = await Agendamento.destroy({
       where: { residente_id: id }
     });
+    console.log('Agendamentos deletados:', agendamentosDeletados);
     
     // Por fim, deletar o residente permanentemente do banco de dados
+    console.log('Deletando residente...');
     await residente.destroy();
+    console.log('Residente deletado com sucesso!');
     
     res.json({
       success: true,
