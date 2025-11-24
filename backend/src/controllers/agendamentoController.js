@@ -1,6 +1,7 @@
 const Agendamento = require('../models/Agendamento');
 const Residente = require('../models/Residente');
 const Profissional = require('../models/Profissional');
+const HistoricoConsulta = require('../models/HistoricoConsulta');
 const { Op } = require('sequelize');
 
 // Criar novo agendamento
@@ -250,7 +251,30 @@ exports.atualizar = async (req, res) => {
       });
     }
     
+    // Verificar se o status está mudando para 'concluido'
+    const statusAnterior = agendamento.status;
+    const novoStatus = req.body.status;
+    
     await agendamento.update(req.body);
+    
+    // Se o status mudou para 'concluido', criar registro no histórico
+    if (novoStatus === 'concluido' && statusAnterior !== 'concluido') {
+      try {
+        await HistoricoConsulta.create({
+          residente_id: agendamento.residente_id,
+          profissional_id: agendamento.profissional_id,
+          agendamento_id: agendamento.id,
+          data_consulta: agendamento.data_agendamento,
+          tipo_consulta: agendamento.tipo_atendimento,
+          observacoes: agendamento.observacoes || 'Consulta realizada conforme agendamento',
+          status: 'realizada'
+        });
+        console.log('✅ Registro criado no histórico de consultas para agendamento:', id);
+      } catch (historicoError) {
+        console.error('⚠️ Erro ao criar histórico de consulta:', historicoError);
+        // Não falhar a atualização do agendamento se houver erro no histórico
+      }
+    }
     
     res.json({
       success: true,

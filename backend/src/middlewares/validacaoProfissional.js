@@ -1,66 +1,26 @@
-// Validação de CPF
+// Validação de CPF simplificada - apenas verifica se tem 11 dígitos
 const validarCPF = (cpf) => {
   cpf = cpf.replace(/[^\d]/g, '');
-  
-  if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) {
-    return false;
-  }
-  
-  let soma = 0;
-  let resto;
-  
-  for (let i = 1; i <= 9; i++) {
-    soma += parseInt(cpf.substring(i - 1, i)) * (11 - i);
-  }
-  
-  resto = (soma * 10) % 11;
-  if (resto === 10 || resto === 11) resto = 0;
-  if (resto !== parseInt(cpf.substring(9, 10))) return false;
-  
-  soma = 0;
-  for (let i = 1; i <= 10; i++) {
-    soma += parseInt(cpf.substring(i - 1, i)) * (12 - i);
-  }
-  
-  resto = (soma * 10) % 11;
-  if (resto === 10 || resto === 11) resto = 0;
-  if (resto !== parseInt(cpf.substring(10, 11))) return false;
-  
-  return true;
+  return cpf.length === 11;
 };
 
 // Middleware de validação para criar profissional
 exports.validarCriarProfissional = (req, res, next) => {
   const { 
     nome_completo, 
-    data_nascimento, 
     cpf, 
-    sexo, 
-    celular,
-    email,
-    profissao,
-    data_admissao,
-    cargo,
-    turno
+    profissao
   } = req.body;
   
-  // Campos obrigatórios
-  if (!nome_completo || !data_nascimento || !cpf || !sexo || !celular || !email || 
-      !profissao || !data_admissao || !cargo || !turno) {
+  // Apenas 3 campos obrigatórios: nome, cpf e profissao
+  if (!nome_completo || !cpf || !profissao) {
     return res.status(400).json({
       success: false,
-      message: 'Campos obrigatórios não preenchidos',
+      message: 'Preencha os campos obrigatórios: Nome Completo, CPF e Profissão',
       campos_obrigatorios: [
         'nome_completo',
-        'data_nascimento',
         'cpf',
-        'sexo',
-        'celular',
-        'email',
-        'profissao',
-        'data_admissao',
-        'cargo',
-        'turno'
+        'profissao'
       ]
     });
   }
@@ -69,53 +29,7 @@ exports.validarCriarProfissional = (req, res, next) => {
   if (!validarCPF(cpf)) {
     return res.status(400).json({
       success: false,
-      message: 'CPF inválido'
-    });
-  }
-  
-  // Validar data de nascimento
-  const dataNascimento = new Date(data_nascimento);
-  const hoje = new Date();
-  
-  if (dataNascimento > hoje) {
-    return res.status(400).json({
-      success: false,
-      message: 'Data de nascimento não pode ser futura'
-    });
-  }
-  
-  // Validar idade mínima (18 anos) para profissional
-  const idade = hoje.getFullYear() - dataNascimento.getFullYear();
-  if (idade < 18) {
-    return res.status(400).json({
-      success: false,
-      message: 'Profissional deve ter pelo menos 18 anos'
-    });
-  }
-  
-  // Validar sexo
-  if (!['masculino', 'feminino', 'outro'].includes(sexo)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Sexo inválido. Valores permitidos: masculino, feminino, outro'
-    });
-  }
-  
-  // Validar email
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) {
-    return res.status(400).json({
-      success: false,
-      message: 'E-mail inválido'
-    });
-  }
-  
-  // Validar data de admissão
-  const dataAdmissao = new Date(data_admissao);
-  if (dataAdmissao > hoje) {
-    return res.status(400).json({
-      success: false,
-      message: 'Data de admissão não pode ser futura'
+      message: 'CPF deve ter 11 dígitos'
     });
   }
   

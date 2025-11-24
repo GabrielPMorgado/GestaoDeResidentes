@@ -3,6 +3,13 @@ import './CadastroAgendamento.css'
 import { criarAgendamento, listarResidentes, listarProfissionais } from '../../api/api'
 
 function CadastroAgendamento() {
+  // Função auxiliar para formatar CPF
+  const formatarCPF = (cpf) => {
+    if (!cpf) return ''
+    const cpfLimpo = cpf.replace(/\D/g, '')
+    return cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
+  }
+
   const [formData, setFormData] = useState({
     residente_id: '',
     profissional_id: '',
@@ -87,6 +94,7 @@ function CadastroAgendamento() {
       const hoje = new Date()
       hoje.setHours(0, 0, 0, 0)
       const dataAgendamento = new Date(formData.data_agendamento + 'T00:00:00')
+      dataAgendamento.setHours(0, 0, 0, 0)
       
       if (dataAgendamento < hoje) {
         newErrors.data_agendamento = 'A data do agendamento não pode ser no passado'
@@ -191,6 +199,40 @@ function CadastroAgendamento() {
     )
   }
 
+  // Verificar se há residentes e profissionais cadastrados
+  if (residentes.length === 0 || profissionais.length === 0) {
+    return (
+      <div className="cadastro-agendamento">
+        <div className="container-fluid">
+          <div className="row">
+            <div className="col-12">
+              <div className="page-header">
+                <h2>
+                  <i className="bi bi-calendar-plus me-2"></i>
+                  Novo Agendamento
+                </h2>
+              </div>
+              <div className="alert alert-warning d-flex align-items-center" role="alert">
+                <i className="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+                <div>
+                  <strong>Atenção!</strong>
+                  <p className="mb-0 mt-1">
+                    {residentes.length === 0 && profissionais.length === 0 && 
+                      'Não há residentes nem profissionais ativos cadastrados. Por favor, cadastre residentes e profissionais antes de criar agendamentos.'}
+                    {residentes.length === 0 && profissionais.length > 0 && 
+                      'Não há residentes ativos cadastrados. Por favor, cadastre residentes antes de criar agendamentos.'}
+                    {residentes.length > 0 && profissionais.length === 0 && 
+                      'Não há profissionais ativos cadastrados. Por favor, cadastre profissionais antes de criar agendamentos.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="cadastro-agendamento">
       <div className="container-fluid">
@@ -230,7 +272,7 @@ function CadastroAgendamento() {
                         <option value="">Selecione o residente...</option>
                         {residentes.map(residente => (
                           <option key={residente.id} value={residente.id}>
-                            {residente.nome_completo} - CPF: {residente.cpf}
+                            {residente.nome_completo} - CPF: {formatarCPF(residente.cpf)}
                           </option>
                         ))}
                       </select>

@@ -116,6 +116,32 @@ function ListagemResidentes({ onVerHistorico }) {
     setShowEditarModal(true)
   }
 
+  // Atualizar campo do residente selecionado com formatação
+  const handleCampoChange = (campo, valor) => {
+    let valorFormatado = valor
+    
+    // Formatar CPF
+    if (campo === 'cpf') {
+      valorFormatado = valor.replace(/\D/g, '')
+      if (valorFormatado.length <= 11) {
+        valorFormatado = valorFormatado.replace(/(\d{3})(\d)/, '$1.$2')
+        valorFormatado = valorFormatado.replace(/(\d{3})(\d)/, '$1.$2')
+        valorFormatado = valorFormatado.replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+      }
+    }
+    
+    // Formatar telefone
+    if (campo === 'telefone' || campo === 'telefone_responsavel') {
+      valorFormatado = valor.replace(/\D/g, '')
+      if (valorFormatado.length <= 11) {
+        valorFormatado = valorFormatado.replace(/^(\d{2})(\d)/g, '($1) $2')
+        valorFormatado = valorFormatado.replace(/(\d)(\d{4})$/, '$1-$2')
+      }
+    }
+    
+    setResidenteSelecionado({...residenteSelecionado, [campo]: valorFormatado})
+  }
+
   // Salvar edição
   const handleSalvarEdicao = async () => {
     try {
@@ -207,7 +233,7 @@ function ListagemResidentes({ onVerHistorico }) {
   useEffect(() => {
     carregarResidentes()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtros.pagina, filtros.limite])
+  }, [filtros])
 
   useEffect(() => {
     carregarEstatisticas()
@@ -688,7 +714,8 @@ function ListagemResidentes({ onVerHistorico }) {
                         type="text"
                         className="form-control"
                         value={residenteSelecionado.cpf}
-                        onChange={(e) => setResidenteSelecionado({...residenteSelecionado, cpf: e.target.value})}
+                        onChange={(e) => handleCampoChange('cpf', e.target.value)}
+                        maxLength="14"
                       />
                     </div>
                     <div className="col-md-4">
@@ -717,9 +744,9 @@ function ListagemResidentes({ onVerHistorico }) {
                         onChange={(e) => setResidenteSelecionado({...residenteSelecionado, sexo: e.target.value})}
                       >
                         <option value="">Selecione...</option>
-                        <option value="Masculino">Masculino</option>
-                        <option value="Feminino">Feminino</option>
-                        <option value="Outro">Outro</option>
+                        <option value="masculino">Masculino</option>
+                        <option value="feminino">Feminino</option>
+                        <option value="outro">Outro</option>
                       </select>
                     </div>
                     <div className="col-md-6">
@@ -728,7 +755,9 @@ function ListagemResidentes({ onVerHistorico }) {
                         type="text"
                         className="form-control"
                         value={residenteSelecionado.telefone || ''}
-                        onChange={(e) => setResidenteSelecionado({...residenteSelecionado, telefone: e.target.value})}
+                        onChange={(e) => handleCampoChange('telefone', e.target.value)}
+                        placeholder="(00) 00000-0000"
+                        maxLength="15"
                       />
                     </div>
                     <div className="col-md-6">
@@ -786,7 +815,8 @@ function ListagemResidentes({ onVerHistorico }) {
                         className="form-control"
                         placeholder="(00) 00000-0000"
                         value={residenteSelecionado.telefone_responsavel || ''}
-                        onChange={(e) => setResidenteSelecionado({...residenteSelecionado, telefone_responsavel: e.target.value})}
+                        onChange={(e) => handleCampoChange('telefone_responsavel', e.target.value)}
+                        maxLength="15"
                       />
                     </div>
                     <div className="col-md-6">

@@ -236,7 +236,7 @@ function ListagemProfissionais() {
   useEffect(() => {
     carregarProfissionais()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtros.pagina, filtros.limite])
+  }, [filtros])
 
   useEffect(() => {
     carregarEstatisticas()
@@ -384,7 +384,7 @@ function ListagemProfissionais() {
                 <label className="form-label">Buscar</label>
                 <input
                   type="text"
-                  className="form-select"
+                  className="form-control"
                   placeholder="Nome, CPF ou cargo..."
                   value={filtros.busca}
                   onChange={(e) => setFiltros(prev => ({ ...prev, busca: e.target.value }))}

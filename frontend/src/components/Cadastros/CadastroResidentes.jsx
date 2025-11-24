@@ -31,42 +31,38 @@ function CadastroResidentes() {
   const [error, setError] = useState(null)
   const [errors, setErrors] = useState({})
 
+  // Validação do Step 1 - Dados Pessoais
   const validateStep1 = () => {
     const newErrors = {}
 
-    if (!formData.nome_completo.trim()) {
-      newErrors.nome_completo = 'Nome completo é obrigatório'
-    } else if (formData.nome_completo.trim().length < 3) {
-      newErrors.nome_completo = 'Nome deve ter pelo menos 3 caracteres'
+    if (!formData.nome_completo || formData.nome_completo.trim().length < 3) {
+      newErrors.nome_completo = 'Nome completo deve ter pelo menos 3 caracteres'
     }
 
-    if (!formData.cpf.trim()) {
+    if (!formData.cpf) {
       newErrors.cpf = 'CPF é obrigatório'
-    } else if (!/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(formData.cpf) && !/^\d{11}$/.test(formData.cpf)) {
-      newErrors.cpf = 'CPF inválido (use formato: 000.000.000-00 ou 11 dígitos)'
+    }
+    // Validação de CPF simplificada - apenas verifica se tem 11 dígitos
+    else if (formData.cpf.replace(/\D/g, '').length !== 11) {
+      newErrors.cpf = 'CPF deve ter 11 dígitos'
     }
 
     if (!formData.data_nascimento) {
       newErrors.data_nascimento = 'Data de nascimento é obrigatória'
-    } else {
-      const birthDate = new Date(formData.data_nascimento)
-      const today = new Date()
-      const age = today.getFullYear() - birthDate.getFullYear()
-      if (age < 0 || age > 150) {
-        newErrors.data_nascimento = 'Data de nascimento inválida'
-      }
     }
 
     if (!formData.sexo) {
       newErrors.sexo = 'Sexo é obrigatório'
     }
 
-    if (formData.telefone && !/^\(\d{2}\)\s?\d{4,5}-\d{4}$/.test(formData.telefone) && !/^\d{10,11}$/.test(formData.telefone)) {
-      newErrors.telefone = 'Telefone inválido (use formato: (00) 00000-0000)'
+    if (!formData.telefone) {
+      newErrors.telefone = 'Telefone é obrigatório'
     }
 
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'E-mail inválido'
+    if (!formData.email) {
+      newErrors.email = 'Email é obrigatório'
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Email inválido'
     }
 
     return newErrors
@@ -107,12 +103,18 @@ function CadastroResidentes() {
   const validateStep3 = () => {
     const newErrors = {}
 
-    if (formData.email_responsavel && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email_responsavel)) {
-      newErrors.email_responsavel = 'E-mail do responsável inválido'
+    if (!formData.nome_responsavel || formData.nome_responsavel.trim().length < 3) {
+      newErrors.nome_responsavel = 'Nome do responsável é obrigatório'
     }
 
-    if (formData.telefone_responsavel && !/^\(\d{2}\)\s?\d{4,5}-\d{4}$/.test(formData.telefone_responsavel) && !/^\d{10,11}$/.test(formData.telefone_responsavel)) {
+    if (!formData.telefone_responsavel) {
+      newErrors.telefone_responsavel = 'Telefone do responsável é obrigatório'
+    } else if (!/^\(\d{2}\)\s?\d{4,5}-\d{4}$/.test(formData.telefone_responsavel) && !/^\d{10,11}$/.test(formData.telefone_responsavel)) {
       newErrors.telefone_responsavel = 'Telefone do responsável inválido'
+    }
+
+    if (formData.email_responsavel && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email_responsavel)) {
+      newErrors.email_responsavel = 'E-mail do responsável inválido'
     }
 
     return newErrors
@@ -120,10 +122,41 @@ function CadastroResidentes() {
 
   const handleChange = (e) => {
     const { name, value } = e.target
+    
+    let formattedValue = value
+    
+    // Formatar CPF automaticamente
+    if (name === 'cpf') {
+      formattedValue = value.replace(/\D/g, '') // Remove tudo que não é dígito
+      if (formattedValue.length <= 11) {
+        formattedValue = formattedValue.replace(/(\d{3})(\d)/, '$1.$2')
+        formattedValue = formattedValue.replace(/(\d{3})(\d)/, '$1.$2')
+        formattedValue = formattedValue.replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+      }
+    }
+    
+    // Formatar telefone automaticamente
+    if (name === 'telefone' || name === 'telefone_responsavel') {
+      formattedValue = value.replace(/\D/g, '')
+      if (formattedValue.length <= 11) {
+        formattedValue = formattedValue.replace(/^(\d{2})(\d)/g, '($1) $2')
+        formattedValue = formattedValue.replace(/(\d)(\d{4})$/, '$1-$2')
+      }
+    }
+    
+    // Formatar CEP automaticamente
+    if (name === 'cep') {
+      formattedValue = value.replace(/\D/g, '')
+      if (formattedValue.length <= 8) {
+        formattedValue = formattedValue.replace(/^(\d{5})(\d)/, '$1-$2')
+      }
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: formattedValue
     }))
+    
     // Limpar erro do campo ao digitar
     if (errors[name]) {
       setErrors(prev => ({
@@ -172,8 +205,10 @@ function CadastroResidentes() {
       setCurrentStep(1)
     } catch (err) {
       console.error('Erro ao cadastrar:', err)
-      setError(err.message || 'Erro ao cadastrar residente. Tente novamente.')
-      alert('❌ ' + (err.message || 'Erro ao cadastrar residente'))
+      console.error('Detalhes do erro:', err.response?.data || err)
+      const mensagemErro = err.response?.data?.message || err.message || 'Erro ao cadastrar residente. Tente novamente.'
+      setError(mensagemErro)
+      alert('❌ ' + mensagemErro)
     } finally {
       setLoading(false)
     }
@@ -356,7 +391,7 @@ function CadastroResidentes() {
                         value={formData.cpf}
                         onChange={handleChange}
                         placeholder="000.000.000-00"
-                        required
+                        maxLength="14"
                       />
                       {errors.cpf && (
                         <div className="invalid-feedback">{errors.cpf}</div>
@@ -426,7 +461,7 @@ function CadastroResidentes() {
                     <div className="col-12 col-sm-6 col-md-4">
                       <label htmlFor="telefone" className="form-label">
                         <i className="bi bi-telephone me-1"></i>
-                        Telefone
+                        Telefone *
                       </label>
                       <input
                         type="tel"
@@ -436,6 +471,7 @@ function CadastroResidentes() {
                         value={formData.telefone}
                         onChange={handleChange}
                         placeholder="(00) 00000-0000"
+                        maxLength="15"
                       />
                       {errors.telefone && (
                         <div className="invalid-feedback">{errors.telefone}</div>
@@ -663,14 +699,16 @@ function CadastroResidentes() {
                       </label>
                       <input
                         type="text"
-                        className="form-control form-control-lg"
+                        className={`form-control form-control-lg ${errors.nome_responsavel ? 'is-invalid' : ''}`}
                         id="nome_responsavel"
                         name="nome_responsavel"
                         value={formData.nome_responsavel}
                         onChange={handleChange}
                         placeholder="Nome completo do responsável"
-                        required
                       />
+                      {errors.nome_responsavel && (
+                        <div className="invalid-feedback">{errors.nome_responsavel}</div>
+                      )}
                     </div>
 
                     <div className="col-12 col-sm-6 col-md-3">
@@ -692,7 +730,7 @@ function CadastroResidentes() {
                     <div className="col-12 col-sm-6 col-md-3">
                       <label htmlFor="telefone_responsavel" className="form-label">
                         <i className="bi bi-phone-vibrate me-1"></i>
-                        Telefone
+                        Telefone *
                       </label>
                       <input
                         type="tel"
@@ -702,6 +740,7 @@ function CadastroResidentes() {
                         value={formData.telefone_responsavel}
                         onChange={handleChange}
                         placeholder="(00) 00000-0000"
+                        maxLength="15"
                       />
                       {errors.telefone_responsavel && (
                         <div className="invalid-feedback">{errors.telefone_responsavel}</div>

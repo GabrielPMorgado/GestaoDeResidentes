@@ -289,3 +289,21 @@
   font-style: italic;
 }
 
+/* Campos obrigatórios - asterisco vermelho */
+.cadastro-profissionais .form-label:has(+ input:required)::after,
+.cadastro-profissionais .form-label:has(+ select:required)::after {
+  content: ' *';
+  color: #dc3545;
+  font-weight: bold;
+}
+
+/* Indicação visual de campo obrigatório */
+.cadastro-profissionais input:required,
+.cadastro-profissionais select:required {
+  border-left: 3px solid #ffc107;
+}
+
+.cadastro-profissionais input:required:valid,
+.cadastro-profissionais select:required:valid {
+  border-left: 3px solid #28a745;
+}

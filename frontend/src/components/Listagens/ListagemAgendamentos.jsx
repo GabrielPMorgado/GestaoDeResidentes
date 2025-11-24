@@ -169,6 +169,12 @@ function ListagemAgendamentos() {
   }
 
   const handleSalvarEdicao = async () => {
+    // Validar hora_fim > hora_inicio
+    if (editarModal.hora_fim <= editarModal.hora_inicio) {
+      alert('❌ A hora de término deve ser posterior à hora de início')
+      return
+    }
+    
     try {
       const dados = {
         data_agendamento: editarModal.data_agendamento,
@@ -192,7 +198,7 @@ function ListagemAgendamentos() {
     if (!window.confirm('Deseja iniciar este atendimento?')) return
 
     try {
-      const response = await atualizarAgendamento(id, { status: 'em_andamento' })
+      const response = await atualizarAgendamento(id, { status: 'em_atendimento' })
       
       if (response.success) {
         alert('✅ Atendimento iniciado!')
@@ -228,36 +234,48 @@ function ListagemAgendamentos() {
     const badges = {
       agendado: 'bg-primary',
       confirmado: 'bg-success',
+      em_atendimento: 'bg-warning text-dark',
       em_andamento: 'bg-warning text-dark',
       concluido: 'bg-secondary',
-      cancelado: 'bg-danger'
+      cancelado: 'bg-danger',
+      falta: 'bg-danger'
     }
     const labels = {
       agendado: 'Agendado',
       confirmado: 'Confirmado',
+      em_atendimento: 'Em Atendimento',
       em_andamento: 'Em Andamento',
       concluido: 'Concluído',
-      cancelado: 'Cancelado'
+      cancelado: 'Cancelado',
+      falta: 'Falta'
     }
-    return <span className={`badge ${badges[status]}`}>{labels[status]}</span>
+    return <span className={`badge ${badges[status] || 'bg-secondary'}`}>{labels[status] || status}</span>
   }
 
   const getTipoAtendimentoBadge = (tipo) => {
     const badges = {
+      consulta_medica: 'bg-info',
       consulta: 'bg-info',
       fisioterapia: 'bg-success',
       psicologia: 'bg-warning text-dark',
       nutricao: 'bg-danger',
+      enfermagem: 'bg-primary',
+      terapia_ocupacional: 'bg-info',
+      assistencia_social: 'bg-secondary',
       outro: 'bg-secondary'
     }
     const labels = {
+      consulta_medica: 'Consulta Médica',
       consulta: 'Consulta',
       fisioterapia: 'Fisioterapia',
       psicologia: 'Psicologia',
       nutricao: 'Nutrição',
+      enfermagem: 'Enfermagem',
+      terapia_ocupacional: 'Terapia Ocupacional',
+      assistencia_social: 'Assistência Social',
       outro: 'Outro'
     }
-    return <span className={`badge ${badges[tipo]}`}>{labels[tipo]}</span>
+    return <span className={`badge ${badges[tipo] || 'bg-secondary'}`}>{labels[tipo] || tipo}</span>
   }
 
   const formatarData = (data) => {
@@ -357,9 +375,11 @@ function ListagemAgendamentos() {
                   <option value="">Todos</option>
                   <option value="agendado">Agendado</option>
                   <option value="confirmado">Confirmado</option>
+                  <option value="em_atendimento">Em Atendimento</option>
                   <option value="em_andamento">Em Andamento</option>
                   <option value="concluido">Concluído</option>
                   <option value="cancelado">Cancelado</option>
+                  <option value="falta">Falta</option>
                 </select>
               </div>
               <div className="col-md-2">
@@ -371,10 +391,13 @@ function ListagemAgendamentos() {
                   onChange={handleFiltroChange}
                 >
                   <option value="">Todos</option>
-                  <option value="consulta">Consulta</option>
+                  <option value="consulta_medica">Consulta Médica</option>
                   <option value="fisioterapia">Fisioterapia</option>
                   <option value="psicologia">Psicologia</option>
                   <option value="nutricao">Nutrição</option>
+                  <option value="enfermagem">Enfermagem</option>
+                  <option value="terapia_ocupacional">Terapia Ocupacional</option>
+                  <option value="assistencia_social">Assistência Social</option>
                   <option value="outro">Outro</option>
                 </select>
               </div>
@@ -506,7 +529,7 @@ function ListagemAgendamentos() {
                               </button>
                             )}
                             
-                            {agendamento.status === 'em_andamento' && (
+                            {agendamento.status === 'em_atendimento' && (
                               <button
                                 className="btn btn-outline-success"
                                 onClick={() => handleConcluirAtendimento(agendamento.id)}

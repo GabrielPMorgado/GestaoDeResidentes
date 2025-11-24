@@ -10,8 +10,6 @@ function CadastroProfissionais() {
     rg: '',
     data_nascimento: '',
     sexo: '',
-    estado_civil: '',
-    telefone: '',
     celular: '',
     email: '',
     
@@ -34,16 +32,6 @@ function CadastroProfissionais() {
     turno: '',
     salario: '',
     
-    // Contato de Emergência
-    nome_emergencia: '',
-    parentesco_emergencia: '',
-    telefone_emergencia: '',
-    
-    // Documentação
-    titulo_eleitor: '',
-    numero_pis: '',
-    carteira_trabalho: '',
-    
     observacoes: ''
   })
 
@@ -52,84 +40,30 @@ function CadastroProfissionais() {
   const [error, setError] = useState(null)
   const [errors, setErrors] = useState({})
 
-  // Validação do Step 1 - Dados Pessoais
+  // Validação do Step 1 - Dados Pessoais (simplificada)
   const validateStep1 = () => {
     const newErrors = {}
 
     if (!formData.nome_completo || formData.nome_completo.trim().length < 3) {
-      newErrors.nome_completo = 'Nome completo deve ter pelo menos 3 caracteres'
+      newErrors.nome_completo = 'Nome completo é obrigatório (mínimo 3 caracteres)'
     }
 
     if (!formData.cpf) {
       newErrors.cpf = 'CPF é obrigatório'
-    } else if (!/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(formData.cpf) && !/^\d{11}$/.test(formData.cpf)) {
-      newErrors.cpf = 'CPF inválido. Use formato: 000.000.000-00'
     }
-
-    if (!formData.data_nascimento) {
-      newErrors.data_nascimento = 'Data de nascimento é obrigatória'
-    } else {
-      const idade = new Date().getFullYear() - new Date(formData.data_nascimento).getFullYear()
-      if (idade < 18 || idade > 100) {
-        newErrors.data_nascimento = 'Profissional deve ter entre 18 e 100 anos'
-      }
-    }
-
-    if (!formData.sexo) {
-      newErrors.sexo = 'Sexo é obrigatório'
-    }
-
-    if (formData.telefone && !/^\(\d{2}\)\s?\d{4,5}-\d{4}$/.test(formData.telefone) && !/^\d{10,11}$/.test(formData.telefone)) {
-      newErrors.telefone = 'Telefone inválido. Use formato: (00) 0000-0000'
-    }
-
-    if (formData.celular && !/^\(\d{2}\)\s?\d{4,5}-\d{4}$/.test(formData.celular) && !/^\d{10,11}$/.test(formData.celular)) {
-      newErrors.celular = 'Celular inválido. Use formato: (00) 00000-0000'
-    }
-
-    if (!formData.email) {
-      newErrors.email = 'Email é obrigatório'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Email inválido'
+    else if (formData.cpf.replace(/\D/g, '').length !== 11) {
+      newErrors.cpf = 'CPF deve ter 11 dígitos'
     }
 
     return newErrors
   }
 
-  // Validação do Step 2 - Endereço
+  // Validação do Step 2 - Endereço (opcional - sem validações obrigatórias)
   const validateStep2 = () => {
-    const newErrors = {}
-
-    if (!formData.cep) {
-      newErrors.cep = 'CEP é obrigatório'
-    } else if (!/^\d{5}-?\d{3}$/.test(formData.cep)) {
-      newErrors.cep = 'CEP inválido. Use formato: 00000-000'
-    }
-
-    if (!formData.logradouro || formData.logradouro.trim().length < 3) {
-      newErrors.logradouro = 'Logradouro é obrigatório'
-    }
-
-    if (!formData.numero) {
-      newErrors.numero = 'Número é obrigatório'
-    }
-
-    if (!formData.bairro || formData.bairro.trim().length < 2) {
-      newErrors.bairro = 'Bairro é obrigatório'
-    }
-
-    if (!formData.cidade || formData.cidade.trim().length < 2) {
-      newErrors.cidade = 'Cidade é obrigatória'
-    }
-
-    if (!formData.estado) {
-      newErrors.estado = 'Estado é obrigatório'
-    }
-
-    return newErrors
+    return {}
   }
 
-  // Validação do Step 3 - Dados Profissionais
+  // Validação do Step 3 - Dados Profissionais (apenas profissao obrigatória)
   const validateStep3 = () => {
     const newErrors = {}
 
@@ -137,52 +71,46 @@ function CadastroProfissionais() {
       newErrors.profissao = 'Profissão é obrigatória'
     }
 
-    if (formData.registro_profissional && formData.registro_profissional.trim().length > 0 && formData.registro_profissional.trim().length < 3) {
-      newErrors.registro_profissional = 'Registro profissional deve ter pelo menos 3 caracteres'
-    }
-
-    if (formData.especialidade && formData.especialidade.trim().length > 0 && formData.especialidade.trim().length < 3) {
-      newErrors.especialidade = 'Especialidade deve ter pelo menos 3 caracteres'
-    }
-
-    if (!formData.data_admissao) {
-      newErrors.data_admissao = 'Data de admissão é obrigatória'
-    }
-
-    if (!formData.cargo || formData.cargo.trim().length < 3) {
-      newErrors.cargo = 'Cargo é obrigatório'
-    }
-
-    if (!formData.turno) {
-      newErrors.turno = 'Turno é obrigatório'
-    }
-
-    return newErrors
-  }
-
-  // Validação do Step 4 - Contato de Emergência e Documentos
-  const validateStep4 = () => {
-    const newErrors = {}
-
-    if (!formData.nome_emergencia || formData.nome_emergencia.trim().length < 3) {
-      newErrors.nome_emergencia = 'Nome do contato de emergência é obrigatório'
-    }
-
-    if (!formData.telefone_emergencia) {
-      newErrors.telefone_emergencia = 'Telefone de emergência é obrigatório'
-    } else if (!/^\(\d{2}\)\s?\d{4,5}-\d{4}$/.test(formData.telefone_emergencia) && !/^\d{10,11}$/.test(formData.telefone_emergencia)) {
-      newErrors.telefone_emergencia = 'Telefone inválido. Use formato: (00) 00000-0000'
-    }
-
     return newErrors
   }
 
   const handleChange = (e) => {
     const { name, value } = e.target
+    
+    let formattedValue = value
+    
+    // Formatar CPF automaticamente
+    if (name === 'cpf') {
+      formattedValue = value.replace(/\D/g, '') // Remove tudo que não é dígito
+      if (formattedValue.length <= 11) {
+        formattedValue = formattedValue.replace(/(\d{3})(\d)/, '$1.$2')
+        formattedValue = formattedValue.replace(/(\d{3})(\d)/, '$1.$2')
+        formattedValue = formattedValue.replace(/(\d{3})(\d{1,2})$/, '$1-$2')
+      }
+    }
+    
+    // Formatar celular automaticamente
+    if (name === 'celular') {
+      formattedValue = value.replace(/\D/g, '')
+      if (formattedValue.length <= 11) {
+        formattedValue = formattedValue.replace(/^(\d{2})(\d)/g, '($1) $2')
+        formattedValue = formattedValue.replace(/(\d)(\d{4})$/, '$1-$2')
+      }
+    }
+    
+    // Formatar CEP automaticamente
+    if (name === 'cep') {
+      formattedValue = value.replace(/\D/g, '')
+      if (formattedValue.length <= 8) {
+        formattedValue = formattedValue.replace(/^(\d{5})(\d)/, '$1-$2')
+      }
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: formattedValue
     }))
+    
     // Limpar erro do campo quando o usuário digitar
     if (errors[name]) {
       setErrors(prev => ({
@@ -199,9 +127,8 @@ function CadastroProfissionais() {
     const step1Errors = validateStep1()
     const step2Errors = validateStep2()
     const step3Errors = validateStep3()
-    const step4Errors = validateStep4()
     
-    const allErrors = { ...step1Errors, ...step2Errors, ...step3Errors, ...step4Errors }
+    const allErrors = { ...step1Errors, ...step2Errors, ...step3Errors }
     
     if (Object.keys(allErrors).length > 0) {
       setErrors(allErrors)
@@ -214,8 +141,6 @@ function CadastroProfissionais() {
         setCurrentStep(2)
       } else if (Object.keys(step3Errors).length > 0) {
         setCurrentStep(3)
-      } else if (Object.keys(step4Errors).length > 0) {
-        setCurrentStep(4)
       }
       
       return
@@ -236,8 +161,11 @@ function CadastroProfissionais() {
       }
     } catch (err) {
       console.error('Erro ao cadastrar profissional:', err)
-      setError(err.message || 'Erro ao cadastrar profissional. Verifique os dados e tente novamente.')
-      alert('❌ ' + (err.message || 'Erro ao cadastrar profissional'))
+      console.error('Detalhes do erro:', err.response?.data || err)
+      console.error('Dados enviados:', formData)
+      const mensagemErro = err.response?.data?.message || err.message || 'Erro ao cadastrar profissional. Verifique os dados e tente novamente.'
+      setError(mensagemErro)
+      alert('❌ ERRO: ' + mensagemErro + '\n\nCampos obrigatórios: Nome Completo, CPF e Profissão')
     } finally {
       setLoading(false)
     }
@@ -250,8 +178,6 @@ function CadastroProfissionais() {
       rg: '',
       data_nascimento: '',
       sexo: '',
-      estado_civil: '',
-      telefone: '',
       celular: '',
       email: '',
       cep: '',
@@ -269,12 +195,6 @@ function CadastroProfissionais() {
       departamento: '',
       turno: '',
       salario: '',
-      nome_emergencia: '',
-      parentesco_emergencia: '',
-      telefone_emergencia: '',
-      titulo_eleitor: '',
-      numero_pis: '',
-      carteira_trabalho: '',
       observacoes: ''
     })
     setError(null)
@@ -296,13 +216,20 @@ function CadastroProfissionais() {
     
     if (Object.keys(stepErrors).length > 0) {
       setErrors(stepErrors)
-      alert('❌ Por favor, corrija os erros antes de continuar.')
+      // Mostrar todos os erros
+      const mensagensErro = Object.values(stepErrors).join('\n')
+      alert('❌ Corrija os seguintes erros:\n\n' + mensagensErro)
+      
+      // Scroll para o topo para ver os campos com erro
+      window.scrollTo({ top: 0, behavior: 'smooth' })
       return
     }
     
-    if (currentStep < 4) {
+    if (currentStep < 3) {
       setCurrentStep(currentStep + 1)
       setErrors({})
+      // Scroll para o topo ao avançar
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }
 
@@ -310,6 +237,8 @@ function CadastroProfissionais() {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1)
       setErrors({})
+      // Scroll para o topo ao voltar
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }
 
@@ -324,18 +253,18 @@ function CadastroProfissionais() {
                 Cadastro de Profissionais
               </h2>
               <p className="text-muted mb-0">
-                Preencha os dados do profissional em {currentStep}/4 etapas
+                Preencha os dados do profissional em {currentStep}/3 etapas
               </p>
             </div>
             <div className="step-counter">
-              <span className="badge bg-primary fs-5">Etapa {currentStep} de 4</span>
+              <span className="badge bg-primary fs-5">Etapa {currentStep} de 3</span>
             </div>
           </div>
 
           {/* Progress Steps */}
           <div className="progress-steps mb-4 mt-4">
             <div className="row">
-              <div className="col-md-3">
+              <div className="col-md-4">
                 <div className={`step-item ${currentStep >= 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}>
                   <div className="step-number">
                     {currentStep > 1 ? <i className="bi bi-check-lg"></i> : '1'}
@@ -346,7 +275,7 @@ function CadastroProfissionais() {
                   </div>
                 </div>
               </div>
-              <div className="col-md-3">
+              <div className="col-md-4">
                 <div className={`step-item ${currentStep >= 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}>
                   <div className="step-number">
                     {currentStep > 2 ? <i className="bi bi-check-lg"></i> : '2'}
@@ -357,7 +286,7 @@ function CadastroProfissionais() {
                   </div>
                 </div>
               </div>
-              <div className="col-md-3">
+              <div className="col-md-4">
                 <div className={`step-item ${currentStep >= 3 ? 'active' : ''} ${currentStep > 3 ? 'completed' : ''}`}>
                   <div className="step-number">
                     {currentStep > 3 ? <i className="bi bi-check-lg"></i> : '3'}
@@ -365,15 +294,6 @@ function CadastroProfissionais() {
                   <div className="step-info">
                     <span className="step-title">Dados Profissionais</span>
                     <span className="step-desc">Cargo e especialidade</span>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-3">
-                <div className={`step-item ${currentStep >= 4 ? 'active' : ''} ${currentStep > 4 ? 'completed' : ''}`}>
-                  <div className="step-number">4</div>
-                  <div className="step-info">
-                    <span className="step-title">Documentos</span>
-                    <span className="step-desc">Emergência e docs</span>
                   </div>
                 </div>
               </div>
@@ -415,7 +335,7 @@ function CadastroProfissionais() {
                     <div className="col-md-4">
                       <label htmlFor="data_nascimento" className="form-label">
                         <i className="bi bi-calendar-event me-1"></i>
-                        Data de Nascimento *
+                        Data de Nascimento
                       </label>
                       <input
                         type="date"
@@ -443,6 +363,7 @@ function CadastroProfissionais() {
                         value={formData.cpf}
                         onChange={handleChange}
                         placeholder="000.000.000-00"
+                        maxLength="14"
                       />
                       {errors.cpf && (
                         <div className="invalid-feedback">{errors.cpf}</div>
@@ -468,7 +389,7 @@ function CadastroProfissionais() {
                     <div className="col-md-4">
                       <label htmlFor="sexo" className="form-label">
                         <i className="bi bi-gender-ambiguous me-1"></i>
-                        Sexo *
+                        Sexo
                       </label>
                       <select
                         className={`form-select form-select-lg ${errors.sexo ? 'is-invalid' : ''}`}
@@ -488,46 +409,6 @@ function CadastroProfissionais() {
                     </div>
 
                     <div className="col-md-4">
-                      <label htmlFor="estado_civil" className="form-label">
-                        <i className="bi bi-heart me-1"></i>
-                        Estado Civil
-                      </label>
-                      <select
-                        className="form-select form-select-lg"
-                        id="estado_civil"
-                        name="estado_civil"
-                        value={formData.estado_civil}
-                        onChange={handleChange}
-                      >
-                        <option value="">Selecione...</option>
-                        <option value="solteiro">Solteiro(a)</option>
-                        <option value="casado">Casado(a)</option>
-                        <option value="divorciado">Divorciado(a)</option>
-                        <option value="viuvo">Viúvo(a)</option>
-                        <option value="outro">Outro</option>
-                      </select>
-                    </div>
-
-                    <div className="col-md-4">
-                      <label htmlFor="telefone" className="form-label">
-                        <i className="bi bi-telephone me-1"></i>
-                        Telefone Fixo
-                      </label>
-                      <input
-                        type="tel"
-                        className={`form-control form-control-lg ${errors.telefone ? 'is-invalid' : ''}`}
-                        id="telefone"
-                        name="telefone"
-                        value={formData.telefone}
-                        onChange={handleChange}
-                        placeholder="(00) 0000-0000"
-                      />
-                      {errors.telefone && (
-                        <div className="invalid-feedback">{errors.telefone}</div>
-                      )}
-                    </div>
-
-                    <div className="col-md-4">
                       <label htmlFor="celular" className="form-label">
                         <i className="bi bi-phone me-1"></i>
                         Celular
@@ -540,6 +421,7 @@ function CadastroProfissionais() {
                         value={formData.celular}
                         onChange={handleChange}
                         placeholder="(00) 00000-0000"
+                        maxLength="15"
                       />
                       {errors.celular && (
                         <div className="invalid-feedback">{errors.celular}</div>
@@ -549,7 +431,7 @@ function CadastroProfissionais() {
                     <div className="col-md-4">
                       <label htmlFor="email" className="form-label">
                         <i className="bi bi-envelope me-1"></i>
-                        E-mail *
+                        E-mail
                       </label>
                       <input
                         type="email"
@@ -577,14 +459,14 @@ function CadastroProfissionais() {
                 <div className="card-body p-4">
                   <h4 className="mb-4">
                     <i className="bi bi-geo-alt-fill text-success me-2"></i>
-                    Endereço Residencial
+                    Endereço Residencial (Opcional)
                   </h4>
                   
                   <div className="row g-3">
                     <div className="col-md-3">
                       <label htmlFor="cep" className="form-label">
                         <i className="bi bi-mailbox me-1"></i>
-                        CEP *
+                        CEP
                       </label>
                       <input
                         type="text"
@@ -603,7 +485,7 @@ function CadastroProfissionais() {
                     <div className="col-md-7">
                       <label htmlFor="logradouro" className="form-label">
                         <i className="bi bi-signpost me-1"></i>
-                        Logradouro *
+                        Logradouro
                       </label>
                       <input
                         type="text"
@@ -622,7 +504,7 @@ function CadastroProfissionais() {
                     <div className="col-md-2">
                       <label htmlFor="numero" className="form-label">
                         <i className="bi bi-hash me-1"></i>
-                        Número *
+                        Número
                       </label>
                       <input
                         type="text"
@@ -657,7 +539,7 @@ function CadastroProfissionais() {
                     <div className="col-md-6">
                       <label htmlFor="bairro" className="form-label">
                         <i className="bi bi-pin-map me-1"></i>
-                        Bairro *
+                        Bairro
                       </label>
                       <input
                         type="text"
@@ -676,7 +558,7 @@ function CadastroProfissionais() {
                     <div className="col-md-8">
                       <label htmlFor="cidade" className="form-label">
                         <i className="bi bi-building-fill me-1"></i>
-                        Cidade *
+                        Cidade
                       </label>
                       <input
                         type="text"
@@ -695,7 +577,7 @@ function CadastroProfissionais() {
                     <div className="col-md-4">
                       <label htmlFor="estado" className="form-label">
                         <i className="bi bi-map me-1"></i>
-                        Estado *
+                        Estado
                       </label>
                       <select
                         className={`form-select form-select-lg ${errors.estado ? 'is-invalid' : ''}`}
@@ -828,7 +710,7 @@ function CadastroProfissionais() {
                     <div className="col-md-6">
                       <label htmlFor="data_admissao" className="form-label">
                         <i className="bi bi-calendar-check me-1"></i>
-                        Data de Admissão *
+                        Data de Admissão
                       </label>
                       <input
                         type="date"
@@ -846,7 +728,7 @@ function CadastroProfissionais() {
                     <div className="col-md-4">
                       <label htmlFor="cargo" className="form-label">
                         <i className="bi bi-person-badge-fill me-1"></i>
-                        Cargo *
+                        Cargo
                       </label>
                       <input
                         type="text"
@@ -889,7 +771,7 @@ function CadastroProfissionais() {
                     <div className="col-md-4">
                       <label htmlFor="turno" className="form-label">
                         <i className="bi bi-clock me-1"></i>
-                        Turno de Trabalho *
+                        Turno de Trabalho
                       </label>
                       <select
                         className={`form-select form-select-lg ${errors.turno ? 'is-invalid' : ''}`}
@@ -932,70 +814,6 @@ function CadastroProfissionais() {
             </div>
           )}
 
-          {/* Step 4 - Documentos e Emergência */}
-          {currentStep === 4 && (
-            <div className="form-step active">
-              <div className="card border-0 shadow-sm mb-3">
-                <div className="card-body p-4">
-                  <h4 className="mb-4">
-                    <i className="bi bi-file-earmark-text text-warning me-2"></i>
-                    Documentação
-                  </h4>
-                  
-                  <div className="row g-3">
-                    <div className="col-md-4">
-                      <label htmlFor="titulo_eleitor" className="form-label">
-                        <i className="bi bi-person-vcard me-1"></i>
-                        Título de Eleitor
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control form-control-lg"
-                        id="titulo_eleitor"
-                        name="titulo_eleitor"
-                        value={formData.titulo_eleitor}
-                        onChange={handleChange}
-                        placeholder="0000 0000 0000"
-                      />
-                    </div>
-
-                    <div className="col-md-4">
-                      <label htmlFor="numero_pis" className="form-label">
-                        <i className="bi bi-credit-card-2-front me-1"></i>
-                        PIS/PASEP
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control form-control-lg"
-                        id="numero_pis"
-                        name="numero_pis"
-                        value={formData.numero_pis}
-                        onChange={handleChange}
-                        placeholder="000.00000.00-0"
-                      />
-                    </div>
-
-                    <div className="col-md-4">
-                      <label htmlFor="carteira_trabalho" className="form-label">
-                        <i className="bi bi-journal-bookmark me-1"></i>
-                        Carteira de Trabalho
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control form-control-lg"
-                        id="carteira_trabalho"
-                        name="carteira_trabalho"
-                        value={formData.carteira_trabalho}
-                        onChange={handleChange}
-                        placeholder="0000000"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Navigation Buttons */}
           <div className="form-navigation mt-4">
             <div className="d-flex justify-content-between">
@@ -1012,7 +830,7 @@ function CadastroProfissionais() {
                   <i className="bi bi-x-circle me-2"></i>
                   Limpar Tudo
                 </button>
-                {currentStep < 4 ? (
+                {currentStep < 3 ? (
                   <button type="button" className="btn btn-primary btn-lg" onClick={nextStep}>
                     Próximo
                     <i className="bi bi-arrow-right ms-2"></i>
