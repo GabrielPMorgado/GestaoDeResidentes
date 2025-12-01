@@ -434,3 +434,193 @@ exports.estatisticas = async (req, res) => {
     });
   }
 };
+
+// Relatório de Despesas com Profissionais
+exports.relatorioDespesas = async (req, res) => {
+  try {
+    const { mes, ano, departamento, status } = req.query;
+
+    // Construir filtros
+    const where = {};
+    
+    if (departamento) {
+      where.departamento = departamento;
+    }
+    
+    if (status === 'ativos') {
+      where.status = 'ativo';
+    } else if (status === 'inativos') {
+      where.status = 'inativo';
+    }
+
+    // Buscar profissionais com salários
+    const profissionais = await Profissional.findAll({
+      where: {
+        ...where,
+        salario: { [Op.ne]: null }
+      },
+      attributes: [
+        'id',
+        'nome_completo',
+        'cpf',
+        'profissao',
+        'cargo',
+        'departamento',
+        'salario',
+        'status',
+        'data_admissao'
+      ],
+      order: [['salario', 'DESC']]
+    });
+
+    // Calcular estatísticas
+    const totalProfissionais = profissionais.length;
+    const folhaPagamentoTotal = profissionais.reduce((sum, p) => sum + parseFloat(p.salario || 0), 0);
+    const salarioMedio = totalProfissionais > 0 ? folhaPagamentoTotal / totalProfissionais : 0;
+    const salarioMaior = profissionais.length > 0 ? parseFloat(profissionais[0].salario) : 0;
+    const salarioMenor = profissionais.length > 0 ? parseFloat(profissionais[profissionais.length - 1].salario) : 0;
+
+    // Agrupar por departamento
+    const despesasPorDepartamento = {};
+    profissionais.forEach(prof => {
+      const dept = prof.departamento || 'Não informado';
+      if (!despesasPorDepartamento[dept]) {
+        despesasPorDepartamento[dept] = {
+          departamento: dept,
+          quantidadeProfissionais: 0,
+          totalDespesas: 0,
+          profissionais: []
+        };
+      }
+      despesasPorDepartamento[dept].quantidadeProfissionais++;
+      despesasPorDepartamento[dept].totalDespesas += parseFloat(prof.salario || 0);
+      despesasPorDepartamento[dept].profissionais.push({
+        id: prof.id,
+        nome: prof.nome_completo,
+        cargo: prof.cargo,
+        salario: parseFloat(prof.salario)
+      });
+    });
+
+    // Agrupar por cargo
+    const despesasPorCargo = {};
+    profissionais.forEach(prof => {
+      const cargo = prof.cargo || 'Não informado';
+      if (!despesasPorCargo[cargo]) {
+        despesasPorCargo[cargo] = {
+          cargo: cargo,
+          quantidade: 0,
+          totalDespesas: 0,
+          salarioMedio: 0
+        };
+      }
+      despesasPorCargo[cargo].quantidade++;
+      despesasPorCargo[cargo].totalDespesas += parseFloat(prof.salario || 0);
+    });
+
+    // Calcular média salarial por cargo
+    Object.values(despesasPorCargo).forEach(cargo => {
+      cargo.salarioMedio = cargo.totalDespesas / cargo.quantidade;
+    });
+
+    res.json({
+      success: true,
+      data: {
+        resumo: {
+          totalProfissionais,
+          folhaPagamentoTotal: parseFloat(folhaPagamentoTotal.toFixed(2)),
+          salarioMedio: parseFloat(salarioMedio.toFixed(2)),
+          salarioMaior: parseFloat(salarioMaior.toFixed(2)),
+          salarioMenor: parseFloat(salarioMenor.toFixed(2))
+        },
+        despesasPorDepartamento: Object.values(despesasPorDepartamento).sort((a, b) => b.totalDespesas - a.totalDespesas),
+        despesasPorCargo: Object.values(despesasPorCargo).sort((a, b) => b.totalDespesas - a.totalDespesas),
+        profissionais: profissionais.map(p => ({
+          id: p.id,
+          nome_completo: p.nome_completo,
+          cpf: p.cpf,
+          profissao: p.profissao,
+          cargo: p.cargo,
+          departamento: p.departamento,
+          salario: parseFloat(p.salario),
+          status: p.status,
+          data_admissao: p.data_admissao
+        }))
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao gerar relatório de despesas:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao gerar relatório de despesas',
+      error: error.message
+    });
+  }
+};
+
+// Folha de Pagamento Mensal
+exports.folhaPagamento = async (req, res) => {
+  try {
+    const { mes, ano } = req.query;
+    const mesAtual = mes || new Date().getMonth() + 1;
+    const anoAtual = ano || new Date().getFullYear();
+
+    // Buscar apenas profissionais ativos
+    const profissionais = await Profissional.findAll({
+      where: {
+        status: 'ativo',
+        salario: { [Op.ne]: null }
+      },
+      attributes: [
+        'id',
+        'nome_completo',
+        'cpf',
+        'cargo',
+        'departamento',
+        'salario',
+        'data_admissao'
+      ],
+      order: [['departamento', 'ASC'], ['nome_completo', 'ASC']]
+    });
+
+    const folha = profissionais.map(prof => ({
+      id: prof.id,
+      nome: prof.nome_completo,
+      cpf: prof.cpf,
+      cargo: prof.cargo,
+      departamento: prof.departamento || 'Não informado',
+      salarioBruto: parseFloat(prof.salario),
+      // Simulação de descontos (pode ser ajustado conforme necessidade)
+      inss: parseFloat((prof.salario * 0.11).toFixed(2)),
+      irrf: parseFloat((prof.salario * 0.075).toFixed(2)),
+      salarioLiquido: parseFloat((prof.salario * 0.815).toFixed(2))
+    }));
+
+    const totalBruto = folha.reduce((sum, item) => sum + item.salarioBruto, 0);
+    const totalDescontos = folha.reduce((sum, item) => sum + item.inss + item.irrf, 0);
+    const totalLiquido = folha.reduce((sum, item) => sum + item.salarioLiquido, 0);
+
+    res.json({
+      success: true,
+      data: {
+        mesReferencia: `${mesAtual}/${anoAtual}`,
+        mes: mesAtual,
+        ano: anoAtual,
+        quantidadeFuncionarios: folha.length,
+        totais: {
+          salarioBruto: parseFloat(totalBruto.toFixed(2)),
+          totalDescontos: parseFloat(totalDescontos.toFixed(2)),
+          salarioLiquido: parseFloat(totalLiquido.toFixed(2))
+        },
+        folha
+      }
+    });
+  } catch (error) {
+    console.error('Erro ao gerar folha de pagamento:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao gerar folha de pagamento',
+      error: error.message
+    });
+  }
+};

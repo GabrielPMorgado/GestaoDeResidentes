@@ -6,6 +6,7 @@ import {
   obterEstatisticasAgendamentos,
   listarAgendamentos
 } from '../../api/api'
+import relatorioService from '../../services/relatorioService'
 
 function Relatorios() {
   const [loading, setLoading] = useState(true)
@@ -35,8 +36,38 @@ function Relatorios() {
     }
   })
 
+  const [dadosDespesas, setDadosDespesas] = useState({
+    resumo: {
+      totalProfissionais: 0,
+      folhaPagamentoTotal: 0,
+      salarioMedio: 0,
+      salarioMaior: 0,
+      salarioMenor: 0
+    },
+    despesasPorDepartamento: [],
+    despesasPorCargo: [],
+    profissionais: []
+  })
+
+  const [folhaPagamento, setFolhaPagamento] = useState({
+    mesReferencia: '',
+    quantidadeFuncionarios: 0,
+    totais: {
+      salarioBruto: 0,
+      totalDescontos: 0,
+      salarioLiquido: 0
+    },
+    folha: []
+  })
+
+  const [loadingDespesas, setLoadingDespesas] = useState(false)
+  const [loadingFolha, setLoadingFolha] = useState(false)
+  const [abaSelecionada, setAbaSelecionada] = useState('geral')
+
   useEffect(() => {
     carregarDadosRelatorio()
+    carregarRelatorioDespesas()
+    carregarFolhaPagamento()
   }, [])
 
   const carregarDadosRelatorio = async () => {
@@ -144,6 +175,41 @@ function Relatorios() {
     return idade
   }
 
+  const carregarRelatorioDespesas = async () => {
+    try {
+      setLoadingDespesas(true)
+      const response = await relatorioService.obterRelatorioDespesas({ status: 'ativos' })
+      if (response.success) {
+        setDadosDespesas(response.data)
+      }
+    } catch (error) {
+      console.error('Erro ao carregar relatório de despesas:', error)
+    } finally {
+      setLoadingDespesas(false)
+    }
+  }
+
+  const carregarFolhaPagamento = async () => {
+    try {
+      setLoadingFolha(true)
+      const response = await relatorioService.obterFolhaPagamento()
+      if (response.success) {
+        setFolhaPagamento(response.data)
+      }
+    } catch (error) {
+      console.error('Erro ao carregar folha de pagamento:', error)
+    } finally {
+      setLoadingFolha(false)
+    }
+  }
+
+  const formatarMoeda = (valor) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(valor || 0)
+  }
+
   const calcularPercentual = (valor, total) => {
     if (total === 0) return 0
     return ((valor / total) * 100).toFixed(1)
@@ -223,6 +289,41 @@ function Relatorios() {
           </button>
         </div>
       </div>
+
+      {/* Abas de Navegação */}
+      <ul className="nav nav-tabs mb-4">
+        <li className="nav-item">
+          <button 
+            className={`nav-link ${abaSelecionada === 'geral' ? 'active' : ''}`}
+            onClick={() => setAbaSelecionada('geral')}
+          >
+            <i className="bi bi-graph-up me-2"></i>
+            Relatório Geral
+          </button>
+        </li>
+        <li className="nav-item">
+          <button 
+            className={`nav-link ${abaSelecionada === 'despesas' ? 'active' : ''}`}
+            onClick={() => setAbaSelecionada('despesas')}
+          >
+            <i className="bi bi-cash-coin me-2"></i>
+            Despesas com Profissionais
+          </button>
+        </li>
+        <li className="nav-item">
+          <button 
+            className={`nav-link ${abaSelecionada === 'folha' ? 'active' : ''}`}
+            onClick={() => setAbaSelecionada('folha')}
+          >
+            <i className="bi bi-wallet2 me-2"></i>
+            Folha de Pagamento
+          </button>
+        </li>
+      </ul>
+
+      {/* Conteúdo da Aba Relatório Geral */}
+      {abaSelecionada === 'geral' && (
+      <div className="aba-conteudo">
 
       {/* Resumo Geral */}
       <div className="row g-4 mb-4">
@@ -593,6 +694,305 @@ function Relatorios() {
           Relatório gerado em: {new Date().toLocaleString('pt-BR')}
         </p>
       </div>
+      </div>
+      )}
+
+      {/* Conteúdo da Aba Despesas */}
+      {abaSelecionada === 'despesas' && (
+      <div className="aba-conteudo">
+        {loadingDespesas ? (
+          <div className="text-center py-5">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Carregando...</span>
+            </div>
+            <p className="mt-3">Carregando relatório de despesas...</p>
+          </div>
+        ) : (
+          <>
+            {/* Cards de Resumo de Despesas */}
+            <div className="row mb-4">
+              <div className="col-md-3">
+                <div className="card text-center">
+                  <div className="card-body">
+                    <i className="bi bi-people-fill text-primary fs-2"></i>
+                    <h3 className="mt-2">{dadosDespesas.resumo.totalProfissionais}</h3>
+                    <p className="text-muted mb-0">Total de Profissionais</p>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-3">
+                <div className="card text-center">
+                  <div className="card-body">
+                    <i className="bi bi-cash-stack text-success fs-2"></i>
+                    <h3 className="mt-2">{formatarMoeda(dadosDespesas.resumo.folhaPagamentoTotal)}</h3>
+                    <p className="text-muted mb-0">Folha de Pagamento Total</p>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-3">
+                <div className="card text-center">
+                  <div className="card-body">
+                    <i className="bi bi-calculator text-info fs-2"></i>
+                    <h3 className="mt-2">{formatarMoeda(dadosDespesas.resumo.salarioMedio)}</h3>
+                    <p className="text-muted mb-0">Salário Médio</p>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-3">
+                <div className="card text-center">
+                  <div className="card-body">
+                    <i className="bi bi-graph-up-arrow text-warning fs-2"></i>
+                    <h3 className="mt-2">{formatarMoeda(dadosDespesas.resumo.salarioMaior)}</h3>
+                    <p className="text-muted mb-0">Maior Salário</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Despesas por Departamento */}
+            <div className="card mb-4">
+              <div className="card-header bg-primary text-white">
+                <h5 className="mb-0">
+                  <i className="bi bi-building me-2"></i>
+                  Despesas por Departamento
+                </h5>
+              </div>
+              <div className="card-body">
+                <div className="table-responsive">
+                  <table className="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Departamento</th>
+                        <th className="text-center">Profissionais</th>
+                        <th className="text-end">Total de Despesas</th>
+                        <th className="text-end">Média Salarial</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dadosDespesas.despesasPorDepartamento.map((dept, index) => (
+                        <tr key={index}>
+                          <td><strong>{dept.departamento}</strong></td>
+                          <td className="text-center">{dept.quantidadeProfissionais}</td>
+                          <td className="text-end">{formatarMoeda(dept.totalDespesas)}</td>
+                          <td className="text-end">
+                            {formatarMoeda(dept.totalDespesas / dept.quantidadeProfissionais)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot>
+                      <tr className="table-secondary">
+                        <td><strong>TOTAL</strong></td>
+                        <td className="text-center"><strong>{dadosDespesas.resumo.totalProfissionais}</strong></td>
+                        <td className="text-end"><strong>{formatarMoeda(dadosDespesas.resumo.folhaPagamentoTotal)}</strong></td>
+                        <td className="text-end"><strong>{formatarMoeda(dadosDespesas.resumo.salarioMedio)}</strong></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* Despesas por Cargo */}
+            <div className="card mb-4">
+              <div className="card-header bg-success text-white">
+                <h5 className="mb-0">
+                  <i className="bi bi-briefcase me-2"></i>
+                  Despesas por Cargo
+                </h5>
+              </div>
+              <div className="card-body">
+                <div className="table-responsive">
+                  <table className="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Cargo</th>
+                        <th className="text-center">Quantidade</th>
+                        <th className="text-end">Total de Despesas</th>
+                        <th className="text-end">Salário Médio</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dadosDespesas.despesasPorCargo.map((cargo, index) => (
+                        <tr key={index}>
+                          <td><strong>{cargo.cargo}</strong></td>
+                          <td className="text-center">{cargo.quantidade}</td>
+                          <td className="text-end">{formatarMoeda(cargo.totalDespesas)}</td>
+                          <td className="text-end">{formatarMoeda(cargo.salarioMedio)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            {/* Lista Detalhada de Profissionais */}
+            <div className="card">
+              <div className="card-header bg-info text-white">
+                <h5 className="mb-0">
+                  <i className="bi bi-person-badge me-2"></i>
+                  Detalhamento de Profissionais e Salários
+                </h5>
+              </div>
+              <div className="card-body">
+                <div className="table-responsive">
+                  <table className="table table-striped table-hover">
+                    <thead>
+                      <tr>
+                        <th>Nome</th>
+                        <th>CPF</th>
+                        <th>Cargo</th>
+                        <th>Departamento</th>
+                        <th className="text-end">Salário</th>
+                        <th className="text-center">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dadosDespesas.profissionais.map((prof) => (
+                        <tr key={prof.id}>
+                          <td>{prof.nome_completo}</td>
+                          <td>{prof.cpf}</td>
+                          <td>{prof.cargo}</td>
+                          <td>{prof.departamento || 'Não informado'}</td>
+                          <td className="text-end"><strong>{formatarMoeda(prof.salario)}</strong></td>
+                          <td className="text-center">
+                            <span className={`badge ${prof.status === 'ativo' ? 'bg-success' : 'bg-secondary'}`}>
+                              {prof.status === 'ativo' ? 'Ativo' : prof.status === 'ferias' ? 'Férias' : prof.status === 'licenca' ? 'Licença' : 'Inativo'}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+      )}
+
+      {/* Conteúdo da Aba Folha de Pagamento */}
+      {abaSelecionada === 'folha' && (
+      <div className="aba-conteudo">
+        {loadingFolha ? (
+          <div className="text-center py-5">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Carregando...</span>
+            </div>
+            <p className="mt-3">Carregando folha de pagamento...</p>
+          </div>
+        ) : (
+          <>
+            {/* Cabeçalho da Folha */}
+            <div className="card mb-4">
+              <div className="card-header bg-primary text-white">
+                <div className="d-flex justify-content-between align-items-center">
+                  <h5 className="mb-0">
+                    <i className="bi bi-wallet2 me-2"></i>
+                    Folha de Pagamento - {folhaPagamento.mesReferencia}
+                  </h5>
+                  <div>
+                    <button className="btn btn-light btn-sm me-2" onClick={carregarFolhaPagamento}>
+                      <i className="bi bi-arrow-clockwise me-1"></i>
+                      Atualizar
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="card-body">
+                <div className="row text-center">
+                  <div className="col-md-3">
+                    <div className="p-3 border rounded">
+                      <i className="bi bi-people text-primary fs-3"></i>
+                      <h4 className="mt-2">{folhaPagamento.quantidadeFuncionarios}</h4>
+                      <p className="text-muted mb-0">Funcionários Ativos</p>
+                    </div>
+                  </div>
+                  <div className="col-md-3">
+                    <div className="p-3 border rounded">
+                      <i className="bi bi-currency-dollar text-success fs-3"></i>
+                      <h4 className="mt-2">{formatarMoeda(folhaPagamento.totais.salarioBruto)}</h4>
+                      <p className="text-muted mb-0">Total Bruto</p>
+                    </div>
+                  </div>
+                  <div className="col-md-3">
+                    <div className="p-3 border rounded">
+                      <i className="bi bi-dash-circle text-warning fs-3"></i>
+                      <h4 className="mt-2">{formatarMoeda(folhaPagamento.totais.totalDescontos)}</h4>
+                      <p className="text-muted mb-0">Total Descontos</p>
+                    </div>
+                  </div>
+                  <div className="col-md-3">
+                    <div className="p-3 border rounded bg-light">
+                      <i className="bi bi-check-circle text-info fs-3"></i>
+                      <h4 className="mt-2">{formatarMoeda(folhaPagamento.totais.salarioLiquido)}</h4>
+                      <p className="text-muted mb-0">Total Líquido</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Tabela de Folha de Pagamento */}
+            <div className="card">
+              <div className="card-header bg-secondary text-white">
+                <h5 className="mb-0">
+                  <i className="bi bi-table me-2"></i>
+                  Detalhamento da Folha
+                </h5>
+              </div>
+              <div className="card-body">
+                <div className="table-responsive">
+                  <table className="table table-striped table-hover">
+                    <thead className="table-dark">
+                      <tr>
+                        <th>Nome</th>
+                        <th>CPF</th>
+                        <th>Cargo</th>
+                        <th>Departamento</th>
+                        <th className="text-end">Salário Bruto</th>
+                        <th className="text-end">INSS</th>
+                        <th className="text-end">IRRF</th>
+                        <th className="text-end">Salário Líquido</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {folhaPagamento.folha.map((funcionario, index) => (
+                        <tr key={index}>
+                          <td>{funcionario.nome}</td>
+                          <td>{funcionario.cpf}</td>
+                          <td>{funcionario.cargo}</td>
+                          <td>{funcionario.departamento}</td>
+                          <td className="text-end">{formatarMoeda(funcionario.salarioBruto)}</td>
+                          <td className="text-end text-danger">{formatarMoeda(funcionario.inss)}</td>
+                          <td className="text-end text-danger">{formatarMoeda(funcionario.irrf)}</td>
+                          <td className="text-end"><strong>{formatarMoeda(funcionario.salarioLiquido)}</strong></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                    <tfoot className="table-secondary">
+                      <tr>
+                        <td colSpan="4"><strong>TOTAIS</strong></td>
+                        <td className="text-end"><strong>{formatarMoeda(folhaPagamento.totais.salarioBruto)}</strong></td>
+                        <td className="text-end" colSpan="2"><strong>{formatarMoeda(folhaPagamento.totais.totalDescontos)}</strong></td>
+                        <td className="text-end"><strong>{formatarMoeda(folhaPagamento.totais.salarioLiquido)}</strong></td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+                <div className="alert alert-info mt-3">
+                  <i className="bi bi-info-circle me-2"></i>
+                  <strong>Observação:</strong> Os valores de INSS (11%) e IRRF (7,5%) são simulados para fins de demonstração. 
+                  Em um sistema real, devem ser calculados conforme as tabelas oficiais vigentes.
+                </div>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+      )}
     </div>
   )
 }

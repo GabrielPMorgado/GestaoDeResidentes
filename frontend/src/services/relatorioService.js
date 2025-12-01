@@ -258,6 +258,43 @@ const relatorioService = {
     } catch (error) {
       throw error.response?.data || error.message;
     }
+  },
+
+  /**
+   * Obter relatório de despesas com profissionais
+   * @param {Object} filtros - Filtros opcionais (mes, ano, departamento, status)
+   * @returns {Promise} Relatório de despesas
+   */
+  obterRelatorioDespesas: async (filtros = {}) => {
+    try {
+      const response = await api.get('/profissionais/relatorio/despesas', {
+        params: filtros
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  /**
+   * Obter folha de pagamento mensal
+   * @param {number} mes - Mês de referência (1-12)
+   * @param {number} ano - Ano de referência
+   * @returns {Promise} Folha de pagamento
+   */
+  obterFolhaPagamento: async (mes = null, ano = null) => {
+    try {
+      const params = {};
+      if (mes) params.mes = mes;
+      if (ano) params.ano = ano;
+      
+      const response = await api.get('/profissionais/relatorio/folha-pagamento', {
+        params
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
   }
 };
 

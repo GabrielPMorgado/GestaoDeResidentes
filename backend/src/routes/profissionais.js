@@ -27,4 +27,10 @@ router.delete('/:id', profissionalController.deletar);
 // Rota para estatísticas
 router.get('/estatisticas/geral', profissionalController.estatisticas);
 
+// Rota para relatório de despesas
+router.get('/relatorio/despesas', profissionalController.relatorioDespesas);
+
+// Rota para folha de pagamento
+router.get('/relatorio/folha-pagamento', profissionalController.folhaPagamento);
+
 module.exports = router;
