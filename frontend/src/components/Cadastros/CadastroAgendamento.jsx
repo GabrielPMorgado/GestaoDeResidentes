@@ -1,14 +1,10 @@
 import { useState, useEffect } from 'react'
 import './CadastroAgendamento.css'
 import { criarAgendamento, listarResidentes, listarProfissionais } from '../../api/api'
+import { formatarCPF } from '../../utils/formatters'
+import { validarDataFutura, validarObrigatorio } from '../../utils/validators'
 
 function CadastroAgendamento() {
-  // Função auxiliar para formatar CPF
-  const formatarCPF = (cpf) => {
-    if (!cpf) return ''
-    const cpfLimpo = cpf.replace(/\D/g, '')
-    return cpfLimpo.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
-  }
 
   const [formData, setFormData] = useState({
     residente_id: '',
@@ -43,19 +39,12 @@ function CadastroAgendamento() {
         listarProfissionais({ status: 'ativo', limit: 1000 })
       ])
       
-      console.log('Residentes Response:', residentesRes)
-      console.log('Profissionais Response:', profissionaisRes)
-      
       const residentesList = residentesRes.data?.residentes || []
       const profissionaisList = profissionaisRes.data?.profissionais || []
-      
-      console.log('Lista de Residentes:', residentesList)
-      console.log('Lista de Profissionais:', profissionaisList)
       
       setResidentes(residentesList)
       setProfissionais(profissionaisList)
     } catch (err) {
-      console.error('Erro ao carregar dados:', err)
       setError('Erro ao carregar residentes e profissionais')
     } finally {
       setLoadingData(false)
@@ -81,36 +70,28 @@ function CadastroAgendamento() {
   const validarFormulario = () => {
     const newErrors = {}
     
-    if (!formData.residente_id) {
+    if (!validarObrigatorio(formData.residente_id)) {
       newErrors.residente_id = 'Selecione um residente'
     }
-    if (!formData.profissional_id) {
+    if (!validarObrigatorio(formData.profissional_id)) {
       newErrors.profissional_id = 'Selecione um profissional'
     }
-    if (!formData.data_agendamento) {
+    if (!validarObrigatorio(formData.data_agendamento)) {
       newErrors.data_agendamento = 'Informe a data do agendamento'
-    } else {
-      // Validar se data não está no passado
-      const hoje = new Date()
-      hoje.setHours(0, 0, 0, 0)
-      const dataAgendamento = new Date(formData.data_agendamento + 'T00:00:00')
-      dataAgendamento.setHours(0, 0, 0, 0)
-      
-      if (dataAgendamento < hoje) {
-        newErrors.data_agendamento = 'A data do agendamento não pode ser no passado'
-      }
+    } else if (!validarDataFutura(formData.data_agendamento)) {
+      newErrors.data_agendamento = 'A data do agendamento não pode ser no passado'
     }
     
-    if (!formData.hora_inicio) {
+    if (!validarObrigatorio(formData.hora_inicio)) {
       newErrors.hora_inicio = 'Informe a hora de início'
     }
-    if (!formData.hora_fim) {
+    if (!validarObrigatorio(formData.hora_fim)) {
       newErrors.hora_fim = 'Informe a hora de término'
     } else if (formData.hora_inicio && formData.hora_fim <= formData.hora_inicio) {
       newErrors.hora_fim = 'A hora de término deve ser posterior à hora de início'
     }
     
-    if (!formData.tipo_atendimento) {
+    if (!validarObrigatorio(formData.tipo_atendimento)) {
       newErrors.tipo_atendimento = 'Selecione o tipo de atendimento'
     }
     if (!formData.titulo || formData.titulo.trim().length < 3) {
@@ -119,7 +100,6 @@ function CadastroAgendamento() {
     
     setErrors(newErrors)
     
-    // Se houver erros, mostrar alert com o primeiro erro
     if (Object.keys(newErrors).length > 0) {
       const primeiroErro = Object.values(newErrors)[0]
       setError(primeiroErro)
@@ -141,7 +121,6 @@ function CadastroAgendamento() {
 
     try {
       const response = await criarAgendamento(formData)
-      console.log('Agendamento criado:', response)
       
       alert('✅ Agendamento criado com sucesso!')
       
@@ -160,7 +139,6 @@ function CadastroAgendamento() {
       })
       setErrors({})
     } catch (err) {
-      console.error('Erro ao criar agendamento:', err)
       const mensagem = err.message || 'Erro ao criar agendamento. Tente novamente.'
       setError(mensagem)
       alert('❌ ' + mensagem)

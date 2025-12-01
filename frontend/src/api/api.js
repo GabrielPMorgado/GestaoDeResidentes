@@ -116,12 +116,9 @@ export const criarProfissional = async (dados) => {
 // Listar profissionais
 export const listarProfissionais = async (filtros = {}) => {
   try {
-    console.log('Chamando API listarProfissionais com filtros:', filtros);
     const response = await api.get('/profissionais', { params: filtros });
-    console.log('Resposta listarProfissionais:', response.data);
     return response.data;
   } catch (error) {
-    console.error('Erro na API listarProfissionais:', error);
     if (error.response?.data) {
       throw error.response.data;
     }

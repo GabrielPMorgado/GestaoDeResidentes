@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { criarProfissional } from '../../api/api'
 import './CadastroProfissionais.css'
+import { formatarCPF, formatarCelular, formatarCEP } from '../../utils/formatters'
 
 function CadastroProfissionais() {
   const [formData, setFormData] = useState({
@@ -79,31 +80,12 @@ function CadastroProfissionais() {
     
     let formattedValue = value
     
-    // Formatar CPF automaticamente
     if (name === 'cpf') {
-      formattedValue = value.replace(/\D/g, '') // Remove tudo que não é dígito
-      if (formattedValue.length <= 11) {
-        formattedValue = formattedValue.replace(/(\d{3})(\d)/, '$1.$2')
-        formattedValue = formattedValue.replace(/(\d{3})(\d)/, '$1.$2')
-        formattedValue = formattedValue.replace(/(\d{3})(\d{1,2})$/, '$1-$2')
-      }
-    }
-    
-    // Formatar celular automaticamente
-    if (name === 'celular') {
-      formattedValue = value.replace(/\D/g, '')
-      if (formattedValue.length <= 11) {
-        formattedValue = formattedValue.replace(/^(\d{2})(\d)/g, '($1) $2')
-        formattedValue = formattedValue.replace(/(\d)(\d{4})$/, '$1-$2')
-      }
-    }
-    
-    // Formatar CEP automaticamente
-    if (name === 'cep') {
-      formattedValue = value.replace(/\D/g, '')
-      if (formattedValue.length <= 8) {
-        formattedValue = formattedValue.replace(/^(\d{5})(\d)/, '$1-$2')
-      }
+      formattedValue = formatarCPF(value)
+    } else if (name === 'celular') {
+      formattedValue = formatarCelular(value)
+    } else if (name === 'cep') {
+      formattedValue = formatarCEP(value)
     }
     
     setFormData(prev => ({
@@ -111,13 +93,13 @@ function CadastroProfissionais() {
       [name]: formattedValue
     }))
     
-    // Limpar erro do campo quando o usuário digitar
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
-        [name]: undefined
+        [name]: ''
       }))
     }
+    if (error) setError(null)
   }
 
   const handleSubmit = async (e) => {
@@ -160,9 +142,6 @@ function CadastroProfissionais() {
         throw new Error(response.message || 'Erro ao cadastrar profissional')
       }
     } catch (err) {
-      console.error('Erro ao cadastrar profissional:', err)
-      console.error('Detalhes do erro:', err.response?.data || err)
-      console.error('Dados enviados:', formData)
       const mensagemErro = err.response?.data?.message || err.message || 'Erro ao cadastrar profissional. Verifique os dados e tente novamente.'
       setError(mensagemErro)
       alert('❌ ERRO: ' + mensagemErro + '\n\nCampos obrigatórios: Nome Completo, CPF e Profissão')

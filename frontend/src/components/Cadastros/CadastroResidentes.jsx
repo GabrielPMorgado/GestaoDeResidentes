@@ -1,6 +1,8 @@
 ﻿import { useState } from 'react'
 import './CadastroResidentes.css'
 import { criarResidente } from '../../api/api'
+import { formatarCPF, formatarTelefone, formatarCEP } from '../../utils/formatters'
+import { validarCPF, validarEmail, validarTelefone, validarCEP, validarNome } from '../../utils/validators'
 
 function CadastroResidentes() {
   const [formData, setFormData] = useState({
@@ -125,31 +127,12 @@ function CadastroResidentes() {
     
     let formattedValue = value
     
-    // Formatar CPF automaticamente
     if (name === 'cpf') {
-      formattedValue = value.replace(/\D/g, '') // Remove tudo que não é dígito
-      if (formattedValue.length <= 11) {
-        formattedValue = formattedValue.replace(/(\d{3})(\d)/, '$1.$2')
-        formattedValue = formattedValue.replace(/(\d{3})(\d)/, '$1.$2')
-        formattedValue = formattedValue.replace(/(\d{3})(\d{1,2})$/, '$1-$2')
-      }
-    }
-    
-    // Formatar telefone automaticamente
-    if (name === 'telefone' || name === 'telefone_responsavel') {
-      formattedValue = value.replace(/\D/g, '')
-      if (formattedValue.length <= 11) {
-        formattedValue = formattedValue.replace(/^(\d{2})(\d)/g, '($1) $2')
-        formattedValue = formattedValue.replace(/(\d)(\d{4})$/, '$1-$2')
-      }
-    }
-    
-    // Formatar CEP automaticamente
-    if (name === 'cep') {
-      formattedValue = value.replace(/\D/g, '')
-      if (formattedValue.length <= 8) {
-        formattedValue = formattedValue.replace(/^(\d{5})(\d)/, '$1-$2')
-      }
+      formattedValue = formatarCPF(value)
+    } else if (name === 'telefone' || name === 'telefone_responsavel') {
+      formattedValue = formatarTelefone(value)
+    } else if (name === 'cep') {
+      formattedValue = formatarCEP(value)
     }
     
     setFormData(prev => ({
@@ -157,7 +140,6 @@ function CadastroResidentes() {
       [name]: formattedValue
     }))
     
-    // Limpar erro do campo ao digitar
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -195,8 +177,7 @@ function CadastroResidentes() {
     setError(null)
 
     try {
-      const response = await criarResidente(formData)
-      console.log('Residente cadastrado:', response)
+      await criarResidente(formData)
       
       alert('✅ Residente cadastrado com sucesso!')
       
@@ -204,8 +185,6 @@ function CadastroResidentes() {
       handleReset()
       setCurrentStep(1)
     } catch (err) {
-      console.error('Erro ao cadastrar:', err)
-      console.error('Detalhes do erro:', err.response?.data || err)
       const mensagemErro = err.response?.data?.message || err.message || 'Erro ao cadastrar residente. Tente novamente.'
       setError(mensagemErro)
       alert('❌ ' + mensagemErro)
