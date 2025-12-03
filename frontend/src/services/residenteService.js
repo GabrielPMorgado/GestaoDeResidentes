@@ -140,7 +140,6 @@ const residenteService = {
       const residentes = await residenteService.listarTodos();
       return !residentes.some(r => r.cpf === cpf && r.id !== idExcluir);
     } catch (error) {
-      console.error('Erro ao validar CPF:', error);
       return false;
     }
   },
@@ -156,7 +155,6 @@ const residenteService = {
       const residentes = await residenteService.listarTodos();
       return !residentes.some(r => r.rg === rg && r.id !== idExcluir);
     } catch (error) {
-      console.error('Erro ao validar RG:', error);
       return false;
     }
   },

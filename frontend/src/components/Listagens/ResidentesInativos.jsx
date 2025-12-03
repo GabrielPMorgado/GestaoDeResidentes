@@ -1,13 +1,12 @@
 import { useState, useEffect } from 'react'
+import { useNotification } from '../../contexts/NotificationContext'
 import { listarResidentes, atualizarResidente, deletarResidentePermanente } from '../../api/api'
-import './ListagemResidentes.css'
 
 function ResidentesInativos() {
+  const { success, error: showError } = useNotification()
   const [residentes, setResidentes] = useState([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
   
-  // Filtros
   const [filtros, setFiltros] = useState({
     status: 'inativo',
     busca: '',
@@ -15,17 +14,14 @@ function ResidentesInativos() {
     limite: 10
   })
 
-  // Paginação
   const [paginacao, setPaginacao] = useState({
     total: 0,
     paginas: 0,
     paginaAtual: 1
   })
 
-  // Carregar residentes inativos
   const carregarResidentes = async () => {
     setLoading(true)
-    setError(null)
     
     try {
       const response = await listarResidentes({
@@ -46,8 +42,7 @@ function ResidentesInativos() {
         throw new Error(response?.message || 'Erro ao carregar residentes')
       }
     } catch (err) {
-      console.error('Erro ao carregar residentes:', err)
-      setError(err.message || 'Erro ao carregar residentes')
+      showError(err.message || 'Erro ao carregar residentes')
       setResidentes([])
       setPaginacao({ total: 0, paginas: 0, paginaAtual: 1 })
     } finally {
@@ -55,7 +50,6 @@ function ResidentesInativos() {
     }
   }
 
-  // Reativar residente
   const handleReativar = async (id, nome) => {
     if (!window.confirm(`Tem certeza que deseja reativar o residente "${nome}"?`)) {
       return
@@ -65,68 +59,56 @@ function ResidentesInativos() {
       const response = await atualizarResidente(id, { status: 'ativo' })
       
       if (response.success) {
-        alert('✅ Residente reativado com sucesso!')
+        success('Residente reativado com sucesso!')
         carregarResidentes()
       } else {
         throw new Error(response.message || 'Erro ao reativar residente')
       }
     } catch (err) {
-      console.error('Erro ao reativar residente:', err)
-      alert('❌ ' + (err.message || 'Erro ao reativar residente'))
+      showError(err.message || 'Erro ao reativar residente')
     }
   }
 
-  // Deletar residente permanentemente
   const handleDeletarPermanente = async (id, nome) => {
-    // Primeira confirmação
     if (!window.confirm(`⚠️ ATENÇÃO! Tem certeza que deseja DELETAR PERMANENTEMENTE o residente "${nome}"?\n\nEsta ação NÃO PODE SER DESFEITA e irá remover:\n- Todos os agendamentos\n- Todo o histórico de consultas\n- Todos os dados do residente\n\nDeseja continuar?`)) {
       return
     }
     
-    // Segunda confirmação - usuário precisa digitar "DELETAR"
     const confirmacao = window.prompt('Para confirmar, digite: DELETAR')
     
     if (confirmacao !== 'DELETAR') {
-      alert('❌ Operação cancelada. Confirmação incorreta.')
+      showError('Operação cancelada. Confirmação incorreta.')
       return
     }
     
     try {
-      console.log(`Tentando deletar residente ID: ${id}`)
       const response = await deletarResidentePermanente(id)
       
-      console.log('Resposta da deleção:', response)
-      
       if (response.success) {
-        alert('✅ Residente deletado permanentemente do sistema!')
+        success('Residente deletado permanentemente do sistema!')
         carregarResidentes()
       } else {
         throw new Error(response.message || 'Erro ao deletar residente')
       }
     } catch (err) {
-      console.error('Erro ao deletar residente:', err)
-      alert('❌ ' + (err.message || 'Erro ao deletar residente permanentemente'))
+      showError(err.message || 'Erro ao deletar residente permanentemente')
     }
   }
 
-  // Mudar página
   const mudarPagina = (novaPagina) => {
     setFiltros(prev => ({ ...prev, pagina: novaPagina }))
   }
 
-  // Formatar CPF
   const formatarCPF = (cpf) => {
     if (!cpf) return '-'
     return cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4')
   }
 
-  // Formatar data
   const formatarData = (data) => {
     if (!data) return '-'
     return new Date(data).toLocaleDateString('pt-BR')
   }
 
-  // Calcular idade
   const calcularIdade = (dataNascimento) => {
     if (!dataNascimento) return '-'
     const hoje = new Date()
@@ -139,219 +121,219 @@ function ResidentesInativos() {
     return idade + ' anos'
   }
 
-  // useEffect para carregar dados
   useEffect(() => {
     carregarResidentes()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filtros.pagina, filtros.limite])
 
   return (
-    <div className="listagem-residentes">
-      <div className="container-fluid py-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <div>
-            <h2 className="mb-1">
-              <i className="bi bi-person-x-fill text-secondary me-2"></i>
-              Residentes Inativos
-            </h2>
-            <p className="text-muted mb-0">Lista de residentes que foram inativados no sistema</p>
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center shadow-lg shadow-slate-500/30">
+              <i className="bi bi-person-x-fill text-3xl text-white"></i>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-white">Residentes Inativos</h1>
+              <p className="text-slate-400">Lista de residentes que foram inativados no sistema</p>
+            </div>
           </div>
-        </div>
 
-        {/* Estatísticas */}
-        <div className="row g-3 mb-4">
-          <div className="col-md-4">
-            <div className="card stats-card border-0 shadow-sm">
-              <div className="card-body">
-                <div className="d-flex align-items-center">
-                  <div className="stats-icon bg-secondary bg-opacity-10 text-secondary rounded-circle p-3 me-3">
-                    <i className="bi bi-person-x-fill fs-4"></i>
-                  </div>
-                  <div>
-                    <p className="text-muted mb-0 small">Total de Inativos</p>
-                    <h3 className="mb-0">{paginacao.total}</h3>
-                  </div>
-                </div>
+          {/* Estatísticas */}
+          <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-slate-500/10 flex items-center justify-center">
+                <i className="bi bi-person-x-fill text-2xl text-slate-400"></i>
+              </div>
+              <div>
+                <p className="text-sm text-slate-400">Total de Inativos</p>
+                <h3 className="text-2xl font-bold text-white">{paginacao.total}</h3>
               </div>
             </div>
           </div>
         </div>
 
         {/* Filtros */}
-        <div className="card border-0 shadow-sm mb-4">
-          <div className="card-body">
-            <div className="row g-3">
-              <div className="col-md-8">
-                <label className="form-label small text-muted">Buscar por nome ou CPF</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  placeholder="Digite o nome ou CPF..."
-                  value={filtros.busca}
-                  onChange={(e) => setFiltros({ ...filtros, busca: e.target.value, pagina: 1 })}
-                />
-              </div>
-              <div className="col-md-4 d-flex align-items-end">
-                <button 
-                  className="btn btn-primary w-100"
-                  onClick={carregarResidentes}
-                >
-                  <i className="bi bi-search me-2"></i>
-                  Buscar
-                </button>
-              </div>
+        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6 mb-6">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <i className="bi bi-funnel text-slate-400"></i>
+            Filtros
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+            <div className="md:col-span-10">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Buscar por nome ou CPF</label>
+              <input
+                type="text"
+                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500"
+                placeholder="Digite o nome ou CPF..."
+                value={filtros.busca}
+                onChange={(e) => setFiltros({ ...filtros, busca: e.target.value, pagina: 1 })}
+              />
+            </div>
+            <div className="md:col-span-2 flex items-end">
+              <button
+                className="w-full px-4 py-2 bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-700 hover:to-slate-800 text-white rounded-lg shadow-lg shadow-slate-500/30 transition-all flex items-center justify-center gap-2"
+                onClick={carregarResidentes}
+              >
+                <i className="bi bi-search"></i>
+                Buscar
+              </button>
             </div>
           </div>
         </div>
 
         {/* Tabela */}
-        <div className="card border-0 shadow-sm">
-          <div className="card-body">
-            {loading ? (
-              <div className="text-center py-5">
-                <div className="spinner-border text-primary" role="status">
-                  <span className="visually-hidden">Carregando...</span>
-                </div>
-                <p className="mt-3 text-muted">Carregando residentes inativos...</p>
-              </div>
-            ) : error ? (
-              <div className="alert alert-danger" role="alert">
-                <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                {error}
-              </div>
-            ) : residentes.length === 0 ? (
-              <div className="text-center py-5">
-                <i className="bi bi-inbox fs-1 text-muted"></i>
-                <p className="mt-3 text-muted">Nenhum residente inativo encontrado</p>
-              </div>
-            ) : (
-              <>
-                <div className="table-responsive">
-                  <table className="table table-hover align-middle">
-                    <thead className="table-light">
-                      <tr>
-                        <th>ID</th>
-                        <th>Nome</th>
-                        <th>CPF</th>
-                        <th>Idade</th>
-                        <th>Telefone</th>
-                        <th>Data Entrada</th>
-                        <th>Status</th>
-                        <th className="text-center">Ações</th>
+        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 overflow-hidden">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <svg className="animate-spin h-12 w-12 text-slate-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <p className="text-slate-400">Carregando residentes inativos...</p>
+            </div>
+          ) : residentes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <i className="bi bi-inbox text-6xl text-slate-600 mb-4"></i>
+              <p className="text-slate-400">Nenhum residente inativo encontrado</p>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-900/50 border-b border-slate-700">
+                    <tr>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">ID</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Nome</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">CPF</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Idade</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Telefone</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Data Entrada</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-center text-xs font-semibold text-slate-300 uppercase tracking-wider">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-700">
+                    {residentes.map((residente) => (
+                      <tr key={residente.id} className="hover:bg-slate-700/30 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
+                          #{residente.id}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center text-white font-semibold shadow-lg">
+                              {residente.nome_completo.charAt(0)}
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-white">{residente.nome_completo}</div>
+                              {residente.email && (
+                                <div className="text-xs text-slate-400">{residente.email}</div>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                          {formatarCPF(residente.cpf)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                          {calcularIdade(residente.data_nascimento)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                          {residente.telefone || '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                          {formatarData(residente.data_entrada)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="px-3 py-1 border rounded-full text-xs font-medium bg-slate-500/10 text-slate-400 border-slate-500/20">
+                            Inativo
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <div className="flex items-center justify-center gap-2">
+                            <button
+                              className="px-4 py-2 text-emerald-400 hover:bg-emerald-500/10 border border-emerald-500/20 hover:border-emerald-500/40 rounded-lg transition-all flex items-center gap-2"
+                              onClick={() => handleReativar(residente.id, residente.nome_completo)}
+                              title="Reativar"
+                            >
+                              <i className="bi bi-arrow-clockwise"></i>
+                              Reativar
+                            </button>
+                            <button
+                              className="px-4 py-2 text-red-400 hover:bg-red-500/10 border border-red-500/20 hover:border-red-500/40 rounded-lg transition-all flex items-center gap-2"
+                              onClick={() => handleDeletarPermanente(residente.id, residente.nome_completo)}
+                              title="Deletar Permanentemente"
+                            >
+                              <i className="bi bi-trash3"></i>
+                              Deletar
+                            </button>
+                          </div>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {residentes.map((residente) => (
-                        <tr key={residente.id}>
-                          <td className="text-muted">#{residente.id}</td>
-                          <td>
-                            <div className="d-flex align-items-center">
-                              <div className="avatar-circle bg-secondary bg-opacity-10 text-secondary me-2">
-                                {residente.nome_completo.charAt(0)}
-                              </div>
-                              <div>
-                                <strong>{residente.nome_completo}</strong>
-                                {residente.email && (
-                                  <div className="small text-muted">{residente.email}</div>
-                                )}
-                              </div>
-                            </div>
-                          </td>
-                          <td>{formatarCPF(residente.cpf)}</td>
-                          <td>{calcularIdade(residente.data_nascimento)}</td>
-                          <td>{residente.telefone || '-'}</td>
-                          <td>{formatarData(residente.data_entrada)}</td>
-                          <td>
-                            <span className="badge bg-secondary">
-                              Inativo
-                            </span>
-                          </td>
-                          <td>
-                            <div className="d-flex gap-2 justify-content-center">
-                              <button 
-                                className="btn btn-sm btn-outline-success"
-                                title="Reativar"
-                                onClick={() => handleReativar(residente.id, residente.nome_completo)}
-                              >
-                                <i className="bi bi-arrow-clockwise me-1"></i>
-                                Reativar
-                              </button>
-                              <button 
-                                className="btn btn-sm btn-outline-danger"
-                                title="Deletar Permanentemente"
-                                onClick={() => handleDeletarPermanente(residente.id, residente.nome_completo)}
-                              >
-                                <i className="bi bi-trash3 me-1"></i>
-                                Deletar
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-                {/* Paginação */}
-                <div className="d-flex justify-content-between align-items-center mt-4">
-                  <div className="text-muted">
+              {/* Paginação */}
+              {paginacao.paginas > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-700">
+                  <div className="text-sm text-slate-400">
                     Mostrando {residentes.length} de {paginacao.total} residentes inativos
                   </div>
-                  <nav>
-                    <ul className="pagination mb-0">
-                      <li className={`page-item ${paginacao.paginaAtual === 1 ? 'disabled' : ''}`}>
-                        <button 
-                          className="page-link"
-                          onClick={() => mudarPagina(paginacao.paginaAtual - 1)}
-                          disabled={paginacao.paginaAtual === 1}
-                        >
-                          <i className="bi bi-chevron-left"></i>
-                        </button>
-                      </li>
-                      {[...Array(paginacao.paginas)].map((_, index) => {
-                        const numeroPagina = index + 1
-                        if (
-                          numeroPagina === 1 ||
-                          numeroPagina === paginacao.paginas ||
-                          (numeroPagina >= paginacao.paginaAtual - 1 && numeroPagina <= paginacao.paginaAtual + 1)
-                        ) {
-                          return (
-                            <li 
-                              key={numeroPagina} 
-                              className={`page-item ${paginacao.paginaAtual === numeroPagina ? 'active' : ''}`}
-                            >
-                              <button 
-                                className="page-link"
-                                onClick={() => mudarPagina(numeroPagina)}
-                              >
-                                {numeroPagina}
-                              </button>
-                            </li>
-                          )
-                        } else if (
-                          numeroPagina === paginacao.paginaAtual - 2 ||
-                          numeroPagina === paginacao.paginaAtual + 2
-                        ) {
-                          return <li key={numeroPagina} className="page-item disabled"><span className="page-link">...</span></li>
-                        }
-                        return null
-                      })}
-                      <li className={`page-item ${paginacao.paginaAtual === paginacao.paginas ? 'disabled' : ''}`}>
-                        <button 
-                          className="page-link"
-                          onClick={() => mudarPagina(paginacao.paginaAtual + 1)}
-                          disabled={paginacao.paginaAtual === paginacao.paginas}
-                        >
-                          <i className="bi bi-chevron-right"></i>
-                        </button>
-                      </li>
-                    </ul>
-                  </nav>
+
+                  <div className="flex gap-2">
+                    <button
+                      className={`px-3 py-1 rounded-lg transition-colors ${paginacao.paginaAtual === 1 ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-700 text-white hover:bg-slate-600'}`}
+                      onClick={() => mudarPagina(paginacao.paginaAtual - 1)}
+                      disabled={paginacao.paginaAtual === 1}
+                    >
+                      <i className="bi bi-chevron-left"></i>
+                    </button>
+                    
+                    {[...Array(paginacao.paginas)].map((_, index) => {
+                      const numeroPagina = index + 1
+                      if (
+                        numeroPagina === 1 ||
+                        numeroPagina === paginacao.paginas ||
+                        (numeroPagina >= paginacao.paginaAtual - 1 && numeroPagina <= paginacao.paginaAtual + 1)
+                      ) {
+                        return (
+                          <button
+                            key={numeroPagina}
+                            className={`px-4 py-1 rounded-lg transition-colors ${paginacao.paginaAtual === numeroPagina ? 'bg-slate-600 text-white' : 'bg-slate-700 text-white hover:bg-slate-600'}`}
+                            onClick={() => mudarPagina(numeroPagina)}
+                          >
+                            {numeroPagina}
+                          </button>
+                        )
+                      } else if (
+                        numeroPagina === paginacao.paginaAtual - 2 ||
+                        numeroPagina === paginacao.paginaAtual + 2
+                      ) {
+                        return (
+                          <span key={numeroPagina} className="px-2 py-1 text-slate-500">
+                            ...
+                          </span>
+                        )
+                      }
+                      return null
+                    })}
+                    
+                    <button
+                      className={`px-3 py-1 rounded-lg transition-colors ${paginacao.paginaAtual === paginacao.paginas ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-700 text-white hover:bg-slate-600'}`}
+                      onClick={() => mudarPagina(paginacao.paginaAtual + 1)}
+                      disabled={paginacao.paginaAtual === paginacao.paginas}
+                    >
+                      <i className="bi bi-chevron-right"></i>
+                    </button>
+                  </div>
                 </div>
-              </>
-            )}
-          </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>

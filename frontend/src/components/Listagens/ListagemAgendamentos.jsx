@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import './ListagemAgendamentos.css'
+import { useNotification } from '../../contexts/NotificationContext'
 import {
   listarAgendamentos,
   obterEstatisticasAgendamentos,
@@ -10,10 +10,12 @@ import {
 } from '../../api/api'
 
 function ListagemAgendamentos() {
+  const { success, error: showError } = useNotification()
   const [agendamentos, setAgendamentos] = useState([])
   const [estatisticas, setEstatisticas] = useState(null)
   const [loading, setLoading] = useState(true)
   const [mostrarCancelados, setMostrarCancelados] = useState(false)
+  
   const [filtros, setFiltros] = useState({
     status: '',
     tipo_atendimento: '',
@@ -21,10 +23,12 @@ function ListagemAgendamentos() {
     data_fim: '',
     busca: ''
   })
+  
   const [paginaAtual, setPaginaAtual] = useState(1)
   const [itensPorPagina, setItensPorPagina] = useState(10)
   const [totalPaginas, setTotalPaginas] = useState(1)
   const [totalItens, setTotalItens] = useState(0)
+  
   const [detalhesModal, setDetalhesModal] = useState(null)
   const [editarModal, setEditarModal] = useState(null)
 
@@ -48,18 +52,12 @@ function ListagemAgendamentos() {
         obterEstatisticasAgendamentos()
       ])
 
-      console.log('Agendamentos Response:', agendamentosRes)
-      console.log('Estatísticas Response:', estatisticasRes)
-
       if (agendamentosRes.success) {
         let agendamentosData = agendamentosRes.data?.agendamentos || []
         
-        // Filtrar baseado no estado de mostrarCancelados
         if (mostrarCancelados) {
-          // Mostrar APENAS cancelados
           agendamentosData = agendamentosData.filter(ag => ag.status === 'cancelado')
         } else {
-          // Mostrar APENAS não cancelados
           agendamentosData = agendamentosData.filter(ag => ag.status !== 'cancelado')
         }
         
@@ -72,9 +70,8 @@ function ListagemAgendamentos() {
       if (estatisticasRes.success) {
         setEstatisticas(estatisticasRes.data)
       }
-    } catch (error) {
-      console.error('Erro ao carregar agendamentos:', error)
-      alert('Erro ao carregar agendamentos')
+    } catch {
+      showError('Erro ao carregar agendamentos')
     } finally {
       setLoading(false)
     }
@@ -105,17 +102,15 @@ function ListagemAgendamentos() {
 
     try {
       const response = await confirmarAgendamento(id)
-      console.log('Resposta confirmar:', response)
       
       if (response.success) {
-        alert('✅ Agendamento confirmado com sucesso!')
+        success('Agendamento confirmado com sucesso!')
         carregarDados()
       } else {
-        throw new Error(response.message || 'Erro ao confirmar agendamento')
+        throw new Error(response.message || 'Erro ao confirmar')
       }
     } catch (error) {
-      console.error('Erro ao confirmar:', error)
-      alert('❌ ' + (error.message || 'Erro ao confirmar agendamento'))
+      showError(error.message || 'Erro ao confirmar agendamento')
     }
   }
 
@@ -133,14 +128,13 @@ function ListagemAgendamentos() {
       })
       
       if (response.success) {
-        alert('✅ Agendamento cancelado com sucesso!')
+        success('Agendamento cancelado com sucesso!')
         carregarDados()
       } else {
-        throw new Error(response.message || 'Erro ao cancelar agendamento')
+        throw new Error(response.message || 'Erro ao cancelar')
       }
     } catch (error) {
-      console.error('Erro ao cancelar:', error)
-      alert('❌ ' + (error.message || 'Erro ao cancelar agendamento'))
+      showError(error.message || 'Erro ao cancelar agendamento')
     }
   }
 
@@ -150,9 +144,8 @@ function ListagemAgendamentos() {
       if (response.success) {
         setDetalhesModal(response.data)
       }
-    } catch (error) {
-      console.error('Erro ao buscar detalhes:', error)
-      alert('Erro ao buscar detalhes do agendamento')
+    } catch {
+      showError('Erro ao buscar detalhes')
     }
   }
 
@@ -162,16 +155,14 @@ function ListagemAgendamentos() {
       if (response.success) {
         setEditarModal(response.data)
       }
-    } catch (error) {
-      console.error('Erro ao buscar agendamento:', error)
-      alert('Erro ao buscar agendamento para edição')
+    } catch {
+      showError('Erro ao buscar agendamento')
     }
   }
 
   const handleSalvarEdicao = async () => {
-    // Validar hora_fim > hora_inicio
     if (editarModal.hora_fim <= editarModal.hora_inicio) {
-      alert('❌ A hora de término deve ser posterior à hora de início')
+      showError('A hora de término deve ser posterior à hora de início')
       return
     }
     
@@ -185,12 +176,11 @@ function ListagemAgendamentos() {
       }
       
       await atualizarAgendamento(editarModal.id, dados)
-      alert('✅ Agendamento atualizado com sucesso!')
+      success('Agendamento atualizado com sucesso!')
       setEditarModal(null)
       carregarDados()
     } catch (error) {
-      console.error('Erro ao atualizar:', error)
-      alert('❌ ' + (error.message || 'Erro ao atualizar agendamento'))
+      showError(error.message || 'Erro ao atualizar agendamento')
     }
   }
 
@@ -201,14 +191,13 @@ function ListagemAgendamentos() {
       const response = await atualizarAgendamento(id, { status: 'em_atendimento' })
       
       if (response.success) {
-        alert('✅ Atendimento iniciado!')
+        success('Atendimento iniciado!')
         carregarDados()
       } else {
-        throw new Error(response.message || 'Erro ao iniciar atendimento')
+        throw new Error(response.message || 'Erro ao iniciar')
       }
     } catch (error) {
-      console.error('Erro ao iniciar atendimento:', error)
-      alert('❌ ' + (error.message || 'Erro ao iniciar atendimento'))
+      showError(error.message || 'Erro ao iniciar atendimento')
     }
   }
 
@@ -219,26 +208,25 @@ function ListagemAgendamentos() {
       const response = await atualizarAgendamento(id, { status: 'concluido' })
       
       if (response.success) {
-        alert('✅ Atendimento concluído!')
+        success('Atendimento concluído!')
         carregarDados()
       } else {
-        throw new Error(response.message || 'Erro ao concluir atendimento')
+        throw new Error(response.message || 'Erro ao concluir')
       }
     } catch (error) {
-      console.error('Erro ao concluir atendimento:', error)
-      alert('❌ ' + (error.message || 'Erro ao concluir atendimento'))
+      showError(error.message || 'Erro ao concluir atendimento')
     }
   }
 
   const getStatusBadge = (status) => {
     const badges = {
-      agendado: 'bg-primary',
-      confirmado: 'bg-success',
-      em_atendimento: 'bg-warning text-dark',
-      em_andamento: 'bg-warning text-dark',
-      concluido: 'bg-secondary',
-      cancelado: 'bg-danger',
-      falta: 'bg-danger'
+      agendado: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+      confirmado: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+      em_atendimento: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+      em_andamento: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+      concluido: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
+      cancelado: 'bg-red-500/10 text-red-400 border-red-500/20',
+      falta: 'bg-red-500/10 text-red-400 border-red-500/20'
     }
     const labels = {
       agendado: 'Agendado',
@@ -249,33 +237,21 @@ function ListagemAgendamentos() {
       cancelado: 'Cancelado',
       falta: 'Falta'
     }
-    return <span className={`badge ${badges[status] || 'bg-secondary'}`}>{labels[status] || status}</span>
+    return <span className={`px-3 py-1 border rounded-full text-xs font-medium ${badges[status] || 'bg-slate-500/10 text-slate-400 border-slate-500/20'}`}>{labels[status] || status}</span>
   }
 
   const getTipoAtendimentoBadge = (tipo) => {
     const badges = {
-      consulta_medica: 'bg-info',
-      consulta: 'bg-info',
-      fisioterapia: 'bg-success',
-      psicologia: 'bg-warning text-dark',
-      nutricao: 'bg-danger',
-      enfermagem: 'bg-primary',
-      terapia_ocupacional: 'bg-info',
-      assistencia_social: 'bg-secondary',
-      outro: 'bg-secondary'
+      'Consulta Médica': 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+      'Enfermagem': 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+      'Fisioterapia': 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+      'Psicologia': 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+      'Nutrição': 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+      'Exame': 'bg-pink-500/10 text-pink-400 border-pink-500/20',
+      'Procedimento': 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+      'Outro': 'bg-slate-500/10 text-slate-400 border-slate-500/20'
     }
-    const labels = {
-      consulta_medica: 'Consulta Médica',
-      consulta: 'Consulta',
-      fisioterapia: 'Fisioterapia',
-      psicologia: 'Psicologia',
-      nutricao: 'Nutrição',
-      enfermagem: 'Enfermagem',
-      terapia_ocupacional: 'Terapia Ocupacional',
-      assistencia_social: 'Assistência Social',
-      outro: 'Outro'
-    }
-    return <span className={`badge ${badges[tipo] || 'bg-secondary'}`}>{labels[tipo] || tipo}</span>
+    return <span className={`px-3 py-1 border rounded-full text-xs font-medium ${badges[tipo] || 'bg-slate-500/10 text-slate-400 border-slate-500/20'}`}>{tipo}</span>
   }
 
   const formatarData = (data) => {
@@ -286,214 +262,231 @@ function ListagemAgendamentos() {
     return hora?.substring(0, 5) || ''
   }
 
-  if (loading && agendamentos.length === 0) {
-    return (
-      <div className="listagem-agendamentos">
-        <div className="text-center py-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
-    <div className="listagem-agendamentos">
-      <div className="container-fluid">
-        {/* Cabeçalho */}
-        <div className="page-header">
-          <h2>
-            <i className="bi bi-calendar-check me-2"></i>
-            Agendamentos
-          </h2>
-          <p className="text-muted">Gerencie os agendamentos dos residentes</p>
-        </div>
-
-        {/* Estatísticas */}
-        {estatisticas && (
-          <div className="row g-3 mb-4">
-            <div className="col-md-3">
-              <div className="stat-card total">
-                <div className="stat-icon">
-                  <i className="bi bi-calendar-check"></i>
-                </div>
-                <div className="stat-info">
-                  <h3>{estatisticas.total || 0}</h3>
-                  <p>Total de Agendamentos</p>
-                </div>
-              </div>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+              <i className="bi bi-calendar-check text-3xl text-white"></i>
             </div>
-            <div className="col-md-3">
-              <div className="stat-card agendado">
-                <div className="stat-icon">
-                  <i className="bi bi-calendar-plus"></i>
-                </div>
-                <div className="stat-info">
-                  <h3>{estatisticas.agendados || 0}</h3>
-                  <p>Agendados</p>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="stat-card confirmado">
-                <div className="stat-icon">
-                  <i className="bi bi-calendar-check-fill"></i>
-                </div>
-                <div className="stat-info">
-                  <h3>{estatisticas.confirmados || 0}</h3>
-                  <p>Confirmados</p>
-                </div>
-              </div>
-            </div>
-            <div className="col-md-3">
-              <div className="stat-card concluido">
-                <div className="stat-icon">
-                  <i className="bi bi-check-circle-fill"></i>
-                </div>
-                <div className="stat-info">
-                  <h3>{estatisticas.concluidos || 0}</h3>
-                  <p>Concluídos</p>
-                </div>
-              </div>
+            <div>
+              <h1 className="text-3xl font-bold text-white">Listagem de Agendamentos</h1>
+              <p className="text-slate-400">Gerencie os agendamentos dos residentes</p>
             </div>
           </div>
-        )}
+
+          {/* Estatísticas */}
+          {estatisticas && (
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                    <i className="bi bi-calendar-check text-2xl text-amber-400"></i>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-400">Total</p>
+                    <h3 className="text-2xl font-bold text-white">{estatisticas?.total || 0}</h3>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                    <i className="bi bi-calendar-plus text-2xl text-blue-400"></i>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-400">Agendados</p>
+                    <h3 className="text-2xl font-bold text-white">{estatisticas?.agendados || 0}</h3>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                    <i className="bi bi-calendar-check-fill text-2xl text-emerald-400"></i>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-400">Confirmados</p>
+                    <h3 className="text-2xl font-bold text-white">{estatisticas?.confirmados || 0}</h3>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-slate-500/10 flex items-center justify-center">
+                    <i className="bi bi-check-circle-fill text-2xl text-slate-400"></i>
+                  </div>
+                  <div>
+                    <p className="text-sm text-slate-400">Concluídos</p>
+                    <h3 className="text-2xl font-bold text-white">{estatisticas?.concluidos || 0}</h3>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
 
         {/* Filtros */}
-        <div className="card mb-4">
-          <div className="card-body">
-            <div className="row g-3">
-              <div className="col-md-2">
-                <label className="form-label">Status</label>
-                <select
-                  className="form-select"
-                  name="status"
-                  value={filtros.status}
-                  onChange={handleFiltroChange}
-                >
-                  <option value="">Todos</option>
-                  <option value="agendado">Agendado</option>
-                  <option value="confirmado">Confirmado</option>
-                  <option value="em_atendimento">Em Atendimento</option>
-                  <option value="em_andamento">Em Andamento</option>
-                  <option value="concluido">Concluído</option>
-                  <option value="cancelado">Cancelado</option>
-                  <option value="falta">Falta</option>
-                </select>
-              </div>
-              <div className="col-md-2">
-                <label className="form-label">Tipo</label>
-                <select
-                  className="form-select"
-                  name="tipo_atendimento"
-                  value={filtros.tipo_atendimento}
-                  onChange={handleFiltroChange}
-                >
-                  <option value="">Todos</option>
-                  <option value="consulta_medica">Consulta Médica</option>
-                  <option value="fisioterapia">Fisioterapia</option>
-                  <option value="psicologia">Psicologia</option>
-                  <option value="nutricao">Nutrição</option>
-                  <option value="enfermagem">Enfermagem</option>
-                  <option value="terapia_ocupacional">Terapia Ocupacional</option>
-                  <option value="assistencia_social">Assistência Social</option>
-                  <option value="outro">Outro</option>
-                </select>
-              </div>
-              <div className="col-md-2">
-                <label className="form-label">Data Início</label>
-                <input
-                  type="date"
-                  className="form-control"
-                  name="data_inicio"
-                  value={filtros.data_inicio}
-                  onChange={handleFiltroChange}
-                />
-              </div>
-              <div className="col-md-2">
-                <label className="form-label">Data Fim</label>
-                <input
-                  type="date"
-                  className="form-control"
-                  name="data_fim"
-                  value={filtros.data_fim}
-                  onChange={handleFiltroChange}
-                />
-              </div>
-              <div className="col-md-2">
-                <label className="form-label">Buscar</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="busca"
-                  value={filtros.busca}
-                  onChange={handleFiltroChange}
-                  placeholder="Residente ou profissional..."
-                />
-              </div>
-              <div className="col-md-1 d-flex align-items-end">
-                <button
-                  className="btn btn-secondary w-100"
-                  onClick={limparFiltros}
-                  title="Limpar filtros"
-                >
-                  <i className="bi bi-x-circle"></i>
-                </button>
-              </div>
-              <div className="col-md-2 d-flex align-items-end">
-                <button
-                  className={`btn w-100 ${mostrarCancelados ? 'btn-warning' : 'btn-outline-warning'}`}
-                  onClick={() => setMostrarCancelados(!mostrarCancelados)}
-                  title={mostrarCancelados ? "Ocultar cancelados" : "Ver cancelados"}
-                >
-                  <i className="bi bi-eye-slash me-2"></i>
-                  {mostrarCancelados ? 'Ocultar Cancelados' : 'Ver Cancelados'}
-                </button>
-              </div>
+        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6 mb-6">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <i className="bi bi-funnel text-amber-400"></i>
+            Filtros
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Status</label>
+              <select
+                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                name="status"
+                value={filtros.status}
+                onChange={handleFiltroChange}
+              >
+                <option value="">Todos</option>
+                <option value="agendado">Agendado</option>
+                <option value="confirmado">Confirmado</option>
+                <option value="em_atendimento">Em Atendimento</option>
+                <option value="concluido">Concluído</option>
+                <option value="cancelado">Cancelado</option>
+                <option value="falta">Falta</option>
+              </select>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Tipo</label>
+              <select
+                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                name="tipo_atendimento"
+                value={filtros.tipo_atendimento}
+                onChange={handleFiltroChange}
+              >
+                <option value="">Todos</option>
+                <option value="Consulta Médica">Consulta Médica</option>
+                <option value="Enfermagem">Enfermagem</option>
+                <option value="Fisioterapia">Fisioterapia</option>
+                <option value="Psicologia">Psicologia</option>
+                <option value="Nutrição">Nutrição</option>
+                <option value="Exame">Exame</option>
+                <option value="Procedimento">Procedimento</option>
+                <option value="Outro">Outro</option>
+              </select>
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Data Início</label>
+              <input
+                type="date"
+                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                name="data_inicio"
+                value={filtros.data_inicio}
+                onChange={handleFiltroChange}
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Data Fim</label>
+              <input
+                type="date"
+                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                name="data_fim"
+                value={filtros.data_fim}
+                onChange={handleFiltroChange}
+              />
+            </div>
+
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Buscar</label>
+              <input
+                type="text"
+                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                name="busca"
+                value={filtros.busca}
+                onChange={handleFiltroChange}
+                placeholder="Residente ou profissional..."
+              />
+            </div>
+
+            <div className="md:col-span-1 flex items-end">
+              <button
+                className="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                onClick={limparFiltros}
+                title="Limpar filtros"
+              >
+                <i className="bi bi-x-circle"></i>
+              </button>
+            </div>
+
+            <div className="md:col-span-1 flex items-end">
+              <button
+                className={`w-full px-4 py-2 rounded-lg transition-colors ${mostrarCancelados ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-slate-700 hover:bg-slate-600 text-white'}`}
+                onClick={() => setMostrarCancelados(!mostrarCancelados)}
+                title={mostrarCancelados ? "Ocultar cancelados" : "Ver cancelados"}
+              >
+                <i className={`bi ${mostrarCancelados ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+              </button>
             </div>
           </div>
         </div>
 
         {/* Tabela */}
-        <div className="card">
-          <div className="card-body">
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <thead>
-                  <tr>
-                    <th>Data</th>
-                    <th>Horário</th>
-                    <th>Residente</th>
-                    <th>Profissional</th>
-                    <th>Tipo</th>
-                    <th>Status</th>
-                    <th className="text-center">Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {agendamentos.length === 0 ? (
+        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 overflow-hidden">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <svg className="animate-spin h-12 w-12 text-amber-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <p className="text-slate-400">Carregando agendamentos...</p>
+            </div>
+          ) : agendamentos.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <i className="bi bi-calendar-x text-6xl text-slate-600 mb-4"></i>
+              <p className="text-slate-400">Nenhum agendamento encontrado</p>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-900/50 border-b border-slate-700">
                     <tr>
-                      <td colSpan="7" className="text-center py-4">
-                        <i className="bi bi-calendar-x fs-1 text-muted d-block mb-2"></i>
-                        <span className="text-muted">Nenhum agendamento encontrado</span>
-                      </td>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Data</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Horário</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Residente</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Profissional</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Tipo</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-center text-xs font-semibold text-slate-300 uppercase tracking-wider">Ações</th>
                     </tr>
-                  ) : (
-                    agendamentos.map(agendamento => (
-                      <tr key={agendamento.id}>
-                        <td>{formatarData(agendamento.data_agendamento)}</td>
-                        <td>
+                  </thead>
+                  <tbody className="divide-y divide-slate-700">
+                    {agendamentos.map((agendamento) => (
+                      <tr key={agendamento.id} className="hover:bg-slate-700/30 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                          {formatarData(agendamento.data_agendamento)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
                           {formatarHora(agendamento.hora_inicio)} - {formatarHora(agendamento.hora_fim)}
                         </td>
-                        <td>{agendamento.Residente?.nome_completo || 'N/A'}</td>
-                        <td>{agendamento.Profissional?.nome_completo || 'N/A'}</td>
-                        <td>{getTipoAtendimentoBadge(agendamento.tipo_atendimento)}</td>
-                        <td>{getStatusBadge(agendamento.status)}</td>
-                        <td className="text-center">
-                          <div className="btn-group btn-group-sm">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                          {agendamento.residente?.nome_completo || agendamento.Residente?.nome_completo || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
+                          {agendamento.profissional?.nome_completo || agendamento.Profissional?.nome_completo || 'N/A'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {getTipoAtendimentoBadge(agendamento.tipo_atendimento)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {getStatusBadge(agendamento.status)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center">
+                          <div className="flex items-center justify-center gap-2">
                             <button
-                              className="btn btn-outline-primary"
+                              className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
                               onClick={() => verDetalhes(agendamento.id)}
                               title="Ver detalhes"
                             >
@@ -503,14 +496,14 @@ function ListagemAgendamentos() {
                             {agendamento.status === 'agendado' && (
                               <>
                                 <button
-                                  className="btn btn-outline-warning"
+                                  className="p-2 text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors"
                                   onClick={() => abrirModalEditar(agendamento.id)}
                                   title="Editar"
                                 >
                                   <i className="bi bi-pencil"></i>
                                 </button>
                                 <button
-                                  className="btn btn-outline-success"
+                                  className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors"
                                   onClick={() => handleConfirmar(agendamento.id)}
                                   title="Confirmar"
                                 >
@@ -521,7 +514,7 @@ function ListagemAgendamentos() {
                             
                             {agendamento.status === 'confirmado' && (
                               <button
-                                className="btn btn-outline-info"
+                                className="p-2 text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition-colors"
                                 onClick={() => handleIniciarAtendimento(agendamento.id)}
                                 title="Iniciar Atendimento"
                               >
@@ -531,7 +524,7 @@ function ListagemAgendamentos() {
                             
                             {agendamento.status === 'em_atendimento' && (
                               <button
-                                className="btn btn-outline-success"
+                                className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors"
                                 onClick={() => handleConcluirAtendimento(agendamento.id)}
                                 title="Concluir"
                               >
@@ -541,7 +534,7 @@ function ListagemAgendamentos() {
                             
                             {(agendamento.status === 'agendado' || agendamento.status === 'confirmado') && (
                               <button
-                                className="btn btn-outline-danger"
+                                className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                                 onClick={() => handleCancelar(agendamento.id)}
                                 title="Cancelar"
                               >
@@ -551,143 +544,142 @@ function ListagemAgendamentos() {
                           </div>
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Paginação */}
-            {totalPaginas > 1 && (
-              <div className="pagination-container">
-                <div className="items-per-page">
-                  <label>Itens por página:</label>
-                  <select
-                    className="form-select form-select-sm"
-                    value={itensPorPagina}
-                    onChange={(e) => {
-                      setItensPorPagina(Number(e.target.value))
-                      setPaginaAtual(1)
-                    }}
-                  >
-                    <option value="5">5</option>
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                  </select>
-                </div>
-
-                <div className="pagination-info">
-                  Mostrando {((paginaAtual - 1) * itensPorPagina) + 1} a{' '}
-                  {Math.min(paginaAtual * itensPorPagina, totalItens)} de {totalItens} registros
-                </div>
-
-                <nav>
-                  <ul className="pagination pagination-sm mb-0">
-                    <li className={`page-item ${paginaAtual === 1 ? 'disabled' : ''}`}>
-                      <button
-                        className="page-link"
-                        onClick={() => setPaginaAtual(1)}
-                        disabled={paginaAtual === 1}
-                      >
-                        <i className="bi bi-chevron-double-left"></i>
-                      </button>
-                    </li>
-                    <li className={`page-item ${paginaAtual === 1 ? 'disabled' : ''}`}>
-                      <button
-                        className="page-link"
-                        onClick={() => setPaginaAtual(paginaAtual - 1)}
-                        disabled={paginaAtual === 1}
-                      >
-                        <i className="bi bi-chevron-left"></i>
-                      </button>
-                    </li>
-                    <li className="page-item active">
-                      <span className="page-link">{paginaAtual}</span>
-                    </li>
-                    <li className={`page-item ${paginaAtual === totalPaginas ? 'disabled' : ''}`}>
-                      <button
-                        className="page-link"
-                        onClick={() => setPaginaAtual(paginaAtual + 1)}
-                        disabled={paginaAtual === totalPaginas}
-                      >
-                        <i className="bi bi-chevron-right"></i>
-                      </button>
-                    </li>
-                    <li className={`page-item ${paginaAtual === totalPaginas ? 'disabled' : ''}`}>
-                      <button
-                        className="page-link"
-                        onClick={() => setPaginaAtual(totalPaginas)}
-                        disabled={paginaAtual === totalPaginas}
-                      >
-                        <i className="bi bi-chevron-double-right"></i>
-                      </button>
-                    </li>
-                  </ul>
-                </nav>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-            )}
-          </div>
+
+              {/* Paginação */}
+              {totalPaginas > 1 && (
+                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-700">
+                  <div className="flex items-center gap-4">
+                    <label className="text-sm text-slate-400">Itens por página:</label>
+                    <select
+                      className="px-3 py-1 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      value={itensPorPagina}
+                      onChange={(e) => {
+                        setItensPorPagina(Number(e.target.value))
+                        setPaginaAtual(1)
+                      }}
+                    >
+                      <option value="5">5</option>
+                      <option value="10">10</option>
+                      <option value="25">25</option>
+                      <option value="50">50</option>
+                    </select>
+                    <span className="text-sm text-slate-400">
+                      Mostrando {((paginaAtual - 1) * itensPorPagina) + 1} a{' '}
+                      {Math.min(paginaAtual * itensPorPagina, totalItens)} de {totalItens}
+                    </span>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <button
+                      className={`px-3 py-1 rounded-lg transition-colors ${paginaAtual === 1 ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-700 text-white hover:bg-slate-600'}`}
+                      onClick={() => setPaginaAtual(1)}
+                      disabled={paginaAtual === 1}
+                    >
+                      <i className="bi bi-chevron-double-left"></i>
+                    </button>
+                    <button
+                      className={`px-3 py-1 rounded-lg transition-colors ${paginaAtual === 1 ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-700 text-white hover:bg-slate-600'}`}
+                      onClick={() => setPaginaAtual(paginaAtual - 1)}
+                      disabled={paginaAtual === 1}
+                    >
+                      <i className="bi bi-chevron-left"></i>
+                    </button>
+                    <span className="px-4 py-1 bg-amber-600 text-white rounded-lg">
+                      {paginaAtual}
+                    </span>
+                    <button
+                      className={`px-3 py-1 rounded-lg transition-colors ${paginaAtual === totalPaginas ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-700 text-white hover:bg-slate-600'}`}
+                      onClick={() => setPaginaAtual(paginaAtual + 1)}
+                      disabled={paginaAtual === totalPaginas}
+                    >
+                      <i className="bi bi-chevron-right"></i>
+                    </button>
+                    <button
+                      className={`px-3 py-1 rounded-lg transition-colors ${paginaAtual === totalPaginas ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-700 text-white hover:bg-slate-600'}`}
+                      onClick={() => setPaginaAtual(totalPaginas)}
+                      disabled={paginaAtual === totalPaginas}
+                    >
+                      <i className="bi bi-chevron-double-right"></i>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
 
-      {/* Modal de Detalhes */}
+      {/* Modal Detalhes */}
       {detalhesModal && (
-        <div className="modal-overlay" onClick={() => setDetalhesModal(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h5>
-                <i className="bi bi-info-circle me-2"></i>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setDetalhesModal(null)}>
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 max-w-3xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <i className="bi bi-info-circle"></i>
                 Detalhes do Agendamento
-              </h5>
-              <button className="btn-close" onClick={() => setDetalhesModal(null)}></button>
+              </h3>
+              <button onClick={() => setDetalhesModal(null)} className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors">
+                <i className="bi bi-x-lg"></i>
+              </button>
             </div>
-            <div className="modal-body">
-              <div className="detail-group">
-                <strong>Residente:</strong>
-                <span>{detalhesModal.Residente?.nome_completo}</span>
-              </div>
-              <div className="detail-group">
-                <strong>Profissional:</strong>
-                <span>{detalhesModal.Profissional?.nome_completo} - {detalhesModal.Profissional?.profissao}</span>
-              </div>
-              <div className="detail-group">
-                <strong>Data:</strong>
-                <span>{formatarData(detalhesModal.data_agendamento)}</span>
-              </div>
-              <div className="detail-group">
-                <strong>Horário:</strong>
-                <span>{formatarHora(detalhesModal.hora_inicio)} às {formatarHora(detalhesModal.hora_fim)}</span>
-              </div>
-              <div className="detail-group">
-                <strong>Tipo:</strong>
-                <span>{getTipoAtendimentoBadge(detalhesModal.tipo_atendimento)}</span>
-              </div>
-              <div className="detail-group">
-                <strong>Status:</strong>
-                <span>{getStatusBadge(detalhesModal.status)}</span>
-              </div>
-              {detalhesModal.observacoes && (
-                <div className="detail-group">
-                  <strong>Observações:</strong>
-                  <span>{detalhesModal.observacoes}</span>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="text-sm text-slate-400">Residente</label>
+                  <p className="text-white font-medium mt-1">
+                    {detalhesModal.residente?.nome_completo || detalhesModal.Residente?.nome_completo}
+                  </p>
                 </div>
-              )}
-              {detalhesModal.status === 'cancelado' && (
-                <>
-                  <div className="detail-group">
-                    <strong>Cancelado por:</strong>
-                    <span>{detalhesModal.cancelado_por}</span>
+                <div>
+                  <label className="text-sm text-slate-400">Profissional</label>
+                  <p className="text-white font-medium mt-1">
+                    {(detalhesModal.profissional?.nome_completo || detalhesModal.Profissional?.nome_completo)} - {(detalhesModal.profissional?.profissao || detalhesModal.Profissional?.profissao)}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm text-slate-400">Data</label>
+                  <p className="text-white font-medium mt-1">{formatarData(detalhesModal.data_agendamento)}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-slate-400">Horário</label>
+                  <p className="text-white font-medium mt-1">
+                    {formatarHora(detalhesModal.hora_inicio)} às {formatarHora(detalhesModal.hora_fim)}
+                  </p>
+                </div>
+                <div>
+                  <label className="text-sm text-slate-400">Tipo</label>
+                  <p className="mt-1">{getTipoAtendimentoBadge(detalhesModal.tipo_atendimento)}</p>
+                </div>
+                <div>
+                  <label className="text-sm text-slate-400">Status</label>
+                  <p className="mt-1">{getStatusBadge(detalhesModal.status)}</p>
+                </div>
+                {detalhesModal.observacoes && (
+                  <div className="col-span-full">
+                    <label className="text-sm text-slate-400">Observações</label>
+                    <p className="text-white font-medium mt-1">{detalhesModal.observacoes}</p>
                   </div>
-                  <div className="detail-group">
-                    <strong>Motivo:</strong>
-                    <span>{detalhesModal.motivo_cancelamento}</span>
-                  </div>
-                </>
-              )}
+                )}
+                {detalhesModal.status === 'cancelado' && (
+                  <>
+                    <div>
+                      <label className="text-sm text-slate-400">Cancelado por</label>
+                      <p className="text-white font-medium mt-1">{detalhesModal.cancelado_por}</p>
+                    </div>
+                    <div className="col-span-full">
+                      <label className="text-sm text-slate-400">Motivo do cancelamento</label>
+                      <p className="text-white font-medium mt-1">{detalhesModal.motivo_cancelamento}</p>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-            <div className="modal-footer">
-              <button className="btn btn-secondary" onClick={() => setDetalhesModal(null)}>
+            <div className="px-6 py-4 border-t border-slate-700 flex justify-end gap-3">
+              <button onClick={() => setDetalhesModal(null)} className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors">
                 Fechar
               </button>
             </div>
@@ -695,92 +687,91 @@ function ListagemAgendamentos() {
         </div>
       )}
 
-      {/* Modal de Edição */}
+      {/* Modal Editar */}
       {editarModal && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }} onClick={() => setEditarModal(null)}>
-          <div className="modal-dialog modal-dialog-centered" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-content">
-              <div className="modal-header bg-warning">
-                <h5 className="modal-title">
-                  <i className="bi bi-pencil-square me-2"></i>
-                  Editar Agendamento
-                </h5>
-                <button type="button" className="btn-close" onClick={() => setEditarModal(null)}></button>
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => setEditarModal(null)}>
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-gradient-to-r from-amber-600 to-orange-600 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <i className="bi bi-pencil-square"></i>
+                Editar Agendamento
+              </h3>
+              <button onClick={() => setEditarModal(null)} className="text-white hover:bg-white/20 rounded-lg p-2 transition-colors">
+                <i className="bi bi-x-lg"></i>
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="md:col-span-3">
+                  <label className="text-sm text-slate-400">Residente</label>
+                  <p className="text-white font-medium mt-1">{editarModal.Residente?.nome_completo}</p>
+                </div>
+                <div className="md:col-span-3">
+                  <label className="text-sm text-slate-400">Profissional</label>
+                  <p className="text-white font-medium mt-1">{editarModal.Profissional?.nome_completo}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Data *</label>
+                  <input
+                    type="date"
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    value={editarModal.data_agendamento}
+                    onChange={(e) => setEditarModal({...editarModal, data_agendamento: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Hora Início *</label>
+                  <input
+                    type="time"
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    value={editarModal.hora_inicio}
+                    onChange={(e) => setEditarModal({...editarModal, hora_inicio: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Hora Fim *</label>
+                  <input
+                    type="time"
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    value={editarModal.hora_fim}
+                    onChange={(e) => setEditarModal({...editarModal, hora_fim: e.target.value})}
+                  />
+                </div>
+                <div className="md:col-span-3">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Tipo de Atendimento *</label>
+                  <select
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    value={editarModal.tipo_atendimento}
+                    onChange={(e) => setEditarModal({...editarModal, tipo_atendimento: e.target.value})}
+                  >
+                    <option value="Consulta Médica">Consulta Médica</option>
+                    <option value="Enfermagem">Enfermagem</option>
+                    <option value="Fisioterapia">Fisioterapia</option>
+                    <option value="Psicologia">Psicologia</option>
+                    <option value="Nutrição">Nutrição</option>
+                    <option value="Exame">Exame</option>
+                    <option value="Procedimento">Procedimento</option>
+                    <option value="Outro">Outro</option>
+                  </select>
+                </div>
+                <div className="md:col-span-3">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Observações</label>
+                  <textarea
+                    className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                    rows="3"
+                    value={editarModal.observacoes || ''}
+                    onChange={(e) => setEditarModal({...editarModal, observacoes: e.target.value})}
+                  ></textarea>
+                </div>
               </div>
-              <div className="modal-body">
-                <form>
-                  <div className="row g-3">
-                    <div className="col-12">
-                      <label className="form-label text-muted small">Residente</label>
-                      <p className="fw-bold">{editarModal.Residente?.nome_completo}</p>
-                    </div>
-                    <div className="col-12">
-                      <label className="form-label text-muted small">Profissional</label>
-                      <p className="fw-bold">{editarModal.Profissional?.nome_completo}</p>
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label">Data *</label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        value={editarModal.data_agendamento}
-                        onChange={(e) => setEditarModal({...editarModal, data_agendamento: e.target.value})}
-                      />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label">Hora Início *</label>
-                      <input
-                        type="time"
-                        className="form-control"
-                        value={editarModal.hora_inicio}
-                        onChange={(e) => setEditarModal({...editarModal, hora_inicio: e.target.value})}
-                      />
-                    </div>
-                    <div className="col-md-4">
-                      <label className="form-label">Hora Fim *</label>
-                      <input
-                        type="time"
-                        className="form-control"
-                        value={editarModal.hora_fim}
-                        onChange={(e) => setEditarModal({...editarModal, hora_fim: e.target.value})}
-                      />
-                    </div>
-                    <div className="col-12">
-                      <label className="form-label">Tipo de Atendimento *</label>
-                      <select
-                        className="form-select"
-                        value={editarModal.tipo_atendimento}
-                        onChange={(e) => setEditarModal({...editarModal, tipo_atendimento: e.target.value})}
-                      >
-                        <option value="consulta">Consulta</option>
-                        <option value="fisioterapia">Fisioterapia</option>
-                        <option value="psicologia">Psicologia</option>
-                        <option value="nutricao">Nutrição</option>
-                        <option value="outro">Outro</option>
-                      </select>
-                    </div>
-                    <div className="col-12">
-                      <label className="form-label">Observações</label>
-                      <textarea
-                        className="form-control"
-                        rows="3"
-                        value={editarModal.observacoes || ''}
-                        onChange={(e) => setEditarModal({...editarModal, observacoes: e.target.value})}
-                      ></textarea>
-                    </div>
-                  </div>
-                </form>
-              </div>
-              <div className="modal-footer">
-                <button type="button" className="btn btn-secondary" onClick={() => setEditarModal(null)}>
-                  <i className="bi bi-x-circle me-2"></i>
-                  Cancelar
-                </button>
-                <button type="button" className="btn btn-warning" onClick={handleSalvarEdicao}>
-                  <i className="bi bi-check-circle me-2"></i>
-                  Salvar Alterações
-                </button>
-              </div>
+            </div>
+            <div className="px-6 py-4 border-t border-slate-700 flex justify-end gap-3">
+              <button onClick={() => setEditarModal(null)} className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors">
+                Cancelar
+              </button>
+              <button onClick={handleSalvarEdicao} className="px-6 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-lg shadow-lg shadow-amber-500/30 transition-all">
+                Salvar Alterações
+              </button>
             </div>
           </div>
         </div>

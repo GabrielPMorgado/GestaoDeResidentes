@@ -26,7 +26,7 @@ function Gerenciamento() {
         setProfissionais(Array.isArray(dados) ? dados : [])
       }
     } catch (error) {
-      console.error('Erro ao carregar dados:', error)
+
       alert('❌ Erro ao carregar dados')
       // Definir como array vazio em caso de erro
       if (tipoExclusao === 'residentes') {
@@ -116,16 +116,13 @@ function Gerenciamento() {
     try {
       for (const id of selectedIds) {
         try {
-          console.log(`Tentando deletar ${tipoExclusao} ID:`, id)
           if (tipoExclusao === 'residentes') {
             await deletarResidentePermanente(id)
           } else {
             await deletarProfissionalPermanente(id)
           }
-          console.log(`✅ Deletado com sucesso ID:`, id)
           sucessos++
         } catch (error) {
-          console.error(`❌ Erro ao deletar ID ${id}:`, error)
           errosDetalhados.push(`ID ${id}: ${error.message || error}`)
           erros++
         }
@@ -139,7 +136,6 @@ function Gerenciamento() {
         alert(`❌ Nenhum registro foi deletado. Erros:\n${errosDetalhados.join('\n')}`)
       }
     } catch (error) {
-      console.error('Erro geral:', error)
       alert(`❌ Erro ao processar exclusões: ${error.message}`)
     } finally {
       setLoading(false)

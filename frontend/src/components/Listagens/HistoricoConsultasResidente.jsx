@@ -60,7 +60,7 @@ function HistoricoConsultasResidente({ residenteId, residenteNome, onVoltar }) {
       setHistoricoConsultas(todasConsultas)
       setConsultasFiltradas(todasConsultas)
     } catch (err) {
-      console.error('Erro ao carregar histórico:', err)
+
       setHistoricoConsultas([])
       setConsultasFiltradas([])
     } finally {

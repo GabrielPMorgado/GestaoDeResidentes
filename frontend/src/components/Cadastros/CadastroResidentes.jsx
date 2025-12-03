@@ -1,10 +1,88 @@
-﻿import { useState } from 'react'
-import './CadastroResidentes.css'
+import { useState } from 'react'
 import { criarResidente } from '../../api/api'
 import { formatarCPF, formatarTelefone, formatarCEP } from '../../utils/formatters'
-import { validarCPF, validarEmail, validarTelefone, validarCEP, validarNome } from '../../utils/validators'
+import { useNotification } from '../../contexts/NotificationContext'
+
+// Componente Input fora para evitar recria��o
+const Input = ({ label, name, type = 'text', required = false, icon, formData, errors, touched, handleChange, handleBlur, ...props }) => (
+  <div>
+    <label htmlFor={name} className="block text-sm font-medium text-slate-300 mb-2">
+      {label} {required && <span className="text-red-400">*</span>}
+    </label>
+    <div className="relative">
+      {icon && (
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <i className={`bi ${icon} text-slate-400`}></i>
+        </div>
+      )}
+      <input
+        type={type}
+        id={name}
+        name={name}
+        value={formData[name] || ''}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        className={`w-full ${icon ? 'pl-10' : 'pl-4'} pr-4 py-3 bg-slate-900/50 border ${
+          errors[name] && touched[name] 
+            ? 'border-red-500 focus:ring-red-500' 
+            : 'border-slate-600 focus:ring-blue-500'
+        } rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:border-transparent transition-all`}
+        {...props}
+      />
+    </div>
+    {errors[name] && touched[name] && (
+      <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+        <i className="bi bi-exclamation-circle text-xs"></i>
+        {errors[name]}
+      </p>
+    )}
+  </div>
+)
+
+// Componente Select fora para evitar recria��o
+const Select = ({ label, name, options, required = false, icon, formData, errors, touched, handleChange, handleBlur }) => (
+  <div>
+    <label htmlFor={name} className="block text-sm font-medium text-slate-300 mb-2">
+      {label} {required && <span className="text-red-400">*</span>}
+    </label>
+    <div className="relative">
+      {icon && (
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+          <i className={`bi ${icon} text-slate-400`}></i>
+        </div>
+      )}
+      <select
+        id={name}
+        name={name}
+        value={formData[name] || ''}
+        onChange={handleChange}
+        onBlur={handleBlur}
+        className={`w-full ${icon ? 'pl-10' : 'pl-4'} pr-10 py-3 bg-slate-900/50 border ${
+          errors[name] && touched[name]
+            ? 'border-red-500 focus:ring-red-500'
+            : 'border-slate-600 focus:ring-blue-500'
+        } rounded-lg text-white focus:outline-none focus:ring-2 focus:border-transparent transition-all appearance-none`}
+      >
+        <option value="">Selecione...</option>
+        {options.map(opt => (
+          <option key={opt.value} value={opt.value}>{opt.label}</option>
+        ))}
+      </select>
+      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+        <i className="bi bi-chevron-down text-slate-400"></i>
+      </div>
+    </div>
+    {errors[name] && touched[name] && (
+      <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+        <i className="bi bi-exclamation-circle text-xs"></i>
+        {errors[name]}
+      </p>
+    )}
+  </div>
+)
 
 function CadastroResidentes() {
+  const { success, error: showError } = useNotification()
   const [formData, setFormData] = useState({
     nome_completo: '',
     cpf: '',
@@ -30,164 +108,457 @@ function CadastroResidentes() {
 
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
   const [errors, setErrors] = useState({})
+  const [touched, setTouched] = useState({})
 
-  // Validação do Step 1 - Dados Pessoais
-  const validateStep1 = () => {
-    const newErrors = {}
+  const steps = [
+    { number: 1, title: 'Dados Pessoais', icon: 'bi-person', description: 'Informa��es b�sicas' },
+    { number: 2, title: 'Endere�o', icon: 'bi-geo-alt', description: 'Localiza��o' },
+    { number: 3, title: 'Respons�vel', icon: 'bi-people', description: 'Contato de emerg�ncia' }
+  ]
 
-    if (!formData.nome_completo || formData.nome_completo.trim().length < 3) {
-      newErrors.nome_completo = 'Nome completo deve ter pelo menos 3 caracteres'
+  // Valida��es em tempo real
+  const validateField = (name, value) => {
+    switch (name) {
+      case 'nome_completo':
+      
+  // Wrappers que passam as props automaticamente
+  const Input = (props) => (
+    <Input 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  const Select = (props) => (
+    <Select 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  return value.trim().length < 3 ? 'Nome deve ter pelo menos 3 caracteres' : ''
+      case 'cpf':
+      
+  // Wrappers que passam as props automaticamente
+  const Input = (props) => (
+    <Input 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  const Select = (props) => (
+    <Select 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  return value.replace(/\D/g, '').length !== 11 ? 'CPF deve ter 11 d�gitos' : ''
+      case 'data_nascimento':
+      
+  // Wrappers que passam as props automaticamente
+  const Input = (props) => (
+    <Input 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  const Select = (props) => (
+    <Select 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  return !value ? 'Data de nascimento � obrigat�ria' : ''
+      case 'sexo':
+      
+  // Wrappers que passam as props automaticamente
+  const Input = (props) => (
+    <Input 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  const Select = (props) => (
+    <Select 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  return !value ? 'Sexo � obrigat�rio' : ''
+      case 'telefone':
+      case 'telefone_responsavel':
+      
+  // Wrappers que passam as props automaticamente
+  const Input = (props) => (
+    <Input 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  const Select = (props) => (
+    <Select 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  return !value ? 'Telefone � obrigat�rio' : ''
+      case 'email':
+      
+  // Wrappers que passam as props automaticamente
+  const Input = (props) => (
+    <Input 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  const Select = (props) => (
+    <Select 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  return !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? 'Email inv�lido' : ''
+      case 'email_responsavel':
+      
+  // Wrappers que passam as props automaticamente
+  const Input = (props) => (
+    <Input 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  const Select = (props) => (
+    <Select 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  return value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? 'Email inv�lido' : ''
+      case 'cep':
+      
+  // Wrappers que passam as props automaticamente
+  const Input = (props) => (
+    <Input 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  const Select = (props) => (
+    <Select 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  return !/^\d{5}-?\d{3}$/.test(value) ? 'CEP inv�lido' : ''
+      case 'logradouro':
+      case 'numero':
+      case 'bairro':
+      case 'cidade':
+      
+  // Wrappers que passam as props automaticamente
+  const Input = (props) => (
+    <Input 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  const Select = (props) => (
+    <Select 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  return !value.trim() ? 'Campo obrigat�rio' : ''
+      case 'estado':
+      
+  // Wrappers que passam as props automaticamente
+  const Input = (props) => (
+    <Input 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  const Select = (props) => (
+    <Select 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  return !value ? 'Estado � obrigat�rio' : ''
+      case 'nome_responsavel':
+      
+  // Wrappers que passam as props automaticamente
+  const Input = (props) => (
+    <Input 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  const Select = (props) => (
+    <Select 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  return value.trim().length < 3 ? 'Nome deve ter pelo menos 3 caracteres' : ''
+      default:
+      
+  // Wrappers que passam as props automaticamente
+  const Input = (props) => (
+    <Input 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  const Select = (props) => (
+    <Select 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  return ''
     }
-
-    if (!formData.cpf) {
-      newErrors.cpf = 'CPF é obrigatório'
-    }
-    // Validação de CPF simplificada - apenas verifica se tem 11 dígitos
-    else if (formData.cpf.replace(/\D/g, '').length !== 11) {
-      newErrors.cpf = 'CPF deve ter 11 dígitos'
-    }
-
-    if (!formData.data_nascimento) {
-      newErrors.data_nascimento = 'Data de nascimento é obrigatória'
-    }
-
-    if (!formData.sexo) {
-      newErrors.sexo = 'Sexo é obrigatório'
-    }
-
-    if (!formData.telefone) {
-      newErrors.telefone = 'Telefone é obrigatório'
-    }
-
-    if (!formData.email) {
-      newErrors.email = 'Email é obrigatório'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Email inválido'
-    }
-
-    return newErrors
   }
 
-  const validateStep2 = () => {
-    const newErrors = {}
-
-    if (!formData.cep.trim()) {
-      newErrors.cep = 'CEP é obrigatório'
-    } else if (!/^\d{5}-?\d{3}$/.test(formData.cep)) {
-      newErrors.cep = 'CEP inválido (use formato: 00000-000)'
+  const validateStep = (step) => {
+    const stepErrors = {}
+    
+    if (step === 1) {
+      const fields = ['nome_completo', 'cpf', 'data_nascimento', 'sexo', 'telefone', 'email']
+      fields.forEach(field => {
+        const error = validateField(field, formData[field])
+        if (error) stepErrors[field] = error
+      })
+    } else if (step === 2) {
+      const fields = ['cep', 'logradouro', 'numero', 'bairro', 'cidade', 'estado']
+      fields.forEach(field => {
+        const error = validateField(field, formData[field])
+        if (error) stepErrors[field] = error
+      })
+    } else if (step === 3) {
+      const fields = ['nome_responsavel', 'telefone_responsavel']
+      fields.forEach(field => {
+        const error = validateField(field, formData[field])
+        if (error) stepErrors[field] = error
+      })
+      if (formData.email_responsavel) {
+        const error = validateField('email_responsavel', formData.email_responsavel)
+        if (error) stepErrors.email_responsavel = error
+      }
     }
+    
+  
+  // Wrappers que passam as props automaticamente
+  const Input = (props) => (
+    <Input 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
 
-    if (!formData.logradouro.trim()) {
-      newErrors.logradouro = 'Logradouro é obrigatório'
-    }
+  const Select = (props) => (
+    <Select 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
 
-    if (!formData.numero.trim()) {
-      newErrors.numero = 'Número é obrigatório'
-    }
-
-    if (!formData.bairro.trim()) {
-      newErrors.bairro = 'Bairro é obrigatório'
-    }
-
-    if (!formData.cidade.trim()) {
-      newErrors.cidade = 'Cidade é obrigatória'
-    }
-
-    if (!formData.estado) {
-      newErrors.estado = 'Estado é obrigatório'
-    }
-
-    return newErrors
-  }
-
-  const validateStep3 = () => {
-    const newErrors = {}
-
-    if (!formData.nome_responsavel || formData.nome_responsavel.trim().length < 3) {
-      newErrors.nome_responsavel = 'Nome do responsável é obrigatório'
-    }
-
-    if (!formData.telefone_responsavel) {
-      newErrors.telefone_responsavel = 'Telefone do responsável é obrigatório'
-    } else if (!/^\(\d{2}\)\s?\d{4,5}-\d{4}$/.test(formData.telefone_responsavel) && !/^\d{10,11}$/.test(formData.telefone_responsavel)) {
-      newErrors.telefone_responsavel = 'Telefone do responsável inválido'
-    }
-
-    if (formData.email_responsavel && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email_responsavel)) {
-      newErrors.email_responsavel = 'E-mail do responsável inválido'
-    }
-
-    return newErrors
+  return stepErrors
   }
 
   const handleChange = (e) => {
     const { name, value } = e.target
     
     let formattedValue = value
+    if (name === 'cpf') formattedValue = formatarCPF(value)
+    else if (name === 'telefone' || name === 'telefone_responsavel') formattedValue = formatarTelefone(value)
+    else if (name === 'cep') formattedValue = formatarCEP(value)
     
-    if (name === 'cpf') {
-      formattedValue = formatarCPF(value)
-    } else if (name === 'telefone' || name === 'telefone_responsavel') {
-      formattedValue = formatarTelefone(value)
-    } else if (name === 'cep') {
-      formattedValue = formatarCEP(value)
-    }
-    
-    setFormData(prev => ({
-      ...prev,
-      [name]: formattedValue
-    }))
-    
-    if (errors[name]) {
-      setErrors(prev => ({
-        ...prev,
-        [name]: ''
-      }))
-    }
-    if (error) setError(null)
+    setFormData(prev => ({ ...prev, [name]: formattedValue }))
+  }
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target
+    setTouched(prev => ({ ...prev, [name]: true }))
+    const error = validateField(name, value)
+    setErrors(prev => ({ ...prev, [name]: error }))
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    // Validar todos os steps antes de enviar
-    const step1Errors = validateStep1()
-    const step2Errors = validateStep2()
-    const step3Errors = validateStep3()
-    
-    const allErrors = { ...step1Errors, ...step2Errors, ...step3Errors }
+    const allErrors = { ...validateStep(1), ...validateStep(2), ...validateStep(3) }
     
     if (Object.keys(allErrors).length > 0) {
       setErrors(allErrors)
-      alert('❌ Por favor, corrija os erros no formulário antes de enviar.')
-      // Voltar para o primeiro step com erro
-      if (Object.keys(step1Errors).length > 0) {
-        setCurrentStep(1)
-      } else if (Object.keys(step2Errors).length > 0) {
-        setCurrentStep(2)
-      } else {
-        setCurrentStep(3)
-      }
-      return
+      showError('Por favor, corrija os erros no formul�rio')
+      
+      // Ir para o primeiro step com erro
+      if (Object.keys(validateStep(1)).length > 0) setCurrentStep(1)
+      else if (Object.keys(validateStep(2)).length > 0) setCurrentStep(2)
+      else setCurrentStep(3)
+    
+  // Wrappers que passam as props automaticamente
+  const Input = (props) => (
+    <Input 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  const Select = (props) => (
+    <Select 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  return
     }
     
     setLoading(true)
-    setError(null)
 
     try {
       await criarResidente(formData)
-      
-      alert('✅ Residente cadastrado com sucesso!')
-      
-      // Limpar formulário após sucesso
+      success('Residente cadastrado com sucesso!')
       handleReset()
-      setCurrentStep(1)
     } catch (err) {
-      const mensagemErro = err.response?.data?.message || err.message || 'Erro ao cadastrar residente. Tente novamente.'
-      setError(mensagemErro)
-      alert('❌ ' + mensagemErro)
+      showError(err.response?.data?.message || 'Erro ao cadastrar residente')
     } finally {
       setLoading(false)
     }
@@ -195,620 +566,535 @@ function CadastroResidentes() {
 
   const handleReset = () => {
     setFormData({
-      nome_completo: '',
-      cpf: '',
-      rg: '',
-      data_nascimento: '',
-      sexo: '',
-      estado_civil: '',
-      telefone: '',
-      email: '',
-      cep: '',
-      logradouro: '',
-      numero: '',
-      complemento: '',
-      bairro: '',
-      cidade: '',
-      estado: '',
-      nome_responsavel: '',
-      parentesco_responsavel: '',
-      telefone_responsavel: '',
-      email_responsavel: '',
-      observacoes: ''
+      nome_completo: '', cpf: '', rg: '', data_nascimento: '', sexo: '', estado_civil: '',
+      telefone: '', email: '', cep: '', logradouro: '', numero: '', complemento: '',
+      bairro: '', cidade: '', estado: '', nome_responsavel: '', parentesco_responsavel: '',
+      telefone_responsavel: '', email_responsavel: '', observacoes: ''
     })
-    setError(null)
     setErrors({})
+    setTouched({})
     setCurrentStep(1)
   }
 
   const nextStep = () => {
-    // Validar step atual antes de avançar
-    let stepErrors = {}
-    
-    if (currentStep === 1) {
-      stepErrors = validateStep1()
-    } else if (currentStep === 2) {
-      stepErrors = validateStep2()
-    }
+    const stepErrors = validateStep(currentStep)
     
     if (Object.keys(stepErrors).length > 0) {
       setErrors(stepErrors)
-      alert('❌ Por favor, corrija os erros antes de avançar.')
-      return
+      Object.keys(stepErrors).forEach(key => {
+        setTouched(prev => ({ ...prev, [key]: true }))
+      })
+      showError('Por favor, corrija os erros antes de avan�ar')
+    
+  // Wrappers que passam as props automaticamente
+  const Input = (props) => (
+    <Input 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  const Select = (props) => (
+    <Select 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  return
     }
     
     if (currentStep < 3) {
       setCurrentStep(currentStep + 1)
-      setErrors({})
     }
   }
 
   const prevStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1)
-      setErrors({})
-    }
+    if (currentStep > 1) setCurrentStep(currentStep - 1)
   }
 
-  return (
-    <div className="cadastro-residentes">
-      <div className="container-fluid">
-        {/* Header */}
-        <div className="cadastro-header">
-          <div className="row align-items-center mb-4">
-            <div className="col">
-              <h2 className="mb-1">
-                <i className="bi bi-person-plus-fill me-3 text-primary"></i>
-                Cadastro de Residentes
-              </h2>
-              <p className="text-muted mb-0">
-                <i className="bi bi-info-circle me-2"></i>
-                Preencha todos os campos obrigatórios (*) para completar o cadastro
-              </p>
-            </div>
+  const Input = ({ label, name, type = 'text', required = false, icon, ...props }) => (
+    <div>
+      <label htmlFor={name} className="block text-sm font-medium text-slate-300 mb-2">
+        {label} {required && <span className="text-red-400">*</span>}
+      </label>
+      <div className="relative">
+        {icon && (
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <i className={`bi ${icon} text-slate-400`}></i>
           </div>
+        )}
+        <input
+          type={type}
+          id={name}
+          name={name}
+          value={formData[name]}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          className={`w-full ${icon ? 'pl-10' : 'pl-4'} pr-4 py-3 bg-slate-900/50 border ${
+            errors[name] && touched[name] 
+              ? 'border-red-500 focus:ring-red-500' 
+              : 'border-slate-600 focus:ring-blue-500'
+          } rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:border-transparent transition-all`}
+          {...props}
+        />
+      </div>
+      {errors[name] && touched[name] && (
+        <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+          <i className="bi bi-exclamation-circle text-xs"></i>
+          {errors[name]}
+        </p>
+      )}
+    </div>
+  )
 
-          {/* Progress Steps */}
-          <div className="progress-steps mb-4">
-            <div className="row g-3">
-              <div className="col-12 col-md-4">
-                <div className={`step-item ${currentStep >= 1 ? 'active' : ''} ${currentStep > 1 ? 'completed' : ''}`}>
-                  <div className="step-number">
-                    {currentStep > 1 ? <i className="bi bi-check-lg"></i> : '1'}
-                  </div>
-                  <div className="step-info">
-                    <span className="step-title">Dados Pessoais</span>
-                    <span className="step-desc">Informações básicas</span>
-                  </div>
-                </div>
-              </div>
-              <div className="col-12 col-md-4">
-                <div className={`step-item ${currentStep >= 2 ? 'active' : ''} ${currentStep > 2 ? 'completed' : ''}`}>
-                  <div className="step-number">
-                    {currentStep > 2 ? <i className="bi bi-check-lg"></i> : '2'}
-                  </div>
-                  <div className="step-info">
-                    <span className="step-title">Endereço</span>
-                    <span className="step-desc">Localização</span>
-                  </div>
-                </div>
-              </div>
-              <div className="col-12 col-md-4">
-                <div className={`step-item ${currentStep >= 3 ? 'active' : ''} ${currentStep > 3 ? 'completed' : ''}`}>
-                  <div className="step-number">3</div>
-                  <div className="step-info">
-                    <span className="step-title">Responsável</span>
-                    <span className="step-desc">Contato emergencial</span>
-                  </div>
-                </div>
-              </div>
+  const Select = ({ label, name, options, required = false, icon }) => (
+    <div>
+      <label htmlFor={name} className="block text-sm font-medium text-slate-300 mb-2">
+        {label} {required && <span className="text-red-400">*</span>}
+      </label>
+      <div className="relative">
+        {icon && (
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
+            <i className={`bi ${icon} text-slate-400`}></i>
+          </div>
+        )}
+        <select
+          id={name}
+          name={name}
+          value={formData[name]}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          className={`w-full ${icon ? 'pl-10' : 'pl-4'} pr-10 py-3 bg-slate-900/50 border ${
+            errors[name] && touched[name]
+              ? 'border-red-500 focus:ring-red-500'
+              : 'border-slate-600 focus:ring-blue-500'
+          } rounded-lg text-white focus:outline-none focus:ring-2 focus:border-transparent transition-all appearance-none`}
+        >
+          <option value="">Selecione...</option>
+          {options.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+          <i className="bi bi-chevron-down text-slate-400"></i>
+        </div>
+      </div>
+      {errors[name] && touched[name] && (
+        <p className="mt-1 text-sm text-red-400 flex items-center gap-1">
+          <i className="bi bi-exclamation-circle text-xs"></i>
+          {errors[name]}
+        </p>
+      )}
+    </div>
+  )
+
+
+  // Wrappers que passam as props automaticamente
+  const Input = (props) => (
+    <Input 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  const Select = (props) => (
+    <Select 
+      {...props} 
+      formData={formData} 
+      errors={errors} 
+      touched={touched} 
+      handleChange={handleChange} 
+      handleBlur={handleBlur} 
+    />
+  )
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+      <div className="max-w-5xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-4 mb-3">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+              <i className="bi bi-person-plus text-2xl text-white"></i>
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-white">Cadastro de Residentes</h1>
+              <p className="text-slate-400">Preencha todos os campos obrigat�rios (*)</p>
             </div>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {/* Step 1 - Dados Pessoais */}
-          {currentStep === 1 && (
-            <div className="form-step active">
-              <div className="card border-0 shadow-sm">
-                <div className="card-body p-4">
-                  <h4 className="mb-4">
-                    <i className="bi bi-person-circle text-primary me-2"></i>
-                    Dados Pessoais
-                  </h4>
-                  
-                  <div className="row g-3">
-                    <div className="col-12 col-md-8">
-                      <label htmlFor="nome_completo" className="form-label">
-                        <i className="bi bi-person me-1"></i>
-                        Nome Completo *
-                      </label>
-                      <input
-                        type="text"
-                        className={`form-control form-control-lg ${errors.nome_completo ? 'is-invalid' : ''}`}
-                        id="nome_completo"
-                        name="nome_completo"
-                        value={formData.nome_completo}
-                        onChange={handleChange}
-                        placeholder="Digite o nome completo"
-                        required
-                      />
-                      {errors.nome_completo && (
-                        <div className="invalid-feedback">{errors.nome_completo}</div>
-                      )}
-                    </div>
+        {/* Progress Steps */}
+        <div className="mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {steps.map((step, idx) => (
+              <div
+                key={step.number}
+                className={`relative flex items-center gap-4 p-4 rounded-xl transition-all ${
+                  currentStep === step.number
+                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg shadow-blue-500/20'
+                    : currentStep > step.number
+                    ? 'bg-emerald-600/20 border border-emerald-500/30'
+                    : 'bg-slate-800/50 border border-slate-700'
+                }`}
+              >
+                <div
+                  className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-bold ${
+                    currentStep === step.number
+                      ? 'bg-white text-blue-600'
+                      : currentStep > step.number
+                      ? 'bg-emerald-500 text-white'
+                      : 'bg-slate-700 text-slate-400'
+                  }`}
+                >
+                  {currentStep > step.number ? (
+                    <i className="bi bi-check-lg text-xl"></i>
+                  ) : (
+                    <i className={`bi ${step.icon}`}></i>
+                  )}
+                </div>
+                <div className="flex-1">
+                  <h3
+                    className={`font-semibold ${
+                      currentStep >= step.number ? 'text-white' : 'text-slate-400'
+                    }`}
+                  >
+                    {step.title}
+                  </h3>
+                  <p
+                    className={`text-sm ${
+                      currentStep === step.number ? 'text-blue-100' : 'text-slate-500'
+                    }`}
+                  >
+                    {step.description}
+                  </p>
+                </div>
+                
+                {/* Connector Line */}
+                {idx < steps.length - 1 && (
+                  <div className="hidden md:block absolute top-1/2 -right-8 w-16 h-0.5 bg-slate-700 -translate-y-1/2"></div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
 
-                    <div className="col-12 col-md-4">
-                      <label htmlFor="data_nascimento" className="form-label">
-                        <i className="bi bi-calendar-event me-1"></i>
-                        Data de Nascimento *
-                      </label>
-                      <input
-                        type="date"
-                        className={`form-control form-control-lg ${errors.data_nascimento ? 'is-invalid' : ''}`}
-                        id="data_nascimento"
-                        name="data_nascimento"
-                        value={formData.data_nascimento}
-                        onChange={handleChange}
-                        required
-                      />
-                      {errors.data_nascimento && (
-                        <div className="invalid-feedback">{errors.data_nascimento}</div>
-                      )}
-                    </div>
+        {/* Form Card */}
+        <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700/50 p-8">
+          <form onSubmit={handleSubmit}>
+            {/* Step 1: Dados Pessoais */}
+            {currentStep === 1 && (
+              <div className="space-y-6 animate-fade-in">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2">
+                    <Input
+                      label="Nome Completo"
+                      name="nome_completo"
+                      icon="bi-person"
+                      required
+                      placeholder="Digite o nome completo"
+                    />
+                  </div>
 
-                    <div className="col-12 col-sm-6 col-md-4">
-                      <label htmlFor="cpf" className="form-label">
-                        <i className="bi bi-card-text me-1"></i>
-                        CPF *
-                      </label>
-                      <input
-                        type="text"
-                        className={`form-control form-control-lg ${errors.cpf ? 'is-invalid' : ''}`}
-                        id="cpf"
-                        name="cpf"
-                        value={formData.cpf}
-                        onChange={handleChange}
-                        placeholder="000.000.000-00"
-                        maxLength="14"
-                      />
-                      {errors.cpf && (
-                        <div className="invalid-feedback">{errors.cpf}</div>
-                      )}
-                    </div>
+                  <Input
+                    label="CPF"
+                    name="cpf"
+                    icon="bi-card-text"
+                    required
+                    placeholder="000.000.000-00"
+                    maxLength="14"
+                  />
 
-                    <div className="col-12 col-sm-6 col-md-4">
-                      <label htmlFor="rg" className="form-label">
-                        <i className="bi bi-card-heading me-1"></i>
-                        RG
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control form-control-lg"
-                        id="rg"
-                        name="rg"
-                        value={formData.rg}
-                        onChange={handleChange}
-                        placeholder="00.000.000-0"
-                      />
-                    </div>
+                  <Input
+                    label="RG"
+                    name="rg"
+                    icon="bi-card-heading"
+                    placeholder="00.000.000-0"
+                  />
 
-                    <div className="col-12 col-sm-6 col-md-4">
-                      <label htmlFor="sexo" className="form-label">
-                        <i className="bi bi-gender-ambiguous me-1"></i>
-                        Sexo *
-                      </label>
-                      <select
-                        className={`form-select form-select-lg ${errors.sexo ? 'is-invalid' : ''}`}
-                        id="sexo"
-                        name="sexo"
-                        value={formData.sexo}
-                        onChange={handleChange}
-                        required
-                      >
-                        <option value="">Selecione...</option>
-                        <option value="masculino">Masculino</option>
-                        <option value="feminino">Feminino</option>
-                        <option value="outro">Outro</option>
-                      </select>
-                      {errors.sexo && (
-                        <div className="invalid-feedback">{errors.sexo}</div>
-                      )}
-                    </div>
+                  <Input
+                    label="Data de Nascimento"
+                    name="data_nascimento"
+                    type="date"
+                    icon="bi-calendar"
+                    required
+                  />
 
-                    <div className="col-12 col-sm-6 col-md-4">
-                      <label htmlFor="estado_civil" className="form-label">
-                        <i className="bi bi-heart me-1"></i>
-                        Estado Civil
-                      </label>
-                      <select
-                        className="form-select form-select-lg"
-                        id="estado_civil"
-                        name="estado_civil"
-                        value={formData.estado_civil}
-                        onChange={handleChange}
-                      >
-                        <option value="">Selecione...</option>
-                        <option value="solteiro">Solteiro(a)</option>
-                        <option value="casado">Casado(a)</option>
-                        <option value="divorciado">Divorciado(a)</option>
-                        <option value="viuvo">Viúvo(a)</option>
-                        <option value="outro">Outro</option>
-                      </select>
-                    </div>
+                  <Select
+                    label="Sexo"
+                    name="sexo"
+                    icon="bi-gender-ambiguous"
+                    required
+                    options={[
+                      { value: 'M', label: 'Masculino' },
+                      { value: 'F', label: 'Feminino' },
+                      { value: 'Outro', label: 'Outro' }
+                    ]}
+                  />
 
-                    <div className="col-12 col-sm-6 col-md-4">
-                      <label htmlFor="telefone" className="form-label">
-                        <i className="bi bi-telephone me-1"></i>
-                        Telefone *
-                      </label>
-                      <input
-                        type="tel"
-                        className={`form-control form-control-lg ${errors.telefone ? 'is-invalid' : ''}`}
-                        id="telefone"
-                        name="telefone"
-                        value={formData.telefone}
-                        onChange={handleChange}
-                        placeholder="(00) 00000-0000"
-                        maxLength="15"
-                      />
-                      {errors.telefone && (
-                        <div className="invalid-feedback">{errors.telefone}</div>
-                      )}
-                    </div>
+                  <Select
+                    label="Estado Civil"
+                    name="estado_civil"
+                    icon="bi-heart"
+                    options={[
+                      { value: 'Solteiro', label: 'Solteiro(a)' },
+                      { value: 'Casado', label: 'Casado(a)' },
+                      { value: 'Divorciado', label: 'Divorciado(a)' },
+                      { value: 'Viuvo', label: 'Vi�vo(a)' }
+                    ]}
+                  />
 
-                    <div className="col-12 col-sm-6 col-md-4">
-                      <label htmlFor="email" className="form-label">
-                        <i className="bi bi-envelope me-1"></i>
-                        E-mail
-                      </label>
-                      <input
-                        type="email"
-                        className={`form-control form-control-lg ${errors.email ? 'is-invalid' : ''}`}
-                        id="email"
-                        name="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        placeholder="seuemail@exemplo.com"
-                      />
-                      {errors.email && (
-                        <div className="invalid-feedback">{errors.email}</div>
-                      )}
-                    </div>
+                  <Input
+                    label="Telefone"
+                    name="telefone"
+                    icon="bi-telephone"
+                    required
+                    placeholder="(00) 00000-0000"
+                    maxLength="15"
+                  />
+
+                  <Input
+                    label="Email"
+                    name="email"
+                    type="email"
+                    icon="bi-envelope"
+                    required
+                    placeholder="email@exemplo.com"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Endere�o */}
+            {currentStep === 2 && (
+              <div className="space-y-6 animate-fade-in">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <Input
+                    label="CEP"
+                    name="cep"
+                    icon="bi-mailbox"
+                    required
+                    placeholder="00000-000"
+                    maxLength="9"
+                  />
+
+                  <div></div>
+
+                  <div className="md:col-span-2">
+                    <Input
+                      label="Logradouro"
+                      name="logradouro"
+                      icon="bi-signpost"
+                      required
+                      placeholder="Rua, Avenida, etc"
+                    />
+                  </div>
+
+                  <Input
+                    label="N�mero"
+                    name="numero"
+                    icon="bi-hash"
+                    required
+                    placeholder="123"
+                  />
+
+                  <Input
+                    label="Complemento"
+                    name="complemento"
+                    icon="bi-building"
+                    placeholder="Apto, Bloco, etc"
+                  />
+
+                  <Input
+                    label="Bairro"
+                    name="bairro"
+                    icon="bi-map"
+                    required
+                    placeholder="Nome do bairro"
+                  />
+
+                  <Input
+                    label="Cidade"
+                    name="cidade"
+                    icon="bi-building"
+                    required
+                    placeholder="Nome da cidade"
+                  />
+
+                  <Select
+                    label="Estado"
+                    name="estado"
+                    icon="bi-geo-alt"
+                    required
+                    options={[
+                      { value: 'AC', label: 'Acre' },
+                      { value: 'AL', label: 'Alagoas' },
+                      { value: 'AP', label: 'Amap�' },
+                      { value: 'AM', label: 'Amazonas' },
+                      { value: 'BA', label: 'Bahia' },
+                      { value: 'CE', label: 'Cear�' },
+                      { value: 'DF', label: 'Distrito Federal' },
+                      { value: 'ES', label: 'Esp�rito Santo' },
+                      { value: 'GO', label: 'Goi�s' },
+                      { value: 'MA', label: 'Maranh�o' },
+                      { value: 'MT', label: 'Mato Grosso' },
+                      { value: 'MS', label: 'Mato Grosso do Sul' },
+                      { value: 'MG', label: 'Minas Gerais' },
+                      { value: 'PA', label: 'Par�' },
+                      { value: 'PB', label: 'Para�ba' },
+                      { value: 'PR', label: 'Paran�' },
+                      { value: 'PE', label: 'Pernambuco' },
+                      { value: 'PI', label: 'Piau�' },
+                      { value: 'RJ', label: 'Rio de Janeiro' },
+                      { value: 'RN', label: 'Rio Grande do Norte' },
+                      { value: 'RS', label: 'Rio Grande do Sul' },
+                      { value: 'RO', label: 'Rond�nia' },
+                      { value: 'RR', label: 'Roraima' },
+                      { value: 'SC', label: 'Santa Catarina' },
+                      { value: 'SP', label: 'S�o Paulo' },
+                      { value: 'SE', label: 'Sergipe' },
+                      { value: 'TO', label: 'Tocantins' }
+                    ]}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Respons�vel */}
+            {currentStep === 3 && (
+              <div className="space-y-6 animate-fade-in">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2">
+                    <Input
+                      label="Nome do Respons�vel"
+                      name="nome_responsavel"
+                      icon="bi-person-check"
+                      required
+                      placeholder="Nome completo do respons�vel"
+                    />
+                  </div>
+
+                  <Input
+                    label="Parentesco"
+                    name="parentesco_responsavel"
+                    icon="bi-people"
+                    placeholder="Ex: Filho(a), C�njuge"
+                  />
+
+                  <Input
+                    label="Telefone do Respons�vel"
+                    name="telefone_responsavel"
+                    icon="bi-telephone"
+                    required
+                    placeholder="(00) 00000-0000"
+                    maxLength="15"
+                  />
+
+                  <div className="md:col-span-2">
+                    <Input
+                      label="Email do Respons�vel"
+                      name="email_responsavel"
+                      type="email"
+                      icon="bi-envelope"
+                      placeholder="email@exemplo.com"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label htmlFor="observacoes" className="block text-sm font-medium text-slate-300 mb-2">
+                      Observa��es
+                    </label>
+                    <textarea
+                      id="observacoes"
+                      name="observacoes"
+                      value={formData.observacoes}
+                      onChange={handleChange}
+                      rows="4"
+                      className="w-full px-4 py-3 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+                      placeholder="Informa��es adicionais relevantes..."
+                    ></textarea>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Step 2 - Endereço */}
-          {currentStep === 2 && (
-            <div className="form-step active">
-              <div className="card border-0 shadow-sm">
-                <div className="card-body p-4">
-                  <h4 className="mb-4">
-                    <i className="bi bi-geo-alt-fill text-success me-2"></i>
-                    Endereço Residencial
-                  </h4>
-                  
-                  <div className="row g-3">
-                    <div className="col-12 col-sm-6 col-md-3">
-                      <label htmlFor="cep" className="form-label">
-                        <i className="bi bi-mailbox me-1"></i>
-                        CEP *
-                      </label>
-                      <input
-                        type="text"
-                        className={`form-control form-control-lg ${errors.cep ? 'is-invalid' : ''}`}
-                        id="cep"
-                        name="cep"
-                        value={formData.cep}
-                        onChange={handleChange}
-                        placeholder="00000-000"
-                        required
-                      />
-                      {errors.cep && (
-                        <div className="invalid-feedback">{errors.cep}</div>
-                      )}
-                    </div>
-
-                    <div className="col-12 col-md-7">
-                      <label htmlFor="logradouro" className="form-label">
-                        <i className="bi bi-signpost me-1"></i>
-                        Logradouro *
-                      </label>
-                      <input
-                        type="text"
-                        className={`form-control form-control-lg ${errors.logradouro ? 'is-invalid' : ''}`}
-                        id="logradouro"
-                        name="logradouro"
-                        value={formData.logradouro}
-                        onChange={handleChange}
-                        placeholder="Rua, Avenida, etc."
-                        required
-                      />
-                      {errors.logradouro && (
-                        <div className="invalid-feedback">{errors.logradouro}</div>
-                      )}
-                    </div>
-
-                    <div className="col-12 col-sm-6 col-md-2">
-                      <label htmlFor="numero" className="form-label">
-                        <i className="bi bi-hash me-1"></i>
-                        Número *
-                      </label>
-                      <input
-                        type="text"
-                        className={`form-control form-control-lg ${errors.numero ? 'is-invalid' : ''}`}
-                        id="numero"
-                        name="numero"
-                        value={formData.numero}
-                        onChange={handleChange}
-                        placeholder="123"
-                        required
-                      />
-                      {errors.numero && (
-                        <div className="invalid-feedback">{errors.numero}</div>
-                      )}
-                    </div>
-
-                    <div className="col-12 col-md-6">
-                      <label htmlFor="complemento" className="form-label">
-                        <i className="bi bi-building me-1"></i>
-                        Complemento
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control form-control-lg"
-                        id="complemento"
-                        name="complemento"
-                        value={formData.complemento}
-                        onChange={handleChange}
-                        placeholder="Apto, Bloco, etc."
-                      />
-                    </div>
-
-                    <div className="col-12 col-md-6">
-                      <label htmlFor="bairro" className="form-label">
-                        <i className="bi bi-map me-1"></i>
-                        Bairro *
-                      </label>
-                      <input
-                        type="text"
-                        className={`form-control form-control-lg ${errors.bairro ? 'is-invalid' : ''}`}
-                        id="bairro"
-                        name="bairro"
-                        value={formData.bairro}
-                        onChange={handleChange}
-                        placeholder="Nome do bairro"
-                        required
-                      />
-                      {errors.bairro && (
-                        <div className="invalid-feedback">{errors.bairro}</div>
-                      )}
-                    </div>
-
-                    <div className="col-12 col-sm-8 col-md-8">
-                      <label htmlFor="cidade" className="form-label">
-                        <i className="bi bi-building-fill-check me-1"></i>
-                        Cidade *
-                      </label>
-                      <input
-                        type="text"
-                        className={`form-control form-control-lg ${errors.cidade ? 'is-invalid' : ''}`}
-                        id="cidade"
-                        name="cidade"
-                        value={formData.cidade}
-                        onChange={handleChange}
-                        placeholder="Nome da cidade"
-                        required
-                      />
-                      {errors.cidade && (
-                        <div className="invalid-feedback">{errors.cidade}</div>
-                      )}
-                    </div>
-
-                    <div className="col-12 col-sm-4 col-md-4">
-                      <label htmlFor="estado" className="form-label">
-                        <i className="bi bi-pin-map me-1"></i>
-                        Estado *
-                      </label>
-                      <select
-                        className={`form-select form-select-lg ${errors.estado ? 'is-invalid' : ''}`}
-                        id="estado"
-                        name="estado"
-                        value={formData.estado}
-                        onChange={handleChange}
-                        required
-                      >
-                        <option value="">UF</option>
-                        <option value="AC">AC</option>
-                        <option value="AL">AL</option>
-                        <option value="AP">AP</option>
-                        <option value="AM">AM</option>
-                        <option value="BA">BA</option>
-                        <option value="CE">CE</option>
-                        <option value="DF">DF</option>
-                        <option value="ES">ES</option>
-                        <option value="GO">GO</option>
-                        <option value="MA">MA</option>
-                        <option value="MT">MT</option>
-                        <option value="MS">MS</option>
-                        <option value="MG">MG</option>
-                        <option value="PA">PA</option>
-                        <option value="PB">PB</option>
-                        <option value="PR">PR</option>
-                        <option value="PE">PE</option>
-                        <option value="PI">PI</option>
-                        <option value="RJ">RJ</option>
-                        <option value="RN">RN</option>
-                        <option value="RS">RS</option>
-                        <option value="RO">RO</option>
-                        <option value="RR">RR</option>
-                        <option value="SC">SC</option>
-                        <option value="SP">SP</option>
-                        <option value="SE">SE</option>
-                        <option value="TO">TO</option>
-                      </select>
-                      {errors.estado && (
-                        <div className="invalid-feedback">{errors.estado}</div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3 - Responsável */}
-          {currentStep === 3 && (
-            <div className="form-step active">
-              <div className="card border-0 shadow-sm">
-                <div className="card-body p-4">
-                  <h4 className="mb-4">
-                    <i className="bi bi-person-check-fill text-warning me-2"></i>
-                    Contato de Emergência
-                  </h4>
-                  
-                  <div className="row g-3">
-                    <div className="col-12 col-md-6">
-                      <label htmlFor="nome_responsavel" className="form-label">
-                        <i className="bi bi-person-badge me-1"></i>
-                        Nome do Responsável *
-                      </label>
-                      <input
-                        type="text"
-                        className={`form-control form-control-lg ${errors.nome_responsavel ? 'is-invalid' : ''}`}
-                        id="nome_responsavel"
-                        name="nome_responsavel"
-                        value={formData.nome_responsavel}
-                        onChange={handleChange}
-                        placeholder="Nome completo do responsável"
-                      />
-                      {errors.nome_responsavel && (
-                        <div className="invalid-feedback">{errors.nome_responsavel}</div>
-                      )}
-                    </div>
-
-                    <div className="col-12 col-sm-6 col-md-3">
-                      <label htmlFor="parentesco_responsavel" className="form-label">
-                        <i className="bi bi-people me-1"></i>
-                        Parentesco
-                      </label>
-                      <input
-                        type="text"
-                        className="form-control form-control-lg"
-                        id="parentesco_responsavel"
-                        name="parentesco_responsavel"
-                        value={formData.parentesco_responsavel}
-                        onChange={handleChange}
-                        placeholder="Ex: Filho(a), Irmão(ã)"
-                      />
-                    </div>
-
-                    <div className="col-12 col-sm-6 col-md-3">
-                      <label htmlFor="telefone_responsavel" className="form-label">
-                        <i className="bi bi-phone-vibrate me-1"></i>
-                        Telefone *
-                      </label>
-                      <input
-                        type="tel"
-                        className={`form-control form-control-lg ${errors.telefone_responsavel ? 'is-invalid' : ''}`}
-                        id="telefone_responsavel"
-                        name="telefone_responsavel"
-                        value={formData.telefone_responsavel}
-                        onChange={handleChange}
-                        placeholder="(00) 00000-0000"
-                        maxLength="15"
-                      />
-                      {errors.telefone_responsavel && (
-                        <div className="invalid-feedback">{errors.telefone_responsavel}</div>
-                      )}
-                    </div>
-
-                    <div className="col-12 col-md-6">
-                      <label htmlFor="email_responsavel" className="form-label">
-                        <i className="bi bi-envelope me-1"></i>
-                        E-mail do Responsável
-                      </label>
-                      <input
-                        type="email"
-                        className={`form-control form-control-lg ${errors.email_responsavel ? 'is-invalid' : ''}`}
-                        id="email_responsavel"
-                        name="email_responsavel"
-                        value={formData.email_responsavel}
-                        onChange={handleChange}
-                        placeholder="email@exemplo.com"
-                      />
-                      {errors.email_responsavel && (
-                        <div className="invalid-feedback">{errors.email_responsavel}</div>
-                      )}
-                    </div>
-
-                    <div className="col-12">
-                      <label htmlFor="observacoes" className="form-label">
-                        <i className="bi bi-chat-left-text me-1"></i>
-                        Observações Adicionais
-                      </label>
-                      <textarea
-                        className="form-control"
-                        id="observacoes"
-                        name="observacoes"
-                        value={formData.observacoes}
-                        onChange={handleChange}
-                        rows="4"
-                        placeholder="Informações adicionais relevantes sobre o residente..."
-                      ></textarea>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Navigation Buttons */}
-          <div className="form-navigation mt-4">
-            <div className="d-flex justify-content-between">
+            {/* Navigation Buttons */}
+            <div className="flex items-center justify-between mt-8 pt-6 border-t border-slate-700">
               <div>
                 {currentStep > 1 && (
-                  <button type="button" className="btn btn-outline-secondary btn-lg" onClick={prevStep}>
-                    <i className="bi bi-arrow-left me-2"></i>
-                    Voltar
+                  <button
+                    type="button"
+                    onClick={prevStep}
+                    className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-all flex items-center gap-2"
+                  >
+                    <i className="bi bi-arrow-left"></i>
+                    <span>Voltar</span>
                   </button>
                 )}
               </div>
-              <div className="d-flex gap-2">
-                <button type="button" className="btn btn-outline-danger btn-lg" onClick={handleReset}>
-                  <i className="bi bi-x-circle me-2"></i>
-                  Limpar Tudo
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition-all flex items-center gap-2"
+                >
+                  <i className="bi bi-arrow-clockwise"></i>
+                  <span>Limpar</span>
                 </button>
+
                 {currentStep < 3 ? (
-                  <button type="button" className="btn btn-primary btn-lg" onClick={nextStep}>
-                    Próximo
-                    <i className="bi bi-arrow-right ms-2"></i>
+                  <button
+                    type="button"
+                    onClick={nextStep}
+                    className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium rounded-lg shadow-lg shadow-blue-500/30 transition-all flex items-center gap-2"
+                  >
+                    <span>Pr�ximo</span>
+                    <i className="bi bi-arrow-right"></i>
                   </button>
                 ) : (
-                  <button type="submit" className="btn btn-success btn-lg" disabled={loading}>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-700 hover:to-cyan-700 text-white font-semibold rounded-lg shadow-lg shadow-emerald-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
                     {loading ? (
                       <>
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                        Salvando...
+                        <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span>Salvando...</span>
                       </>
                     ) : (
                       <>
-                        <i className="bi bi-check-circle me-2"></i>
-                        Finalizar Cadastro
+                        <i className="bi bi-check-circle"></i>
+                        <span>Finalizar Cadastro</span>
                       </>
                     )}
                   </button>
                 )}
               </div>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
     </div>
   )
 }
 
 export default CadastroResidentes
+

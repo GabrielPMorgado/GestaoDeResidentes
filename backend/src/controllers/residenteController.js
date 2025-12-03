@@ -1,134 +1,78 @@
-const Residente = require('../models/Residente');
-const Profissional = require('../models/Profissional');
-const Agendamento = require('../models/Agendamento');
-const HistoricoConsulta = require('../models/HistoricoConsulta');
+const { Residente, Agendamento, HistoricoConsulta } = require('../models');
 const { Op } = require('sequelize');
+const {
+  verificarCpfExistente,
+  verificarRgExistente,
+  tratarErroValidacao,
+  montarFiltros,
+  calcularPaginacao,
+  formatarRespostaPaginada,
+  log
+} = require('../utils/helpers');
 
 // Criar novo residente
 exports.criar = async (req, res) => {
   try {
     const { cpf, rg } = req.body;
 
-    // Verificar se CPF já existe em residentes
-    const residenteExistente = await Residente.findOne({ 
-      where: { cpf } 
-    });
-    
-    if (residenteExistente) {
+    // Verificar CPF
+    const cpfVerificacao = await verificarCpfExistente(cpf);
+    if (cpfVerificacao.existe) {
       return res.status(400).json({
         success: false,
-        message: 'CPF já cadastrado como residente!'
+        message: cpfVerificacao.mensagem
       });
     }
 
-    // Verificar se CPF já existe em profissionais
-    const profissionalExistente = await Profissional.findOne({ 
-      where: { cpf } 
-    });
-    
-    if (profissionalExistente) {
+    // Verificar RG
+    const rgVerificacao = await verificarRgExistente(rg);
+    if (rgVerificacao.existe) {
       return res.status(400).json({
         success: false,
-        message: 'CPF já cadastrado como profissional!'
+        message: rgVerificacao.mensagem
       });
-    }
-
-    // Verificar se RG já existe em residentes (se fornecido)
-    if (rg) {
-      const rgExistenteResidente = await Residente.findOne({ 
-        where: { rg } 
-      });
-      
-      if (rgExistenteResidente) {
-        return res.status(400).json({
-          success: false,
-          message: 'RG já cadastrado como residente!'
-        });
-      }
-
-      // Verificar se RG já existe em profissionais
-      const rgExistenteProfissional = await Profissional.findOne({ 
-        where: { rg } 
-      });
-      
-      if (rgExistenteProfissional) {
-        return res.status(400).json({
-          success: false,
-          message: 'RG já cadastrado como profissional!'
-        });
-      }
     }
 
     const residente = await Residente.create(req.body);
+    
+    log('info', 'Residente criado com sucesso', { id: residente.id, cpf });
+    
     res.status(201).json({
       success: true,
       message: 'Residente cadastrado com sucesso!',
       data: residente
     });
   } catch (error) {
-    console.error('Erro ao criar residente:', error);
-    
-    // Tratamento de erro de constraint única
-    if (error.name === 'SequelizeUniqueConstraintError') {
-      const campo = error.errors[0]?.path || 'campo';
-      return res.status(400).json({
-        success: false,
-        message: `${campo.toUpperCase()} já cadastrado no sistema!`
-      });
-    }
-    
-    res.status(500).json({
-      success: false,
-      message: 'Erro ao cadastrar residente',
-      error: error.message
-    });
+    log('error', 'Erro ao criar residente', error);
+    const erroFormatado = tratarErroValidacao(error);
+    res.status(500).json(erroFormatado);
   }
 };
 
 // Listar todos os residentes
 exports.listar = async (req, res) => {
   try {
-    const { status, busca, page = 1, limit = 10 } = req.query;
+    const { page = 1, limit = 10 } = req.query;
     
-    // Filtros
-    const where = {};
+    // Montar filtros
+    const where = montarFiltros(req.query, ['nome_completo', 'cpf', 'telefone']);
     
-    if (status) {
-      where.status = status;
-    }
+    // Calcular paginação
+    const paginacao = calcularPaginacao(page, limit);
     
-    if (busca) {
-      where[Op.or] = [
-        { nome_completo: { [Op.like]: `%${busca}%` } },
-        { cpf: { [Op.like]: `%${busca}%` } },
-        { telefone: { [Op.like]: `%${busca}%` } }
-      ];
-    }
-    
-    // Paginação
-    const offset = (page - 1) * limit;
-    
-    const { count, rows } = await Residente.findAndCountAll({
+    const resultado = await Residente.findAndCountAll({
       where,
-      limit: parseInt(limit),
-      offset: parseInt(offset),
+      ...paginacao,
       order: [['data_cadastro', 'DESC']]
     });
     
-    res.json({
-      success: true,
-      data: {
-        residentes: rows,
-        pagination: {
-          totalItens: count,
-          paginaAtual: parseInt(page),
-          itensPorPagina: parseInt(limit),
-          totalPaginas: Math.ceil(count / limit)
-        }
-      }
-    });
+    const resposta = formatarRespostaPaginada(resultado, page, limit);
+    resposta.data = { residentes: resposta.data, pagination: resposta.paginacao };
+    delete resposta.paginacao;
+    
+    res.json(resposta);
   } catch (error) {
-    console.error('Erro ao listar residentes:', error);
+    log('error', 'Erro ao listar residentes', error);
     res.status(500).json({
       success: false,
       message: 'Erro ao listar residentes',
@@ -155,7 +99,7 @@ exports.buscarPorId = async (req, res) => {
       data: residente
     });
   } catch (error) {
-    console.error('Erro ao buscar residente:', error);
+    log('error', 'Erro ao buscar residente', error);
     res.status(500).json({
       success: false,
       message: 'Erro ao buscar residente',
@@ -182,7 +126,7 @@ exports.buscarPorCpf = async (req, res) => {
       data: residente
     });
   } catch (error) {
-    console.error('Erro ao buscar residente:', error);
+    log('error', 'Erro ao buscar residente por CPF', error);
     res.status(500).json({
       success: false,
       message: 'Erro ao buscar residente',
@@ -206,67 +150,31 @@ exports.atualizar = async (req, res) => {
       });
     }
 
-    // Verificar se o CPF está sendo alterado
+    // Verificar CPF se foi alterado
     if (cpf && cpf !== residente.cpf) {
-      // Verificar se o novo CPF já existe em outros residentes
-      const cpfExistenteResidente = await Residente.findOne({ 
-        where: { 
-          cpf,
-          id: { [Op.ne]: id } // Excluir o próprio residente
-        } 
-      });
-      
-      if (cpfExistenteResidente) {
+      const cpfVerificacao = await verificarCpfExistente(cpf, id, 'residente');
+      if (cpfVerificacao.existe) {
         return res.status(400).json({
           success: false,
-          message: 'CPF já cadastrado como residente!'
-        });
-      }
-
-      // Verificar se o novo CPF já existe em profissionais
-      const cpfExistenteProfissional = await Profissional.findOne({ 
-        where: { cpf } 
-      });
-      
-      if (cpfExistenteProfissional) {
-        return res.status(400).json({
-          success: false,
-          message: 'CPF já cadastrado como profissional!'
+          message: cpfVerificacao.mensagem
         });
       }
     }
 
-    // Verificar se o RG está sendo alterado
+    // Verificar RG se foi alterado
     if (rg && rg !== residente.rg) {
-      // Verificar se o novo RG já existe em outros residentes
-      const rgExistenteResidente = await Residente.findOne({ 
-        where: { 
-          rg,
-          id: { [Op.ne]: id } // Excluir o próprio residente
-        } 
-      });
-      
-      if (rgExistenteResidente) {
+      const rgVerificacao = await verificarRgExistente(rg, id, 'residente');
+      if (rgVerificacao.existe) {
         return res.status(400).json({
           success: false,
-          message: 'RG já cadastrado como residente!'
-        });
-      }
-
-      // Verificar se o novo RG já existe em profissionais
-      const rgExistenteProfissional = await Profissional.findOne({ 
-        where: { rg } 
-      });
-      
-      if (rgExistenteProfissional) {
-        return res.status(400).json({
-          success: false,
-          message: 'RG já cadastrado como profissional!'
+          message: rgVerificacao.mensagem
         });
       }
     }
     
     await residente.update(req.body);
+    
+    log('info', 'Residente atualizado', { id });
     
     res.json({
       success: true,
@@ -274,21 +182,9 @@ exports.atualizar = async (req, res) => {
       data: residente
     });
   } catch (error) {
-    console.error('Erro ao atualizar residente:', error);
-    
-    if (error.name === 'SequelizeUniqueConstraintError') {
-      const campo = error.errors[0]?.path || 'campo';
-      return res.status(400).json({
-        success: false,
-        message: `${campo.toUpperCase()} já cadastrado no sistema!`
-      });
-    }
-    
-    res.status(500).json({
-      success: false,
-      message: 'Erro ao atualizar residente',
-      error: error.message
-    });
+    log('error', 'Erro ao atualizar residente', error);
+    const erroFormatado = tratarErroValidacao(error);
+    res.status(500).json(erroFormatado);
   }
 };
 
@@ -307,12 +203,14 @@ exports.deletar = async (req, res) => {
     
     await residente.update({ status: 'inativo' });
     
+    log('info', 'Residente inativado', { id });
+    
     res.json({
       success: true,
       message: 'Residente inativado com sucesso!'
     });
   } catch (error) {
-    console.error('Erro ao deletar residente:', error);
+    log('error', 'Erro ao inativar residente', error);
     res.status(500).json({
       success: false,
       message: 'Erro ao inativar residente',
@@ -325,11 +223,8 @@ exports.deletar = async (req, res) => {
 exports.deletarPermanente = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log('=== DELETAR PERMANENTE ===');
-    console.log('ID recebido:', id);
     
     const residente = await Residente.findByPk(id);
-    console.log('Residente encontrado:', residente ? 'SIM' : 'NÃO');
     
     if (!residente) {
       return res.status(404).json({
@@ -338,31 +233,17 @@ exports.deletarPermanente = async (req, res) => {
       });
     }
     
-    // Primeiro, deletar todos os históricos de consulta relacionados
-    console.log('Deletando históricos de consulta...');
-    const historicoDeletados = await HistoricoConsulta.destroy({
-      where: { residente_id: id }
-    });
-    console.log('Históricos deletados:', historicoDeletados);
-    
-    // Depois, deletar todos os agendamentos relacionados
-    console.log('Deletando agendamentos...');
-    const agendamentosDeletados = await Agendamento.destroy({
-      where: { residente_id: id }
-    });
-    console.log('Agendamentos deletados:', agendamentosDeletados);
-    
-    // Por fim, deletar o residente permanentemente do banco de dados
-    console.log('Deletando residente...');
+    // Deletar registros relacionados (CASCADE cuida disso automaticamente)
     await residente.destroy();
-    console.log('Residente deletado com sucesso!');
+    
+    log('warn', 'Residente deletado permanentemente', { id, cpf: residente.cpf });
     
     res.json({
       success: true,
       message: 'Residente e todos os registros relacionados foram deletados permanentemente do sistema!'
     });
   } catch (error) {
-    console.error('Erro ao deletar residente permanentemente:', error);
+    log('error', 'Erro ao deletar residente permanentemente', error);
     res.status(500).json({
       success: false,
       message: 'Erro ao deletar residente permanentemente',
@@ -374,10 +255,12 @@ exports.deletarPermanente = async (req, res) => {
 // Estatísticas
 exports.estatisticas = async (req, res) => {
   try {
-    const total = await Residente.count();
-    const ativos = await Residente.count({ where: { status: 'ativo' } });
-    const inativos = await Residente.count({ where: { status: 'inativo' } });
-    const suspensos = await Residente.count({ where: { status: 'suspenso' } });
+    const [total, ativos, inativos, suspensos] = await Promise.all([
+      Residente.count(),
+      Residente.count({ where: { status: 'ativo' } }),
+      Residente.count({ where: { status: 'inativo' } }),
+      Residente.count({ where: { status: 'suspenso' } })
+    ]);
     
     res.json({
       success: true,
@@ -389,7 +272,7 @@ exports.estatisticas = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Erro ao buscar estatísticas:', error);
+    log('error', 'Erro ao buscar estatísticas', error);
     res.status(500).json({
       success: false,
       message: 'Erro ao buscar estatísticas',

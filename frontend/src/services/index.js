@@ -15,13 +15,15 @@ import residenteService from './residenteService';
 import profissionalService from './profissionalService';
 import agendamentoService from './agendamentoService';
 import relatorioService from './relatorioService';
+import financeiroService from './financeiroService';
 
 // Exportações nomeadas
 export { 
   residenteService,
   profissionalService,
   agendamentoService,
-  relatorioService
+  relatorioService,
+  financeiroService
 };
 
 // Exportação default com todos os services
@@ -29,5 +31,6 @@ export default {
   residenteService,
   profissionalService,
   agendamentoService,
-  relatorioService
+  relatorioService,
+  financeiroService
 };

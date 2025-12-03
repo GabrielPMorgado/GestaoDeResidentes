@@ -1,0 +1,49 @@
+/* Estilos para componentes comuns */
+
+.loading-spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  color: var(--bs-secondary);
+  opacity: 0.5;
+}
+
+.empty-state-title {
+  margin-top: 1rem;
+  color: var(--bs-secondary);
+}
+
+.empty-state-description {
+  color: var(--bs-secondary);
+  opacity: 0.7;
+}
+
+.empty-state-action {
+  margin-top: 1.5rem;
+}
+
+.toast-container {
+  z-index: 9999;
+}
+
+.card {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  padding: 1rem 1.25rem;
+}

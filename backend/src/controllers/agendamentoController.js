@@ -91,12 +91,12 @@ exports.listar = async (req, res) => {
       include: [
         {
           model: Residente,
-          as: 'Residente',
+          as: 'residente',
           attributes: ['id', 'nome_completo', 'cpf']
         },
         {
           model: Profissional,
-          as: 'Profissional',
+          as: 'profissional',
           attributes: ['id', 'nome_completo', 'cpf', 'profissao', 'cargo']
         }
       ]
@@ -133,12 +133,12 @@ exports.buscarPorId = async (req, res) => {
       include: [
         {
           model: Residente,
-          as: 'Residente',
+          as: 'residente',
           attributes: ['id', 'nome_completo', 'cpf', 'data_nascimento', 'email', 'telefone']
         },
         {
           model: Profissional,
-          as: 'Profissional',
+          as: 'profissional',
           attributes: ['id', 'nome_completo', 'cpf', 'profissao', 'cargo', 'email', 'celular']
         }
       ]
@@ -176,12 +176,12 @@ exports.buscarPorResidente = async (req, res) => {
       include: [
         {
           model: Residente,
-          as: 'Residente',
+          as: 'residente',
           attributes: ['id', 'nome_completo', 'cpf']
         },
         {
           model: Profissional,
-          as: 'Profissional',
+          as: 'profissional',
           attributes: ['id', 'nome_completo', 'cpf', 'profissao', 'cargo']
         }
       ]
@@ -212,12 +212,12 @@ exports.buscarPorProfissional = async (req, res) => {
       include: [
         {
           model: Residente,
-          as: 'Residente',
+          as: 'residente',
           attributes: ['id', 'nome_completo', 'cpf']
         },
         {
           model: Profissional,
-          as: 'Profissional',
+          as: 'profissional',
           attributes: ['id', 'nome_completo', 'cpf', 'profissao', 'cargo']
         }
       ]

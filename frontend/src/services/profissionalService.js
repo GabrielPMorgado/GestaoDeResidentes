@@ -168,7 +168,6 @@ const profissionalService = {
       const profissionais = await profissionalService.listarTodos();
       return !profissionais.some(p => p.cpf === cpf && p.id !== idExcluir);
     } catch (error) {
-      console.error('Erro ao validar CPF:', error);
       return false;
     }
   },
@@ -184,7 +183,6 @@ const profissionalService = {
       const profissionais = await profissionalService.listarTodos();
       return !profissionais.some(p => p.rg === rg && p.id !== idExcluir);
     } catch (error) {
-      console.error('Erro ao validar RG:', error);
       return false;
     }
   },

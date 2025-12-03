@@ -218,7 +218,6 @@ const agendamentoService = {
       
       return !conflito;
     } catch (error) {
-      console.error('Erro ao verificar disponibilidade:', error);
       return false;
     }
   },
