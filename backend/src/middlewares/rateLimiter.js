@@ -1,18 +1,18 @@
-/**
- * Middleware para limitar taxa de requisições (Rate Limiting)
- * Previne abuso e ataques DDoS
- */
-
 const rateLimits = new Map();
 
 const rateLimiter = (options = {}) => {
   const {
-    windowMs = 15 * 60 * 1000, // 15 minutos
+    windowMs = 15 * 60 * 1000,
     maxRequests = 100,
     message = 'Muitas requisições. Tente novamente mais tarde.'
   } = options;
 
   return (req, res, next) => {
+    // Bypass em desenvolvimento para localhost
+    if (process.env.NODE_ENV === 'development') {
+      return next();
+    }
+
     const ip = req.ip || req.connection.remoteAddress;
     const now = Date.now();
     
@@ -23,7 +23,6 @@ const rateLimiter = (options = {}) => {
       }
     }
     
-    // Verificar limite para este IP
     const clientData = rateLimits.get(ip);
     
     if (!clientData) {
@@ -34,7 +33,6 @@ const rateLimiter = (options = {}) => {
       return next();
     }
     
-    // Resetar se passou a janela de tempo
     if (now - clientData.resetTime > windowMs) {
       rateLimits.set(ip, {
         count: 1,
@@ -43,10 +41,8 @@ const rateLimiter = (options = {}) => {
       return next();
     }
     
-    // Incrementar contador
     clientData.count++;
     
-    // Verificar se excedeu o limite
     if (clientData.count > maxRequests) {
       return res.status(429).json({
         success: false,

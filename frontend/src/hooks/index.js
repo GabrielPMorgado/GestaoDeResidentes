@@ -1,58 +1,51 @@
-/**
- * Custom hooks - Apenas hooks utilizados
- */
-
 import { useState, useCallback } from 'react';
 
 /**
- * Hook para gerenciar loading states
+ * Hook para gerenciar estados de carregamento
  */
 export const useLoading = (initialState = false) => {
   const [loading, setLoading] = useState(initialState);
 
   const startLoading = useCallback(() => setLoading(true), []);
   const stopLoading = useCallback(() => setLoading(false), []);
-  const toggleLoading = useCallback(() => setLoading(prev => !prev), []);
 
-  return { loading, startLoading, stopLoading, toggleLoading, setLoading };
+  return { loading, startLoading, stopLoading };
 };
 
 /**
- * Hook para gerenciar toast notifications
+ * Hook para gerenciar notificações toast
  */
+let toastCounter = 0;
 export const useToast = () => {
   const [toasts, setToasts] = useState([]);
-
-  const addToast = useCallback((message, type = 'info', duration = 3000) => {
-    const id = Date.now();
-    setToasts(prev => [...prev, { id, message, type, duration }]);
-    
-    if (duration > 0) {
-      setTimeout(() => {
-        removeToast(id);
-      }, duration);
-    }
-  }, []);
 
   const removeToast = useCallback((id) => {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   }, []);
 
-  const success = useCallback((message, duration) => 
+  const addToast = useCallback((message, type = 'info', duration = 3000) => {
+    const id = `toast-${Date.now()}-${++toastCounter}-${Math.random().toString(36).substr(2, 9)}`;
+    setToasts(prev => [...prev, { id, message, type, duration }]);
+    
+    if (duration > 0) {
+      setTimeout(() => removeToast(id), duration);
+    }
+  }, [removeToast]);
+
+  const success = useCallback((message, duration = 3000) => 
     addToast(message, 'success', duration), [addToast]);
   
-  const error = useCallback((message, duration) => 
+  const error = useCallback((message, duration = 3000) => 
     addToast(message, 'error', duration), [addToast]);
   
-  const warning = useCallback((message, duration) => 
+  const warning = useCallback((message, duration = 3000) => 
     addToast(message, 'warning', duration), [addToast]);
   
-  const info = useCallback((message, duration) => 
+  const info = useCallback((message, duration = 3000) => 
     addToast(message, 'info', duration), [addToast]);
 
   return {
     toasts,
-    addToast,
     removeToast,
     success,
     error,
@@ -60,3 +53,6 @@ export const useToast = () => {
     info
   };
 };
+
+// Exportar hooks do React Query
+export * from './useQueries';

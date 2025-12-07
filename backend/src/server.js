@@ -14,6 +14,7 @@ const profissionaisRoutes = require('./routes/profissionais');
 const agendamentosRoutes = require('./routes/agendamentos');
 const historicoConsultasRoutes = require('./routes/historicoConsultas');
 const financeiroRoutes = require('./routes/financeiro');
+const atendimentosRoutes = require('./routes/atendimentos');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -37,9 +38,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(requestLogger);
 
 // Rate limiting (proteção contra abuso)
+// Configuração mais permissiva para desenvolvimento
 app.use('/api', rateLimiter({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  maxRequests: 200,
+  windowMs: 1 * 60 * 1000, // 1 minuto
+  maxRequests: 1000, // 1000 requisições por minuto
   message: 'Muitas requisições. Tente novamente em alguns minutos.'
 }));
 
@@ -90,6 +92,7 @@ app.use('/api/profissionais', profissionaisRoutes);
 app.use('/api/agendamentos', agendamentosRoutes);
 app.use('/api/historico-consultas', historicoConsultasRoutes);
 app.use('/api/financeiro', financeiroRoutes);
+app.use('/api/atendimentos', atendimentosRoutes);
 
 // Middleware para rotas não encontradas (404)
 app.use(notFound);

@@ -47,11 +47,10 @@ function Login() {
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl mb-4 shadow-2xl">
-            <span className="text-4xl font-bold text-white">SR</span>
-          </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Sistema Residencial</h1>
-          <p className="text-slate-400">Acesso ao sistema</p>
+          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 mb-3">
+            Sistema Residencial
+          </h1>
+          <p className="text-slate-400 text-lg">Plataforma de Gestão Integrada</p>
         </div>
 
         {/* Form */}

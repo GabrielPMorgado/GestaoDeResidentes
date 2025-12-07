@@ -79,7 +79,6 @@ exports.listar = async (req, res) => {
         { local: { [Op.like]: `%${busca}%` } }
       ];
     }
-    
     // Paginação
     const offset = (page - 1) * limit;
     
@@ -101,7 +100,6 @@ exports.listar = async (req, res) => {
         }
       ]
     });
-    
     res.json({
       success: true,
       data: {
@@ -110,16 +108,18 @@ exports.listar = async (req, res) => {
           totalItens: count,
           paginaAtual: parseInt(page),
           itensPorPagina: parseInt(limit),
-          totalPaginas: Math.ceil(count / limit)
+          totalPaginas: Math.ceil(count / limit) || 1
         }
       }
     });
   } catch (error) {
-    console.error('Erro ao listar agendamentos:', error);
+    console.error('❌ Erro ao listar agendamentos:', error);
+    console.error('Stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Erro ao listar agendamentos',
-      error: error.message
+      error: error.message,
+      details: error.stack
     });
   }
 };
@@ -269,9 +269,11 @@ exports.atualizar = async (req, res) => {
           observacoes: agendamento.observacoes || 'Consulta realizada conforme agendamento',
           status: 'realizada'
         });
-        console.log('✅ Registro criado no histórico de consultas para agendamento:', id);
       } catch (historicoError) {
-        console.error('⚠️ Erro ao criar histórico de consulta:', historicoError);
+        // Log apenas em desenvolvimento
+        if (process.env.NODE_ENV === 'development') {
+          console.error('⚠️ Erro ao criar histórico de consulta:', historicoError);
+        }
         // Não falhar a atualização do agendamento se houver erro no histórico
       }
     }

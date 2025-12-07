@@ -1,19 +1,24 @@
-import { useState, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useNotification } from '../../contexts/NotificationContext'
 import {
-  listarAgendamentos,
-  obterEstatisticasAgendamentos,
   confirmarAgendamento,
-  cancelarAgendamento,
   buscarAgendamentoPorId,
   atualizarAgendamento
-} from '../../api/api'
+} from '../../api/axios'
+import { useAgendamentos, useCancelarAgendamento } from '../../hooks'
 
 function ListagemAgendamentos() {
   const { success, error: showError } = useNotification()
-  const [agendamentos, setAgendamentos] = useState([])
-  const [estatisticas, setEstatisticas] = useState(null)
-  const [loading, setLoading] = useState(true)
+  
+  // React Query - Cache automático
+  const { data: agendamentosData = [], isLoading: loading, refetch } = useAgendamentos()
+  const cancelarMutation = useCancelarAgendamento()
+  
+  // Debug: verificar dados
+  console.log('📊 agendamentosData:', agendamentosData)
+  console.log('📊 Primeiro agendamento:', agendamentosData[0])
+  console.log('📊 isLoading:', loading)
+  
   const [mostrarCancelados, setMostrarCancelados] = useState(false)
   
   const [filtros, setFiltros] = useState({
@@ -26,56 +31,88 @@ function ListagemAgendamentos() {
   
   const [paginaAtual, setPaginaAtual] = useState(1)
   const [itensPorPagina, setItensPorPagina] = useState(10)
-  const [totalPaginas, setTotalPaginas] = useState(1)
-  const [totalItens, setTotalItens] = useState(0)
   
   const [detalhesModal, setDetalhesModal] = useState(null)
   const [editarModal, setEditarModal] = useState(null)
 
-  useEffect(() => {
-    carregarDados()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paginaAtual, itensPorPagina, filtros, mostrarCancelados])
-
-  const carregarDados = async () => {
-    try {
-      setLoading(true)
-
-      const params = {
-        page: paginaAtual,
-        limit: itensPorPagina,
-        ...filtros
-      }
-
-      const [agendamentosRes, estatisticasRes] = await Promise.all([
-        listarAgendamentos(params),
-        obterEstatisticasAgendamentos()
-      ])
-
-      if (agendamentosRes.success) {
-        let agendamentosData = agendamentosRes.data?.agendamentos || []
-        
-        if (mostrarCancelados) {
-          agendamentosData = agendamentosData.filter(ag => ag.status === 'cancelado')
-        } else {
-          agendamentosData = agendamentosData.filter(ag => ag.status !== 'cancelado')
-        }
-        
-        setAgendamentos(agendamentosData)
-        setPaginaAtual(agendamentosRes.data?.pagination?.paginaAtual || 1)
-        setTotalPaginas(agendamentosRes.data?.pagination?.totalPaginas || 1)
-        setTotalItens(agendamentosRes.data?.pagination?.totalItens || 0)
-      }
-
-      if (estatisticasRes.success) {
-        setEstatisticas(estatisticasRes.data)
-      }
-    } catch {
-      showError('Erro ao carregar agendamentos')
-    } finally {
-      setLoading(false)
+  // Processar e filtrar agendamentos
+  const agendamentosFiltrados = useMemo(() => {
+    let dados = Array.isArray(agendamentosData) ? agendamentosData : []
+    
+    // Filtrar cancelados
+    if (mostrarCancelados) {
+      dados = dados.filter(ag => ag.status === 'cancelado')
+    } else {
+      dados = dados.filter(ag => ag.status !== 'cancelado')
     }
-  }
+    
+    // Aplicar filtros
+    if (filtros.status) {
+      dados = dados.filter(ag => ag.status === filtros.status)
+    }
+    
+    if (filtros.tipo_atendimento) {
+      dados = dados.filter(ag => ag.tipo_atendimento === filtros.tipo_atendimento)
+    }
+    
+    if (filtros.data_inicio) {
+      dados = dados.filter(ag => ag.data_agendamento >= filtros.data_inicio)
+    }
+    
+    if (filtros.data_fim) {
+      dados = dados.filter(ag => ag.data_agendamento <= filtros.data_fim)
+    }
+    
+    if (filtros.busca) {
+      const busca = filtros.busca.toLowerCase()
+      dados = dados.filter(ag => 
+        ag.residente_nome?.toLowerCase().includes(busca) ||
+        ag.profissional_nome?.toLowerCase().includes(busca)
+      )
+    }
+    
+    // Ordenar por data (mais recente primeiro)
+    return dados.sort((a, b) => {
+      const dataA = new Date(a.data_agendamento + 'T' + (a.hora_inicio || '00:00'))
+      const dataB = new Date(b.data_agendamento + 'T' + (b.hora_inicio || '00:00'))
+      return dataB - dataA
+    })
+  }, [agendamentosData, mostrarCancelados, filtros])
+
+  // Paginação
+  const { agendamentos, totalPaginas, totalItens } = useMemo(() => {
+    const total = agendamentosFiltrados.length
+    const paginas = Math.ceil(total / itensPorPagina)
+    const inicio = (paginaAtual - 1) * itensPorPagina
+    const fim = inicio + itensPorPagina
+    const dados = agendamentosFiltrados.slice(inicio, fim)
+    
+    return {
+      agendamentos: dados,
+      totalPaginas: paginas,
+      totalItens: total
+    }
+  }, [agendamentosFiltrados, paginaAtual, itensPorPagina])
+
+  // Estatísticas
+  const estatisticas = useMemo(() => {
+    const total = agendamentosData.length
+    const agendados = agendamentosData.filter(ag => ag.status === 'agendado').length
+    const confirmados = agendamentosData.filter(ag => ag.status === 'confirmado').length
+    const concluidos = agendamentosData.filter(ag => ag.status === 'concluido').length
+    const cancelados = agendamentosData.filter(ag => ag.status === 'cancelado').length
+    
+    console.log('📊 ESTATÍSTICAS:', { total, agendados, confirmados, concluidos, cancelados })
+    console.log('📊 Status dos agendamentos:', agendamentosData.map(ag => ag.status))
+    
+    return {
+      total,
+      agendados,
+      confirmados,
+      concluidos,
+      cancelados
+    }
+  }, [agendamentosData])
 
   const handleFiltroChange = (e) => {
     const { name, value } = e.target
@@ -105,7 +142,7 @@ function ListagemAgendamentos() {
       
       if (response.success) {
         success('Agendamento confirmado com sucesso!')
-        carregarDados()
+        refetch() // Recarregar dados do React Query
       } else {
         throw new Error(response.message || 'Erro ao confirmar')
       }
@@ -122,17 +159,14 @@ function ListagemAgendamentos() {
     if (!canceladoPor) return
 
     try {
-      const response = await cancelarAgendamento(id, {
-        motivo_cancelamento: motivo,
-        cancelado_por: canceladoPor
+      await cancelarMutation.mutateAsync({
+        id,
+        dados: {
+          motivo_cancelamento: motivo,
+          cancelado_por: canceladoPor
+        }
       })
-      
-      if (response.success) {
-        success('Agendamento cancelado com sucesso!')
-        carregarDados()
-      } else {
-        throw new Error(response.message || 'Erro ao cancelar')
-      }
+      success('Agendamento cancelado com sucesso!')
     } catch (error) {
       showError(error.message || 'Erro ao cancelar agendamento')
     }
@@ -178,43 +212,9 @@ function ListagemAgendamentos() {
       await atualizarAgendamento(editarModal.id, dados)
       success('Agendamento atualizado com sucesso!')
       setEditarModal(null)
-      carregarDados()
+      refetch() // Recarregar dados do React Query
     } catch (error) {
       showError(error.message || 'Erro ao atualizar agendamento')
-    }
-  }
-
-  const handleIniciarAtendimento = async (id) => {
-    if (!window.confirm('Deseja iniciar este atendimento?')) return
-
-    try {
-      const response = await atualizarAgendamento(id, { status: 'em_atendimento' })
-      
-      if (response.success) {
-        success('Atendimento iniciado!')
-        carregarDados()
-      } else {
-        throw new Error(response.message || 'Erro ao iniciar')
-      }
-    } catch (error) {
-      showError(error.message || 'Erro ao iniciar atendimento')
-    }
-  }
-
-  const handleConcluirAtendimento = async (id) => {
-    if (!window.confirm('Deseja concluir este atendimento?')) return
-
-    try {
-      const response = await atualizarAgendamento(id, { status: 'concluido' })
-      
-      if (response.success) {
-        success('Atendimento concluído!')
-        carregarDados()
-      } else {
-        throw new Error(response.message || 'Erro ao concluir')
-      }
-    } catch (error) {
-      showError(error.message || 'Erro ao concluir atendimento')
     }
   }
 
@@ -263,67 +263,67 @@ function ListagemAgendamentos() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-3 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
-              <i className="bi bi-calendar-check text-3xl text-white"></i>
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+              <i className="bi bi-calendar-check text-2xl sm:text-3xl text-white"></i>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-white">Listagem de Agendamentos</h1>
-              <p className="text-slate-400">Gerencie os agendamentos dos residentes</p>
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">Listagem de Agendamentos</h1>
+              <p className="text-sm sm:text-base text-slate-400">Gerencie os agendamentos dos residentes</p>
             </div>
           </div>
 
           {/* Estatísticas */}
           {estatisticas && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                    <i className="bi bi-calendar-check text-2xl text-amber-400"></i>
+            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
+              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 sm:p-6">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                    <i className="bi bi-calendar-check text-xl sm:text-2xl text-amber-400"></i>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-400">Total</p>
-                    <h3 className="text-2xl font-bold text-white">{estatisticas?.total || 0}</h3>
+                    <p className="text-xs sm:text-sm text-slate-400">Total</p>
+                    <h3 className="text-xl sm:text-2xl font-bold text-white">{estatisticas?.total || 0}</h3>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                    <i className="bi bi-calendar-plus text-2xl text-blue-400"></i>
+              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 sm:p-6">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                    <i className="bi bi-calendar-plus text-xl sm:text-2xl text-blue-400"></i>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-400">Agendados</p>
-                    <h3 className="text-2xl font-bold text-white">{estatisticas?.agendados || 0}</h3>
+                    <p className="text-xs sm:text-sm text-slate-400">Agendados</p>
+                    <h3 className="text-xl sm:text-2xl font-bold text-white">{estatisticas?.agendados || 0}</h3>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                    <i className="bi bi-calendar-check-fill text-2xl text-emerald-400"></i>
+              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 sm:p-6">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                    <i className="bi bi-calendar-check-fill text-xl sm:text-2xl text-emerald-400"></i>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-400">Confirmados</p>
-                    <h3 className="text-2xl font-bold text-white">{estatisticas?.confirmados || 0}</h3>
+                    <p className="text-xs sm:text-sm text-slate-400">Confirmados</p>
+                    <h3 className="text-xl sm:text-2xl font-bold text-white">{estatisticas?.confirmados || 0}</h3>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-slate-500/10 flex items-center justify-center">
-                    <i className="bi bi-check-circle-fill text-2xl text-slate-400"></i>
+              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 sm:p-6">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-slate-500/10 flex items-center justify-center">
+                    <i className="bi bi-check-circle-fill text-xl sm:text-2xl text-slate-400"></i>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-400">Concluídos</p>
-                    <h3 className="text-2xl font-bold text-white">{estatisticas?.concluidos || 0}</h3>
+                    <p className="text-xs sm:text-sm text-slate-400">Concluídos</p>
+                    <h3 className="text-xl sm:text-2xl font-bold text-white">{estatisticas?.concluidos || 0}</h3>
                   </div>
                 </div>
               </div>
@@ -332,16 +332,16 @@ function ListagemAgendamentos() {
         </div>
 
         {/* Filtros */}
-        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6 mb-6">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 sm:p-6 mb-4 sm:mb-6">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
             <i className="bi bi-funnel text-amber-400"></i>
             Filtros
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-300 mb-2">Status</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3 sm:gap-4">
+            <div className="sm:col-span-1 md:col-span-2">
+              <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">Status</label>
               <select
-                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 sm:px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                 name="status"
                 value={filtros.status}
                 onChange={handleFiltroChange}
@@ -356,10 +356,10 @@ function ListagemAgendamentos() {
               </select>
             </div>
 
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-300 mb-2">Tipo</label>
+            <div className="sm:col-span-1 md:col-span-2">
+              <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">Tipo</label>
               <select
-                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 sm:px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                 name="tipo_atendimento"
                 value={filtros.tipo_atendimento}
                 onChange={handleFiltroChange}
@@ -376,33 +376,33 @@ function ListagemAgendamentos() {
               </select>
             </div>
 
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-300 mb-2">Data Início</label>
+            <div className="sm:col-span-1 md:col-span-2">
+              <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">Data Início</label>
               <input
                 type="date"
-                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 sm:px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                 name="data_inicio"
                 value={filtros.data_inicio}
                 onChange={handleFiltroChange}
               />
             </div>
 
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-300 mb-2">Data Fim</label>
+            <div className="sm:col-span-1 md:col-span-2">
+              <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">Data Fim</label>
               <input
                 type="date"
-                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 sm:px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                 name="data_fim"
                 value={filtros.data_fim}
                 onChange={handleFiltroChange}
               />
             </div>
 
-            <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-slate-300 mb-2">Buscar</label>
+            <div className="sm:col-span-2 md:col-span-2">
+              <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">Buscar</label>
               <input
                 type="text"
-                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-3 sm:px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-sm sm:text-base text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
                 name="busca"
                 value={filtros.busca}
                 onChange={handleFiltroChange}
@@ -410,9 +410,9 @@ function ListagemAgendamentos() {
               />
             </div>
 
-            <div className="md:col-span-1 flex items-end">
+            <div className="sm:col-span-1 md:col-span-1 flex items-end">
               <button
-                className="w-full px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                className="w-full px-3 sm:px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors text-sm sm:text-base"
                 onClick={limparFiltros}
                 title="Limpar filtros"
               >
@@ -420,9 +420,9 @@ function ListagemAgendamentos() {
               </button>
             </div>
 
-            <div className="md:col-span-1 flex items-end">
+            <div className="sm:col-span-1 md:col-span-1 flex items-end">
               <button
-                className={`w-full px-4 py-2 rounded-lg transition-colors ${mostrarCancelados ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-slate-700 hover:bg-slate-600 text-white'}`}
+                className={`w-full px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm sm:text-base ${mostrarCancelados ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-slate-700 hover:bg-slate-600 text-white'}`}
                 onClick={() => setMostrarCancelados(!mostrarCancelados)}
                 title={mostrarCancelados ? "Ocultar cancelados" : "Ver cancelados"}
               >
@@ -450,41 +450,68 @@ function ListagemAgendamentos() {
           ) : (
             <>
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full min-w-[1000px]">
                   <thead className="bg-slate-900/50 border-b border-slate-700">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Data</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Horário</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Residente</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Profissional</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Tipo</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-4 text-center text-xs font-semibold text-slate-300 uppercase tracking-wider">Ações</th>
+                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider whitespace-nowrap">Data</th>
+                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider whitespace-nowrap">Horário</th>
+                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Residente</th>
+                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Profissional</th>
+                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider whitespace-nowrap">Tipo</th>
+                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider whitespace-nowrap">Status</th>
+                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-center text-xs font-semibold text-slate-300 uppercase tracking-wider whitespace-nowrap">Ações</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-700">
+                  <tbody className="divide-y divide-slate-700/50">
                     {agendamentos.map((agendamento) => (
                       <tr key={agendamento.id} className="hover:bg-slate-700/30 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
-                          {formatarData(agendamento.data_agendamento)}
+                        <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2 text-sm text-slate-300">
+                            <i className="bi bi-calendar3 text-amber-400"></i>
+                            <span>{formatarData(agendamento.data_agendamento)}</span>
+                          </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
-                          {formatarHora(agendamento.hora_inicio)} - {formatarHora(agendamento.hora_fim)}
+                        <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-2 text-sm text-slate-300">
+                            <i className="bi bi-clock text-blue-400"></i>
+                            <span>{formatarHora(agendamento.hora_inicio)} - {formatarHora(agendamento.hora_fim)}</span>
+                          </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                          {agendamento.residente?.nome_completo || agendamento.Residente?.nome_completo || 'N/A'}
+                        <td className="px-4 sm:px-6 py-3 sm:py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                              {(agendamento.residente?.nome_completo || agendamento.Residente?.nome_completo || 'N')[0]}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-sm font-medium text-white truncate">
+                                {agendamento.residente?.nome_completo || agendamento.Residente?.nome_completo || 'N/A'}
+                              </div>
+                            </div>
+                          </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-white">
-                          {agendamento.profissional?.nome_completo || agendamento.Profissional?.nome_completo || 'N/A'}
+                        <td className="px-4 sm:px-6 py-3 sm:py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                              {(agendamento.profissional?.nome_completo || agendamento.Profissional?.nome_completo || 'N')[0]}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-sm font-medium text-white truncate">
+                                {agendamento.profissional?.nome_completo || agendamento.Profissional?.nome_completo || 'N/A'}
+                              </div>
+                              <div className="text-xs text-slate-400 truncate">
+                                {agendamento.profissional?.profissao || agendamento.Profissional?.profissao || ''}
+                              </div>
+                            </div>
+                          </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                           {getTipoAtendimentoBadge(agendamento.tipo_atendimento)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                        <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                           {getStatusBadge(agendamento.status)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                          <div className="flex items-center justify-center gap-2">
+                        <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                          <div className="flex items-center justify-center gap-1.5 sm:gap-2">
                             <button
                               className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
                               onClick={() => verDetalhes(agendamento.id)}
@@ -509,30 +536,17 @@ function ListagemAgendamentos() {
                                 >
                                   <i className="bi bi-check-circle"></i>
                                 </button>
+                                <button
+                                  className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                  onClick={() => handleCancelar(agendamento.id)}
+                                  title="Cancelar"
+                                >
+                                  <i className="bi bi-x-circle"></i>
+                                </button>
                               </>
                             )}
                             
                             {agendamento.status === 'confirmado' && (
-                              <button
-                                className="p-2 text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition-colors"
-                                onClick={() => handleIniciarAtendimento(agendamento.id)}
-                                title="Iniciar Atendimento"
-                              >
-                                <i className="bi bi-play-circle"></i>
-                              </button>
-                            )}
-                            
-                            {agendamento.status === 'em_atendimento' && (
-                              <button
-                                className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors"
-                                onClick={() => handleConcluirAtendimento(agendamento.id)}
-                                title="Concluir"
-                              >
-                                <i className="bi bi-check2-circle"></i>
-                              </button>
-                            )}
-                            
-                            {(agendamento.status === 'agendado' || agendamento.status === 'confirmado') && (
                               <button
                                 className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                                 onClick={() => handleCancelar(agendamento.id)}

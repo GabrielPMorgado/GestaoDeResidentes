@@ -1,8 +1,4 @@
-/**
- * Context para gerenciar notificações globalmente
- */
-
-import React, { createContext, useContext } from 'react';
+import { createContext, useContext } from 'react';
 import { useToast } from '../hooks';
 import { ToastContainer } from '../components/Common';
 

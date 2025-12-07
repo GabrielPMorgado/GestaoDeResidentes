@@ -1,9 +1,8 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { authService } from '../services/authService'
 
-const AuthContext = createContext()
+const AuthContext = createContext(undefined)
 
-// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext)
   if (!context) {
@@ -26,13 +25,9 @@ export const AuthProvider = ({ children }) => {
   }, [])
 
   const login = async (email, senha) => {
-    try {
-      const response = await authService.login(email, senha)
-      setUser(response.usuario)
-      return { success: true, user: response.usuario }
-    } catch (error) {
-      throw new Error(error.response?.data?.erro || 'Erro ao fazer login')
-    }
+    const response = await authService.login(email, senha)
+    setUser(response.usuario)
+    return { success: true, user: response.usuario }
   }
 
   const logout = () => {
@@ -40,24 +35,13 @@ export const AuthProvider = ({ children }) => {
     setUser(null)
   }
 
-  const isAuthenticated = () => {
-    return !!user && authService.isAuthenticated()
-  }
+  const isAuthenticated = () => !!user && authService.isAuthenticated()
+  
+  const isAdmin = () => user?.tipo === 'admin'
 
-  const isAdmin = () => {
-    return user?.tipo === 'admin'
-  }
-
-  const value = {
-    user,
-    login,
-    logout,
-    isAuthenticated,
-    isAdmin,
-    loading
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider value={{ user, login, logout, isAuthenticated, isAdmin, loading }}>
+      {children}
+    </AuthContext.Provider>
+  )
 }
-
-export default AuthContext

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNotification } from '../../contexts/NotificationContext'
-import { listarProfissionais, atualizarProfissional, deletarProfissionalPermanente } from '../../api/api'
+import { listarProfissionais, atualizarProfissional, deletarProfissionalPermanente } from '../../api/axios'
 
 function ProfissionaisInativos() {
   const { success, error: showError } = useNotification()

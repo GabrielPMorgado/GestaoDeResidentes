@@ -10,12 +10,7 @@ router.post('/login', async (req, res) => {
   try {
     const { email, senha } = req.body;
 
-    console.log('=== LOGIN ATTEMPT ===');
-    console.log('Email recebido:', email);
-    console.log('Senha recebida:', senha ? '***' + senha.substring(senha.length - 3) : 'undefined');
-
     if (!email || !senha) {
-      console.log('ERRO: Email ou senha não fornecidos');
       return res.status(400).json({ 
         erro: 'Email e senha são obrigatórios' 
       });
@@ -31,30 +26,20 @@ router.post('/login', async (req, res) => {
       }]
     });
 
-    console.log('Usuário encontrado:', usuario ? `ID ${usuario.id}, Email: ${usuario.email}` : 'NÃO ENCONTRADO');
-    
     if (!usuario) {
-      console.log('ERRO: Usuário não encontrado ou inativo');
       return res.status(401).json({ 
         erro: 'Email ou senha inválidos' 
       });
     }
 
-    console.log('Hash armazenado no banco:', usuario.senha.substring(0, 10) + '...');
-    
     // Validar senha
     const senhaValida = await usuario.validarSenha(senha);
-    console.log('Senha válida:', senhaValida);
     
     if (!senhaValida) {
-      console.log('ERRO: Senha inválida');
       return res.status(401).json({ 
         erro: 'Email ou senha inválidos' 
       });
     }
-    
-    console.log('LOGIN SUCESSO!');
-
     // Atualizar último acesso
     await usuario.update({ ultimo_acesso: new Date() });
 
@@ -75,6 +60,7 @@ router.post('/login', async (req, res) => {
         id: usuario.id,
         email: usuario.email,
         tipo: usuario.tipo,
+        profissional_id: usuario.profissional_id,
         profissional: usuario.profissional
       }
     });

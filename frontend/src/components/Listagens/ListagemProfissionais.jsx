@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react'
-import { listarProfissionais, deletarProfissional, obterEstatisticasProfissionais, atualizarProfissional, listarHistoricoConsultasProfissional } from '../../api/api'
+import { useState, useMemo } from 'react'
+import { atualizarProfissional, listarHistoricoConsultasProfissional } from '../../api/axios'
 import { useNotification } from '../../contexts/NotificationContext'
+import { useProfissionaisAtivos, useInativarProfissional } from '../../hooks'
 
 function ListagemProfissionais() {
   const { success, error: showError } = useNotification()
-  const [profissionais, setProfissionais] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [estatisticas, setEstatisticas] = useState(null)
+  
+  // React Query - Cache automático
+  const { data: profissionaisData = [], isLoading: loading } = useProfissionaisAtivos()
+  const inativarMutation = useInativarProfissional()
   
   const [showVisualizarModal, setShowVisualizarModal] = useState(false)
   const [showEditarModal, setShowEditarModal] = useState(false)
@@ -24,82 +26,73 @@ function ListagemProfissionais() {
     limite: 10
   })
 
-  const [paginacao, setPaginacao] = useState({
-    total: 0,
-    paginas: 0,
-    paginaAtual: 1
-  })
-
-  useEffect(() => {
-    carregarProfissionais()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filtros])
-
-  useEffect(() => {
-    carregarEstatisticas()
-  }, [])
-
-  const carregarProfissionais = async () => {
-    setLoading(true)
+  // Processar dados com memoização
+  const profissionais = useMemo(() => {
+    let dados = Array.isArray(profissionaisData) ? profissionaisData : []
     
-    try {
-      const response = await listarProfissionais({
-        status: filtros.status,
-        profissao: filtros.profissao,
-        departamento: filtros.departamento,
-        busca: filtros.busca,
-        page: filtros.pagina,
-        limit: filtros.limite
-      })
-      
-      if (response && response.success) {
-        const profissionaisOrdenados = (response.data?.profissionais || []).sort((a, b) => {
-          const nomeA = (a.nome_completo || '').toLowerCase()
-          const nomeB = (b.nome_completo || '').toLowerCase()
-          return nomeA.localeCompare(nomeB, 'pt-BR')
-        })
-        setProfissionais(profissionaisOrdenados)
-        setPaginacao({
-          total: response.data?.pagination?.totalItens || 0,
-          paginas: response.data?.pagination?.totalPaginas || 0,
-          paginaAtual: response.data?.pagination?.paginaAtual || 1
-        })
-      } else {
-        throw new Error(response?.message || 'Erro ao carregar profissionais')
-      }
-    } catch (err) {
-      showError(err.message || 'Erro ao carregar profissionais')
-      setProfissionais([])
-      setPaginacao({ total: 0, paginas: 0, paginaAtual: 1 })
-    } finally {
-      setLoading(false)
+    // Aplicar filtros
+    if (filtros.busca) {
+      const busca = filtros.busca.toLowerCase()
+      dados = dados.filter(p => 
+        p.nome_completo?.toLowerCase().includes(busca) ||
+        p.cpf?.includes(busca) ||
+        p.profissao?.toLowerCase().includes(busca)
+      )
     }
-  }
+    
+    if (filtros.profissao) {
+      dados = dados.filter(p => p.profissao === filtros.profissao)
+    }
+    
+    if (filtros.departamento) {
+      dados = dados.filter(p => p.departamento === filtros.departamento)
+    }
+    
+    // Ordenar alfabeticamente
+    return dados.sort((a, b) => {
+      const nomeA = (a.nome_completo || '').toLowerCase()
+      const nomeB = (b.nome_completo || '').toLowerCase()
+      return nomeA.localeCompare(nomeB, 'pt-BR')
+    })
+  }, [profissionaisData, filtros.busca, filtros.profissao, filtros.departamento])
 
-  const carregarEstatisticas = async () => {
-    try {
-      const response = await obterEstatisticasProfissionais()
-      if (response.success && response.data) {
-        setEstatisticas(response.data)
-      }
-    } catch {
-      // Silenciar erro
+  const paginacao = useMemo(() => {
+    const total = profissionais.length
+    const paginas = Math.ceil(total / filtros.limite)
+    const inicio = (filtros.pagina - 1) * filtros.limite
+    const fim = inicio + filtros.limite
+    const dados = profissionais.slice(inicio, fim)
+    
+    return {
+      total,
+      paginas,
+      paginaAtual: filtros.pagina,
+      dados
     }
-  }
+  }, [profissionais, filtros.pagina, filtros.limite])
+
+  const estatisticas = useMemo(() => {
+    const total = profissionaisData.length
+    const porProfissao = {}
+    
+    profissionaisData.forEach(p => {
+      const prof = p.profissao || 'Não especificado'
+      porProfissao[prof] = (porProfissao[prof] || 0) + 1
+    })
+    
+    return {
+      total,
+      ativos: total,
+      porProfissao
+    }
+  }, [profissionaisData])
 
   const handleDeletar = async (id, nome) => {
     if (!window.confirm(`Tem certeza que deseja inativar o profissional "${nome}"?`)) return
     
     try {
-      const response = await deletarProfissional(id)
-      
-      if (response.success) {
-        success('Profissional inativado com sucesso!')
-        carregarProfissionais()
-        carregarEstatisticas()
-      } else {
-        throw new Error(response.message || 'Erro ao inativar')
-      }
+      await inativarMutation.mutateAsync(id)
+      success('Profissional inativado com sucesso!')
     } catch (err) {
       showError(err.message || 'Erro ao inativar profissional')
     }
@@ -665,36 +658,78 @@ function ListagemProfissionais() {
             </div>
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Dados Pessoais */}
+                <div className="md:col-span-2">
+                  <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <i className="bi bi-person-fill text-amber-400"></i>
+                    Dados Pessoais
+                  </h4>
+                </div>
+
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-slate-300 mb-2">Nome Completo *</label>
                   <input
                     type="text"
                     className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    value={profissionalSelecionado.nome_completo}
+                    value={profissionalSelecionado.nome_completo || ''}
                     onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, nome_completo: e.target.value})}
                   />
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">CPF *</label>
                   <input
                     type="text"
                     className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    value={profissionalSelecionado.cpf}
+                    value={profissionalSelecionado.cpf || ''}
                     onChange={(e) => handleCampoChange('cpf', e.target.value)}
                     maxLength="14"
+                    placeholder="000.000.000-00"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">Telefone *</label>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">RG</label>
                   <input
                     type="text"
                     className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    value={profissionalSelecionado.telefone || ''}
-                    onChange={(e) => handleCampoChange('telefone', e.target.value)}
-                    placeholder="(00) 00000-0000"
-                    maxLength="15"
+                    value={profissionalSelecionado.rg || ''}
+                    onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, rg: e.target.value})}
                   />
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Data de Nascimento</label>
+                  <input
+                    type="date"
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    value={profissionalSelecionado.data_nascimento?.split('T')[0] || ''}
+                    onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, data_nascimento: e.target.value})}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Sexo</label>
+                  <select
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    value={profissionalSelecionado.sexo || ''}
+                    onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, sexo: e.target.value})}
+                  >
+                    <option value="">Selecione...</option>
+                    <option value="masculino">Masculino</option>
+                    <option value="feminino">Feminino</option>
+                    <option value="outro">Outro</option>
+                  </select>
+                </div>
+
+                {/* Dados Profissionais */}
+                <div className="md:col-span-2">
+                  <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 mt-4">
+                    <i className="bi bi-briefcase-fill text-amber-400"></i>
+                    Dados Profissionais
+                  </h4>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">Profissão *</label>
                   <select
@@ -709,8 +744,11 @@ function ListagemProfissionais() {
                     <option value="psicologo">Psicólogo</option>
                     <option value="nutricionista">Nutricionista</option>
                     <option value="cuidador">Cuidador</option>
+                    <option value="assistente_social">Assistente Social</option>
+                    <option value="terapeuta_ocupacional">Terapeuta Ocupacional</option>
                   </select>
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">Cargo</label>
                   <input
@@ -720,11 +758,54 @@ function ListagemProfissionais() {
                     onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, cargo: e.target.value})}
                   />
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Especialidade</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    value={profissionalSelecionado.especialidade || ''}
+                    onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, especialidade: e.target.value})}
+                    placeholder="Ex: Cardiologia, Geriatria..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Registro Profissional</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    value={profissionalSelecionado.registro_profissional || ''}
+                    onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, registro_profissional: e.target.value})}
+                    placeholder="CRM, COREN, etc."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Departamento</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    value={profissionalSelecionado.departamento || ''}
+                    onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, departamento: e.target.value})}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Data de Admissão</label>
+                  <input
+                    type="date"
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    value={profissionalSelecionado.data_admissao?.split('T')[0] || ''}
+                    onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, data_admissao: e.target.value})}
+                  />
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">Status</label>
                   <select
                     className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
-                    value={profissionalSelecionado.status}
+                    value={profissionalSelecionado.status || 'ativo'}
                     onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, status: e.target.value})}
                   >
                     <option value="ativo">Ativo</option>
@@ -733,6 +814,7 @@ function ListagemProfissionais() {
                     <option value="ferias">Férias</option>
                   </select>
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-slate-300 mb-2">Salário</label>
                   <input
@@ -741,6 +823,98 @@ function ListagemProfissionais() {
                     className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                     value={profissionalSelecionado.salario || ''}
                     onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, salario: e.target.value})}
+                    placeholder="0.00"
+                  />
+                </div>
+
+                {/* Contato */}
+                <div className="md:col-span-2">
+                  <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 mt-4">
+                    <i className="bi bi-telephone-fill text-amber-400"></i>
+                    Contato
+                  </h4>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Telefone *</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    value={profissionalSelecionado.telefone || ''}
+                    onChange={(e) => handleCampoChange('telefone', e.target.value)}
+                    placeholder="(00) 00000-0000"
+                    maxLength="15"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Email</label>
+                  <input
+                    type="email"
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    value={profissionalSelecionado.email || ''}
+                    onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, email: e.target.value})}
+                    placeholder="email@exemplo.com"
+                  />
+                </div>
+
+                {/* Endereço */}
+                <div className="md:col-span-2">
+                  <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 mt-4">
+                    <i className="bi bi-geo-alt-fill text-amber-400"></i>
+                    Endereço
+                  </h4>
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Logradouro</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    value={profissionalSelecionado.logradouro || ''}
+                    onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, logradouro: e.target.value})}
+                    placeholder="Rua, Avenida, etc."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Número</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    value={profissionalSelecionado.numero || ''}
+                    onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, numero: e.target.value})}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Bairro</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    value={profissionalSelecionado.bairro || ''}
+                    onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, bairro: e.target.value})}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Cidade</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    value={profissionalSelecionado.cidade || ''}
+                    onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, cidade: e.target.value})}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">CEP</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    value={profissionalSelecionado.cep || ''}
+                    onChange={(e) => setProfissionalSelecionado({...profissionalSelecionado, cep: e.target.value})}
+                    placeholder="00000-000"
                   />
                 </div>
               </div>

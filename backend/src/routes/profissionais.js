@@ -7,7 +7,9 @@ const { validarCriarProfissional, validarAtualizarProfissional } = require('../m
 router.post('/', validarCriarProfissional, profissionalController.criar);
 
 // Rota para listar todos os profissionais (com paginação e filtros)
-router.get('/', profissionalController.listar);
+router.get('/', (req, res, next) => {
+  next();
+}, profissionalController.listar);
 
 // Rota para buscar profissional por ID
 router.get('/:id', profissionalController.buscarPorId);

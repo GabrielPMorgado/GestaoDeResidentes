@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import './GestaoFinanceira.css'
+import { useNotification } from '../../contexts/NotificationContext'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -13,7 +13,7 @@ import {
   Legend,
   Filler
 } from 'chart.js'
-import { Bar, Line, Doughnut } from 'react-chartjs-2'
+import { Line, Doughnut } from 'react-chartjs-2'
 import financeiroService from '../../services/financeiroService'
 
 ChartJS.register(
@@ -30,6 +30,7 @@ ChartJS.register(
 )
 
 function GestaoFinanceira() {
+  const { success: showSuccess, error: showError } = useNotification()
   const [abaSelecionada, setAbaSelecionada] = useState('dashboard')
   const [loading, setLoading] = useState(false)
   
@@ -98,71 +99,46 @@ function GestaoFinanceira() {
         residenteId: m.residente_id,
         residenteNome: m.residente?.nome_completo || 'N/A',
         valor: parseFloat(m.valor),
-        mes: m.mes_referencia,
-        ano: m.ano_referencia,
-        status: m.status,
-        dataPagamento: m.data_pagamento,
         dataVencimento: m.data_vencimento,
-        metodoPagamento: m.metodo_pagamento,
-        observacoes: m.observacoes
+        status: m.status || 'pendente',
+        tipo: 'receita',
+        categoria: 'Mensalidade',
+        descricao: `Mensalidade - ${m.residente?.nome_completo}`
       }))
 
       const salariosData = salariosRes.map(s => ({
         id: s.id,
         profissionalId: s.profissional_id,
         profissionalNome: s.profissional?.nome_completo || 'N/A',
-        cargo: s.profissional?.especialidade || 'N/A',
         valor: parseFloat(s.valor),
-        bonus: parseFloat(s.bonus || 0),
-        descontos: parseFloat(s.descontos || 0),
-        mes: s.mes_referencia,
-        ano: s.ano_referencia,
-        status: s.status,
-        dataPagamento: s.data_pagamento,
-        metodoPagamento: s.metodo_pagamento,
-        horasTrabalhadas: s.horas_trabalhadas,
-        observacoes: s.observacoes
+        dataVencimento: s.data_pagamento,
+        status: s.status || 'pendente',
+        tipo: 'despesa',
+        categoria: 'Salário',
+        descricao: `Salário - ${s.profissional?.nome_completo}`
       }))
 
       const despesasData = despesasRes.map(d => ({
         id: d.id,
         descricao: d.descricao,
-        categoria: d.categoria.toLowerCase(),
+        categoria: d.categoria,
         valor: parseFloat(d.valor),
-        status: d.status,
-        data: d.data_despesa,
-        dataPagamento: d.data_pagamento,
-        metodoPagamento: d.metodo_pagamento,
-        observacoes: d.observacoes
+        dataVencimento: d.data,
+        status: d.status || 'pendente',
+        tipo: 'despesa'
       }))
 
+      const transacoesData = [...mensalidadesData, ...salariosData, ...despesasData]
+        .sort((a, b) => new Date(b.dataVencimento) - new Date(a.dataVencimento))
+
+      setResumoFinanceiro(resumo)
       setMensalidades(mensalidadesData)
       setSalarios(salariosData)
       setDespesas(despesasData)
-
-      setResumoFinanceiro({
-        receitaTotal: parseFloat(resumo.receitaTotal),
-        despesaTotal: parseFloat(resumo.despesaTotal),
-        saldoAtual: parseFloat(resumo.saldo),
-        lucroLiquido: parseFloat(resumo.margemLucro)
-      })
-
-      const transacoesFormatadas = transacoesRes.map(t => ({
-        id: t.id,
-        tipo: t.tipo,
-        descricao: t.descricao,
-        valor: parseFloat(t.valor),
-        data: t.data,
-        categoria: t.categoria,
-        metodo: t.metodo
-      }))
-
-      setTransacoes(transacoesFormatadas)
-
-    // eslint-disable-next-line no-unused-vars
+      setTransacoes(transacoesData)
     } catch (error) {
       console.error('Erro ao carregar dados financeiros:', error)
-      alert('Erro ao carregar dados financeiros. Verifique se as tabelas foram criadas no banco de dados.')
+      showError('Erro ao carregar dados financeiros')
     } finally {
       setLoading(false)
     }
@@ -176,25 +152,17 @@ function GestaoFinanceira() {
   }
 
   const formatarData = (data) => {
-    if (!data) return '-'
     return new Date(data).toLocaleDateString('pt-BR')
   }
 
   const handleAdicionarDespesa = async (e) => {
     e.preventDefault()
-    
     try {
-      const despesaData = {
-        descricao: novaDespesa.descricao,
-        categoria: novaDespesa.categoria.charAt(0).toUpperCase() + novaDespesa.categoria.slice(1),
-        valor: parseFloat(novaDespesa.valor),
-        data_despesa: novaDespesa.data,
-        status: novaDespesa.status,
-        observacoes: novaDespesa.observacoes
-      }
+      await financeiroService.criarDespesa({
+        ...novaDespesa,
+        valor: parseFloat(novaDespesa.valor)
+      })
 
-      await financeiroService.criarDespesa(despesaData)
-      
       setModalNovaDespesa(false)
       setNovaDespesa({
         descricao: '',
@@ -206,10 +174,10 @@ function GestaoFinanceira() {
       })
 
       carregarDadosFinanceiros()
-      alert('Despesa criada com sucesso!')
+      showSuccess('Despesa criada com sucesso!')
     } catch (error) {
       console.error('Erro ao criar despesa:', error)
-      alert('Erro ao criar despesa: ' + error.message)
+      showError('Erro ao criar despesa: ' + error.message)
     }
   }
 
@@ -230,17 +198,17 @@ function GestaoFinanceira() {
 
       if (itemSelecionado.tipo === 'receita') {
         await financeiroService.pagarMensalidade(itemId, dadosPagamento)
-        alert('Mensalidade paga com sucesso!')
+        showSuccess('Mensalidade paga com sucesso!')
       } else if (itemSelecionado.categoria === 'Salário') {
         await financeiroService.pagarSalario(itemId, dadosPagamento)
-        alert('Salário pago com sucesso!')
+        showSuccess('Salário pago com sucesso!')
       } else {
         await financeiroService.atualizarDespesa(itemId, {
           status: 'pago',
           data_pagamento: dadosPagamento.data_pagamento,
           metodo_pagamento: dadosPagamento.metodo_pagamento
         })
-        alert('Despesa paga com sucesso!')
+        showSuccess('Despesa paga com sucesso!')
       }
 
       setModalPagamento(false)
@@ -248,7 +216,7 @@ function GestaoFinanceira() {
       await carregarDadosFinanceiros()
     } catch (error) {
       console.error('Erro ao confirmar pagamento:', error)
-      alert('Erro ao confirmar pagamento: ' + error.message)
+      showError('Erro ao confirmar pagamento: ' + error.message)
     }
   }
 
@@ -259,16 +227,16 @@ function GestaoFinanceira() {
       {
         label: 'Receitas',
         data: [125000, 132000, 128000, 140000, 135000, 145000, 142000, 138000, 150000, 148000, 152000, 155000],
-        borderColor: '#28a745',
-        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+        borderColor: '#10b981',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
         tension: 0.4,
         fill: true
       },
       {
         label: 'Despesas',
         data: [95000, 98000, 92000, 105000, 100000, 108000, 103000, 99000, 110000, 107000, 112000, 115000],
-        borderColor: '#dc3545',
-        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+        borderColor: '#ef4444',
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
         tension: 0.4,
         fill: true
       }
@@ -288,270 +256,282 @@ function GestaoFinanceira() {
         1500
       ],
       backgroundColor: [
-        '#007bff',
-        '#28a745',
-        '#ffc107',
-        '#17a2b8',
-        '#dc3545',
-        '#6610f2',
-        '#6c757d'
+        '#3b82f6',
+        '#10b981',
+        '#f59e0b',
+        '#06b6d4',
+        '#ef4444',
+        '#8b5cf6',
+        '#6b7280'
       ]
-    }]
-  }
-
-  const dadosGraficoReceitasDespesas = {
-    labels: ['Receitas', 'Despesas', 'Lucro'],
-    datasets: [{
-      data: [
-        resumoFinanceiro.receitaTotal,
-        resumoFinanceiro.despesaTotal,
-        resumoFinanceiro.saldoAtual
-      ],
-      backgroundColor: ['#28a745', '#dc3545', '#007bff']
     }]
   }
 
   if (loading) {
     return (
-      <div className="financeiro-container">
-        <div className="text-center py-5">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Carregando...</span>
-          </div>
-          <p className="mt-3">Carregando dados financeiros...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-6">
+        <div className="text-center">
+          <svg className="animate-spin h-16 w-16 text-emerald-500 mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p className="text-slate-300 text-lg">Carregando dados financeiros...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="financeiro-container">
-      {/* Header */}
-      <div className="financeiro-header">
-        <div>
-          <h2>
-            <i className="bi bi-cash-coin me-2"></i>
-            Gestão Financeira
-          </h2>
-          <p className="text-muted">Controle completo de receitas, despesas e pagamentos</p>
-        </div>
-        <div className="header-actions">
-          <select 
-            className="form-select"
-            value={filtros.mes}
-            onChange={(e) => setFiltros({ ...filtros, mes: parseInt(e.target.value) })}
-          >
-            {Array.from({ length: 12 }, (_, i) => (
-              <option key={i + 1} value={i + 1}>
-                {new Date(2025, i).toLocaleDateString('pt-BR', { month: 'long' })}
-              </option>
-            ))}
-          </select>
-          <select 
-            className="form-select"
-            value={filtros.ano}
-            onChange={(e) => setFiltros({ ...filtros, ano: parseInt(e.target.value) })}
-          >
-            <option value={2023}>2023</option>
-            <option value={2024}>2024</option>
-            <option value={2025}>2025</option>
-          </select>
-          <button className="btn btn-primary" onClick={carregarDadosFinanceiros}>
-            <i className="bi bi-arrow-clockwise me-2"></i>
-            Atualizar
-          </button>
-        </div>
-      </div>
-
-      {/* Cards de Resumo */}
-      <div className="row g-3 mb-4">
-        <div className="col-md-3">
-          <div className="financial-card receita">
-            <div className="card-icon">
-              <i className="bi bi-arrow-down-circle"></i>
-            </div>
-            <div className="card-content">
-              <p className="card-label">Receita Total</p>
-              <h3 className="card-value">{formatarMoeda(resumoFinanceiro.receitaTotal)}</h3>
-              <small className="card-subtitle">Mensalidades dos residentes</small>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-3">
-          <div className="financial-card despesa">
-            <div className="card-icon">
-              <i className="bi bi-arrow-up-circle"></i>
-            </div>
-            <div className="card-content">
-              <p className="card-label">Despesa Total</p>
-              <h3 className="card-value">{formatarMoeda(resumoFinanceiro.despesaTotal)}</h3>
-              <small className="card-subtitle">Salários + Operacional</small>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-3">
-          <div className={`financial-card ${resumoFinanceiro.saldoAtual >= 0 ? 'saldo-positivo' : 'saldo-negativo'}`}>
-            <div className="card-icon">
-              <i className="bi bi-wallet2"></i>
-            </div>
-            <div className="card-content">
-              <p className="card-label">Saldo do Mês</p>
-              <h3 className="card-value">{formatarMoeda(resumoFinanceiro.saldoAtual)}</h3>
-              <small className="card-subtitle">
-                {resumoFinanceiro.saldoAtual >= 0 ? 'Superávit' : 'Déficit'}
-              </small>
-            </div>
-          </div>
-        </div>
-
-        <div className="col-md-3">
-          <div className="financial-card lucro">
-            <div className="card-icon">
-              <i className="bi bi-graph-up-arrow"></i>
-            </div>
-            <div className="card-content">
-              <p className="card-label">Margem de Lucro</p>
-              <h3 className="card-value">{resumoFinanceiro.lucroLiquido}%</h3>
-              <small className="card-subtitle">Lucro líquido do período</small>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Abas */}
-      <ul className="nav nav-tabs mb-4">
-        <li className="nav-item">
-          <button 
-            className={`nav-link ${abaSelecionada === 'dashboard' ? 'active' : ''}`}
-            onClick={() => setAbaSelecionada('dashboard')}
-          >
-            <i className="bi bi-speedometer2 me-2"></i>
-            Dashboard
-          </button>
-        </li>
-        <li className="nav-item">
-          <button 
-            className={`nav-link ${abaSelecionada === 'mensalidades' ? 'active' : ''}`}
-            onClick={() => setAbaSelecionada('mensalidades')}
-          >
-            <i className="bi bi-receipt me-2"></i>
-            Mensalidades ({mensalidades.filter(m => m.status === 'pendente').length})
-          </button>
-        </li>
-        <li className="nav-item">
-          <button 
-            className={`nav-link ${abaSelecionada === 'salarios' ? 'active' : ''}`}
-            onClick={() => setAbaSelecionada('salarios')}
-          >
-            <i className="bi bi-wallet2 me-2"></i>
-            Salários ({salarios.length})
-          </button>
-        </li>
-        <li className="nav-item">
-          <button 
-            className={`nav-link ${abaSelecionada === 'despesas' ? 'active' : ''}`}
-            onClick={() => setAbaSelecionada('despesas')}
-          >
-            <i className="bi bi-cart3 me-2"></i>
-            Despesas Gerais ({despesas.filter(d => d.status === 'pendente').length})
-          </button>
-        </li>
-        <li className="nav-item">
-          <button 
-            className={`nav-link ${abaSelecionada === 'transacoes' ? 'active' : ''}`}
-            onClick={() => setAbaSelecionada('transacoes')}
-          >
-            <i className="bi bi-list-ul me-2"></i>
-            Todas Transações
-          </button>
-        </li>
-      </ul>
-
-      {/* Conteúdo das Abas */}
-      {abaSelecionada === 'dashboard' && (
-        <div className="aba-conteudo">
-          {/* Gráficos */}
-          <div className="row g-4 mb-4">
-            <div className="col-lg-8">
-              <div className="chart-card">
-                <div className="chart-header">
-                  <h5>
-                    <i className="bi bi-graph-up me-2"></i>
-                    Fluxo de Caixa Anual
-                  </h5>
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-3 sm:p-4 md:p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 mb-6">
+            <div>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                  <i className="bi bi-cash-coin text-2xl text-white"></i>
                 </div>
-                <div className="chart-body" style={{ height: '300px' }}>
+                <div>
+                  <h1 className="text-2xl sm:text-3xl font-bold text-white">Gestão Financeira</h1>
+                  <p className="text-sm text-slate-400">Controle completo de receitas, despesas e pagamentos</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              <select 
+                className="px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                value={filtros.mes}
+                onChange={(e) => setFiltros({ ...filtros, mes: parseInt(e.target.value) })}
+              >
+                {Array.from({ length: 12 }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {new Date(2025, i).toLocaleDateString('pt-BR', { month: 'long' })}
+                  </option>
+                ))}
+              </select>
+              <select 
+                className="px-4 py-2 bg-slate-800/50 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                value={filtros.ano}
+                onChange={(e) => setFiltros({ ...filtros, ano: parseInt(e.target.value) })}
+              >
+                <option value={2023}>2023</option>
+                <option value={2024}>2024</option>
+                <option value={2025}>2025</option>
+              </select>
+              <button 
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-sm"
+                onClick={carregarDadosFinanceiros}
+              >
+                <i className="bi bi-arrow-clockwise"></i>
+                Atualizar
+              </button>
+            </div>
+          </div>
+
+          {/* Cards de Resumo */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+            {/* Receita Total */}
+            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 hover:border-emerald-500/50 transition-all duration-300">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                  <i className="bi bi-arrow-down-circle text-2xl text-emerald-400"></i>
+                </div>
+                <span className="text-xs px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded-lg">
+                  Receita
+                </span>
+              </div>
+              <p className="text-sm text-slate-400 mb-1">Receita Total</p>
+              <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">{formatarMoeda(resumoFinanceiro.receitaTotal)}</h3>
+              <p className="text-xs text-slate-500">Mensalidades dos residentes</p>
+            </div>
+
+            {/* Despesa Total */}
+            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 hover:border-red-500/50 transition-all duration-300">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center">
+                  <i className="bi bi-arrow-up-circle text-2xl text-red-400"></i>
+                </div>
+                <span className="text-xs px-2 py-1 bg-red-500/10 text-red-400 rounded-lg">
+                  Despesa
+                </span>
+              </div>
+              <p className="text-sm text-slate-400 mb-1">Despesa Total</p>
+              <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">{formatarMoeda(resumoFinanceiro.despesaTotal)}</h3>
+              <p className="text-xs text-slate-500">Salários + Operacional</p>
+            </div>
+
+            {/* Saldo do Mês */}
+            <div className={`bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 hover:border-${resumoFinanceiro.saldoAtual >= 0 ? 'blue' : 'orange'}-500/50 transition-all duration-300`}>
+              <div className="flex items-start justify-between mb-4">
+                <div className={`w-12 h-12 rounded-xl bg-${resumoFinanceiro.saldoAtual >= 0 ? 'blue' : 'orange'}-500/10 flex items-center justify-center`}>
+                  <i className={`bi bi-wallet2 text-2xl text-${resumoFinanceiro.saldoAtual >= 0 ? 'blue' : 'orange'}-400`}></i>
+                </div>
+                <span className={`text-xs px-2 py-1 bg-${resumoFinanceiro.saldoAtual >= 0 ? 'blue' : 'orange'}-500/10 text-${resumoFinanceiro.saldoAtual >= 0 ? 'blue' : 'orange'}-400 rounded-lg`}>
+                  {resumoFinanceiro.saldoAtual >= 0 ? 'Superávit' : 'Déficit'}
+                </span>
+              </div>
+              <p className="text-sm text-slate-400 mb-1">Saldo do Mês</p>
+              <h3 className={`text-2xl sm:text-3xl font-bold mb-2 ${resumoFinanceiro.saldoAtual >= 0 ? 'text-blue-400' : 'text-orange-400'}`}>
+                {formatarMoeda(resumoFinanceiro.saldoAtual)}
+              </h3>
+              <p className="text-xs text-slate-500">Balanço do período</p>
+            </div>
+
+            {/* Margem de Lucro */}
+            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 hover:border-purple-500/50 transition-all duration-300">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                  <i className="bi bi-graph-up-arrow text-2xl text-purple-400"></i>
+                </div>
+                <span className="text-xs px-2 py-1 bg-purple-500/10 text-purple-400 rounded-lg">
+                  Margem
+                </span>
+              </div>
+              <p className="text-sm text-slate-400 mb-1">Margem de Lucro</p>
+              <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">{resumoFinanceiro.lucroLiquido}%</h3>
+              <p className="text-xs text-slate-500">Lucro líquido do período</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Abas */}
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-2 bg-slate-800/30 backdrop-blur-xl rounded-xl p-2 border border-slate-700/50">
+            <button 
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm ${
+                abaSelecionada === 'dashboard' 
+                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30' 
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+              }`}
+              onClick={() => setAbaSelecionada('dashboard')}
+            >
+              <i className="bi bi-speedometer2"></i>
+              Dashboard
+            </button>
+            <button 
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm ${
+                abaSelecionada === 'mensalidades' 
+                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30' 
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+              }`}
+              onClick={() => setAbaSelecionada('mensalidades')}
+            >
+              <i className="bi bi-receipt"></i>
+              Mensalidades 
+              {mensalidades.filter(m => m.status === 'pendente').length > 0 && (
+                <span className="px-2 py-0.5 bg-emerald-500 text-white rounded-full text-xs">
+                  {mensalidades.filter(m => m.status === 'pendente').length}
+                </span>
+              )}
+            </button>
+            <button 
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm ${
+                abaSelecionada === 'salarios' 
+                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30' 
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+              }`}
+              onClick={() => setAbaSelecionada('salarios')}
+            >
+              <i className="bi bi-wallet2"></i>
+              Salários ({salarios.length})
+            </button>
+            <button 
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm ${
+                abaSelecionada === 'despesas' 
+                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30' 
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+              }`}
+              onClick={() => setAbaSelecionada('despesas')}
+            >
+              <i className="bi bi-cart3"></i>
+              Despesas 
+              {despesas.filter(d => d.status === 'pendente').length > 0 && (
+                <span className="px-2 py-0.5 bg-red-500 text-white rounded-full text-xs">
+                  {despesas.filter(d => d.status === 'pendente').length}
+                </span>
+              )}
+            </button>
+            <button 
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 text-sm ${
+                abaSelecionada === 'transacoes' 
+                  ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-600/30' 
+                  : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+              }`}
+              onClick={() => setAbaSelecionada('transacoes')}
+            >
+              <i className="bi bi-list-ul"></i>
+              Todas Transações
+            </button>
+          </div>
+        </div>
+
+        {/* Conteúdo das Abas */}
+        {abaSelecionada === 'dashboard' && (
+          <div className="space-y-6">
+            {/* Gráficos */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Fluxo de Caixa */}
+              <div className="lg:col-span-2 bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                    <i className="bi bi-graph-up text-lg text-emerald-400"></i>
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">Fluxo de Caixa Anual</h3>
+                </div>
+                <div className="h-[300px]">
                   <Line 
                     data={dadosGraficoFluxoCaixa}
                     options={{
                       responsive: true,
                       maintainAspectRatio: false,
                       plugins: {
-                        legend: { position: 'top' }
+                        legend: { 
+                          position: 'top',
+                          labels: { color: '#cbd5e1' }
+                        }
                       },
                       scales: {
                         y: {
                           beginAtZero: true,
                           ticks: {
+                            color: '#94a3b8',
                             callback: (value) => formatarMoeda(value)
-                          }
+                          },
+                          grid: { color: '#334155' }
+                        },
+                        x: {
+                          ticks: { color: '#94a3b8' },
+                          grid: { color: '#334155' }
                         }
                       }
                     }}
                   />
                 </div>
               </div>
-            </div>
 
-            <div className="col-lg-4">
-              <div className="chart-card">
-                <div className="chart-header">
-                  <h5>
-                    <i className="bi bi-pie-chart me-2"></i>
-                    Receitas vs Despesas
-                  </h5>
+              {/* Despesas por Categoria */}
+              <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                    <i className="bi bi-pie-chart text-lg text-purple-400"></i>
+                  </div>
+                  <h3 className="text-lg font-semibold text-white">Despesas por Categoria</h3>
                 </div>
-                <div className="chart-body" style={{ height: '300px' }}>
+                <div className="h-[300px] flex items-center justify-center">
                   <Doughnut 
-                    data={dadosGraficoReceitasDespesas}
-                    options={{
-                      responsive: true,
-                      maintainAspectRatio: false,
-                      plugins: {
-                        legend: { position: 'bottom' }
-                      }
-                    }}
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="row g-4">
-            <div className="col-12">
-              <div className="chart-card">
-                <div className="chart-header">
-                  <h5>
-                    <i className="bi bi-bar-chart me-2"></i>
-                    Despesas por Categoria
-                  </h5>
-                </div>
-                <div className="chart-body" style={{ height: '300px' }}>
-                  <Bar 
                     data={dadosGraficoDespesasPorCategoria}
                     options={{
                       responsive: true,
                       maintainAspectRatio: false,
                       plugins: {
-                        legend: { display: false }
-                      },
-                      scales: {
-                        y: {
-                          beginAtZero: true,
-                          ticks: {
-                            callback: (value) => formatarMoeda(value)
+                        legend: { 
+                          position: 'bottom',
+                          labels: { 
+                            color: '#cbd5e1',
+                            padding: 15,
+                            font: { size: 11 }
                           }
                         }
                       }
@@ -560,195 +540,267 @@ function GestaoFinanceira() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
 
-      {abaSelecionada === 'mensalidades' && (
-        <div className="aba-conteudo">
-          <div className="card">
-            <div className="card-header bg-success text-white d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">
-                <i className="bi bi-receipt me-2"></i>
-                Mensalidades dos Residentes
-              </h5>
-              <span className="badge bg-light text-dark">
-                {mensalidades.filter(m => m.status === 'pago').length}/{mensalidades.length} pagas
-              </span>
-            </div>
-            <div className="card-body">
-              <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead>
-                    <tr>
-                      <th>Residente</th>
-                      <th>Valor</th>
-                      <th>Vencimento</th>
-                      <th>Status</th>
-                      <th>Data Pagamento</th>
-                      <th className="text-center">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mensalidades.map(m => (
-                      <tr key={m.id}>
-                        <td><strong>{m.residenteNome}</strong></td>
-                        <td>{formatarMoeda(m.valor)}</td>
-                        <td>{formatarData(m.dataVencimento)}</td>
-                        <td>
-                          <span className={`badge ${m.status === 'pago' ? 'bg-success' : 'bg-warning'}`}>
-                            {m.status === 'pago' ? 'Pago' : 'Pendente'}
-                          </span>
-                        </td>
-                        <td>{formatarData(m.dataPagamento)}</td>
-                        <td className="text-center">
-                          {m.status === 'pendente' && (
-                            <button 
-                              className="btn btn-sm btn-success"
-                              onClick={() => handleRegistrarPagamento(m)}
-                            >
-                              <i className="bi bi-check-circle me-1"></i>
-                              Registrar Pagamento
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot>
-                    <tr className="table-success">
-                      <td><strong>TOTAL</strong></td>
-                      <td><strong>{formatarMoeda(mensalidades.reduce((acc, m) => acc + m.valor, 0))}</strong></td>
-                      <td colSpan="4"></td>
-                    </tr>
-                  </tfoot>
-                </table>
+            {/* Resumo Rápido */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-white">Mensalidades Pendentes</h3>
+                  <span className="px-3 py-1 bg-amber-500/10 text-amber-400 rounded-lg text-sm font-medium">
+                    {mensalidades.filter(m => m.status === 'pendente').length}
+                  </span>
+                </div>
+                <p className="text-2xl font-bold text-amber-400 mb-2">
+                  {formatarMoeda(mensalidades.filter(m => m.status === 'pendente').reduce((acc, m) => acc + m.valor, 0))}
+                </p>
+                <p className="text-sm text-slate-400">Valor total a receber</p>
+              </div>
+
+              <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-white">Despesas Pendentes</h3>
+                  <span className="px-3 py-1 bg-red-500/10 text-red-400 rounded-lg text-sm font-medium">
+                    {[...salarios, ...despesas].filter(d => d.status === 'pendente').length}
+                  </span>
+                </div>
+                <p className="text-2xl font-bold text-red-400 mb-2">
+                  {formatarMoeda([...salarios, ...despesas].filter(d => d.status === 'pendente').reduce((acc, d) => acc + d.valor, 0))}
+                </p>
+                <p className="text-sm text-slate-400">Valor total a pagar</p>
               </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {abaSelecionada === 'salarios' && (
-        <div className="aba-conteudo">
-          <div className="card">
-            <div className="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">
-                <i className="bi bi-wallet2 me-2"></i>
-                Folha de Pagamento - Profissionais
-              </h5>
-              <span className="badge bg-light text-dark">
-                {salarios.length} funcionários
-              </span>
-            </div>
-            <div className="card-body">
-              <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead>
-                    <tr>
-                      <th>Profissional</th>
-                      <th>Cargo</th>
-                      <th>Salário</th>
-                      <th>Status</th>
-                      <th>Data Pagamento</th>
-                      <th className="text-center">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {salarios.map(s => {
-                      const valorLiquido = s.valor + s.bonus - s.descontos
-                      return (
-                        <tr key={s.id}>
-                          <td><strong>{s.profissionalNome}</strong></td>
-                          <td>{s.cargo}</td>
-                          <td>{formatarMoeda(valorLiquido)}</td>
-                          <td>
-                            <span className={`badge ${s.status === 'pago' ? 'bg-success' : 'bg-danger'}`}>
-                              {s.status === 'pago' ? 'Pago' : 'Pendente'}
-                            </span>
-                          </td>
-                          <td>{formatarData(s.dataPagamento)}</td>
-                          <td className="text-center">
-                            {s.status === 'pendente' && (
-                              <button 
-                                className="btn btn-sm btn-primary"
-                                onClick={() => handleRegistrarPagamento({ ...s, tipo: 'despesa', categoria: 'salario' })}
-                              >
-                                <i className="bi bi-cash me-1"></i>
-                                Pagar
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                  <tfoot>
-                    <tr className="table-primary">
-                      <td colSpan="2"><strong>TOTAL FOLHA</strong></td>
-                      <td><strong>{formatarMoeda(salarios.reduce((acc, s) => acc + s.valor + s.bonus - s.descontos, 0))}</strong></td>
-                      <td colSpan="3"></td>
-                    </tr>
-                  </tfoot>
-                </table>
+        {abaSelecionada === 'mensalidades' && (
+          <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 overflow-hidden">
+            <div className="p-6 border-b border-slate-700/50">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-white flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+                    <i className="bi bi-receipt text-lg text-emerald-400"></i>
+                  </div>
+                  Mensalidades do Mês
+                </h3>
+                <div className="flex gap-2">
+                  <button className="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-slate-300 rounded-lg text-sm transition-colors">
+                    <i className="bi bi-funnel mr-2"></i>
+                    Filtrar
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
 
-      {abaSelecionada === 'despesas' && (
-        <div className="aba-conteudo">
-          <div className="card">
-            <div className="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">
-                <i className="bi bi-cart3 me-2"></i>
-                Despesas Operacionais
-              </h5>
-              <button 
-                className="btn btn-dark btn-sm"
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-900/50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Residente</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Vencimento</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Valor</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-700/50">
+                  {mensalidades.map((m) => (
+                    <tr key={m.id} className="hover:bg-slate-700/30 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                            <i className="bi bi-person text-emerald-400"></i>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-white">{m.residenteNome}</p>
+                            <p className="text-xs text-slate-400">ID: {m.residenteId}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                        {formatarData(m.dataVencimento)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-emerald-400">
+                        {formatarMoeda(m.valor)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          m.status === 'pago' 
+                            ? 'bg-emerald-500/10 text-emerald-400' 
+                            : 'bg-amber-500/10 text-amber-400'
+                        }`}>
+                          {m.status === 'pago' ? '✓ Pago' : 'Pendente'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {m.status !== 'pago' && (
+                          <button
+                            onClick={() => handleRegistrarPagamento(m)}
+                            className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors text-xs"
+                          >
+                            <i className="bi bi-check-circle mr-2"></i>
+                            Registrar Pagamento
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {mensalidades.length === 0 && (
+              <div className="p-12 text-center">
+                <i className="bi bi-inbox text-5xl text-slate-600 mb-4"></i>
+                <p className="text-slate-400">Nenhuma mensalidade encontrada para este período</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {abaSelecionada === 'salarios' && (
+          <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 overflow-hidden">
+            <div className="p-6 border-b border-slate-700/50">
+              <h3 className="text-xl font-semibold text-white flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                  <i className="bi bi-wallet2 text-lg text-blue-400"></i>
+                </div>
+                Salários dos Profissionais
+              </h3>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-900/50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Profissional</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Data Pagamento</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Valor</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-700/50">
+                  {salarios.map((s) => (
+                    <tr key={s.id} className="hover:bg-slate-700/30 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center">
+                            <i className="bi bi-person-badge text-blue-400"></i>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-white">{s.profissionalNome}</p>
+                            <p className="text-xs text-slate-400">ID: {s.profissionalId}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                        {formatarData(s.dataVencimento)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-400">
+                        {formatarMoeda(s.valor)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          s.status === 'pago' 
+                            ? 'bg-emerald-500/10 text-emerald-400' 
+                            : 'bg-amber-500/10 text-amber-400'
+                        }`}>
+                          {s.status === 'pago' ? '✓ Pago' : 'Pendente'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {s.status !== 'pago' && (
+                          <button
+                            onClick={() => handleRegistrarPagamento(s)}
+                            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors text-xs"
+                          >
+                            <i className="bi bi-check-circle mr-2"></i>
+                            Pagar Salário
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {salarios.length === 0 && (
+              <div className="p-12 text-center">
+                <i className="bi bi-inbox text-5xl text-slate-600 mb-4"></i>
+                <p className="text-slate-400">Nenhum salário encontrado para este período</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {abaSelecionada === 'despesas' && (
+          <div className="space-y-6">
+            <div className="flex justify-end">
+              <button
                 onClick={() => setModalNovaDespesa(true)}
+                className="px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium transition-all duration-200 flex items-center gap-2 shadow-lg shadow-amber-600/30"
               >
-                <i className="bi bi-plus-circle me-2"></i>
+                <i className="bi bi-plus-circle text-lg"></i>
                 Nova Despesa
               </button>
             </div>
-            <div className="card-body">
-              <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead>
+
+            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 overflow-hidden">
+              <div className="p-6 border-b border-slate-700/50">
+                <h3 className="text-xl font-semibold text-white flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                    <i className="bi bi-cart3 text-lg text-amber-400"></i>
+                  </div>
+                  Despesas Gerais
+                </h3>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-900/50">
                     <tr>
-                      <th>Descrição</th>
-                      <th>Categoria</th>
-                      <th>Valor</th>
-                      <th>Data</th>
-                      <th>Status</th>
-                      <th className="text-center">Ações</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Descrição</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Categoria</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Data</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Valor</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Ações</th>
                     </tr>
                   </thead>
-                  <tbody>
-                    {despesas.map(d => (
-                      <tr key={d.id}>
-                        <td><strong>{d.descricao}</strong></td>
-                        <td>
-                          <span className="badge bg-secondary">
+                  <tbody className="divide-y divide-slate-700/50">
+                    {despesas.map((d) => (
+                      <tr key={d.id} className="hover:bg-slate-700/30 transition-colors">
+                        <td className="px-6 py-4">
+                          <p className="text-sm font-medium text-white">{d.descricao}</p>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="px-3 py-1 bg-slate-700 text-slate-300 rounded-lg text-xs">
                             {d.categoria}
                           </span>
                         </td>
-                        <td>{formatarMoeda(d.valor)}</td>
-                        <td>{formatarData(d.data)}</td>
-                        <td>
-                          <span className={`badge ${d.status === 'pago' ? 'bg-success' : 'bg-warning'}`}>
-                            {d.status === 'pago' ? 'Pago' : 'Pendente'}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                          {formatarData(d.dataVencimento)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-red-400">
+                          {formatarMoeda(d.valor)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            d.status === 'pago' 
+                              ? 'bg-emerald-500/10 text-emerald-400' 
+                              : 'bg-amber-500/10 text-amber-400'
+                          }`}>
+                            {d.status === 'pago' ? '✓ Pago' : 'Pendente'}
                           </span>
                         </td>
-                        <td className="text-center">
-                          {d.status === 'pendente' && (
-                            <button 
-                              className="btn btn-sm btn-success"
-                              onClick={() => handleRegistrarPagamento({ ...d, tipo: 'despesa' })}
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {d.status !== 'pago' && (
+                            <button
+                              onClick={() => handleRegistrarPagamento(d)}
+                              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-colors text-xs"
                             >
-                              <i className="bi bi-check-circle me-1"></i>
+                              <i className="bi bi-check-circle mr-2"></i>
                               Pagar
                             </button>
                           )}
@@ -756,201 +808,258 @@ function GestaoFinanceira() {
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot>
-                    <tr className="table-warning">
-                      <td colSpan="2"><strong>TOTAL DESPESAS</strong></td>
-                      <td><strong>{formatarMoeda(despesas.reduce((acc, d) => acc + d.valor, 0))}</strong></td>
-                      <td colSpan="3"></td>
-                    </tr>
-                  </tfoot>
                 </table>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
 
-      {abaSelecionada === 'transacoes' && (
-        <div className="aba-conteudo">
-          <div className="card">
-            <div className="card-header bg-info text-white">
-              <h5 className="mb-0">
-                <i className="bi bi-list-ul me-2"></i>
-                Todas as Transações
-              </h5>
-            </div>
-            <div className="card-body">
-              <div className="table-responsive">
-                <table className="table table-hover">
-                  <thead>
-                    <tr>
-                      <th>Data</th>
-                      <th>Descrição</th>
-                      <th>Tipo</th>
-                      <th>Categoria</th>
-                      <th>Valor</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {transacoes.slice(0, 50).map((t, index) => (
-                      <tr key={index}>
-                        <td>{formatarData(t.data || t.dataVencimento)}</td>
-                        <td><strong>{t.descricao}</strong></td>
-                        <td>
-                          <span className={`badge ${t.tipo === 'receita' ? 'bg-success' : 'bg-danger'}`}>
-                            {t.tipo === 'receita' ? (
-                              <><i className="bi bi-arrow-down-circle me-1"></i>Receita</>
-                            ) : (
-                              <><i className="bi bi-arrow-up-circle me-1"></i>Despesa</>
-                            )}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="badge bg-secondary">
-                            {t.categoria}
-                          </span>
-                        </td>
-                        <td className={t.tipo === 'receita' ? 'text-success' : 'text-danger'}>
-                          <strong>{formatarMoeda(t.valor)}</strong>
-                        </td>
-                        <td>
-                          <span className={`badge ${t.status === 'pago' ? 'bg-success' : 'bg-warning'}`}>
-                            {t.status}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {despesas.length === 0 && (
+                <div className="p-12 text-center">
+                  <i className="bi bi-inbox text-5xl text-slate-600 mb-4"></i>
+                  <p className="text-slate-400">Nenhuma despesa encontrada</p>
+                </div>
+              )}
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+        {abaSelecionada === 'transacoes' && (
+          <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 overflow-hidden">
+            <div className="p-6 border-b border-slate-700/50">
+              <h3 className="text-xl font-semibold text-white flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
+                  <i className="bi bi-list-ul text-lg text-purple-400"></i>
+                </div>
+                Todas as Transações
+              </h3>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-900/50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Data</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Descrição</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Tipo</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Categoria</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Valor</th>
+                    <th className="px-6 py-4 text-left text-xs font-medium text-slate-400 uppercase tracking-wider">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-700/50">
+                  {transacoes.map((t, idx) => (
+                    <tr key={idx} className="hover:bg-slate-700/30 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                        {formatarData(t.dataVencimento)}
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-sm font-medium text-white">{t.descricao}</p>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-3 py-1 rounded-lg text-xs font-medium ${
+                          t.tipo === 'receita' 
+                            ? 'bg-emerald-500/10 text-emerald-400' 
+                            : 'bg-red-500/10 text-red-400'
+                        }`}>
+                          {t.tipo === 'receita' ? (
+                            <><i className="bi bi-arrow-down-circle mr-1"></i>Receita</>
+                          ) : (
+                            <><i className="bi bi-arrow-up-circle mr-1"></i>Despesa</>
+                          )}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-3 py-1 bg-slate-700 text-slate-300 rounded-lg text-xs">
+                          {t.categoria}
+                        </span>
+                      </td>
+                      <td className={`px-6 py-4 whitespace-nowrap text-sm font-semibold ${
+                        t.tipo === 'receita' ? 'text-emerald-400' : 'text-red-400'
+                      }`}>
+                        {formatarMoeda(t.valor)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          t.status === 'pago' 
+                            ? 'bg-emerald-500/10 text-emerald-400' 
+                            : 'bg-amber-500/10 text-amber-400'
+                        }`}>
+                          {t.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {transacoes.length === 0 && (
+              <div className="p-12 text-center">
+                <i className="bi bi-inbox text-5xl text-slate-600 mb-4"></i>
+                <p className="text-slate-400">Nenhuma transação encontrada</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Modal Nova Despesa */}
       {modalNovaDespesa && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header bg-warning">
-                <h5 className="modal-title">
-                  <i className="bi bi-plus-circle me-2"></i>
-                  Nova Despesa
-                </h5>
-                <button className="btn-close" onClick={() => setModalNovaDespesa(false)}></button>
-              </div>
-              <form onSubmit={handleAdicionarDespesa}>
-                <div className="modal-body">
-                  <div className="mb-3">
-                    <label className="form-label">Descrição*</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      value={novaDespesa.descricao}
-                      onChange={(e) => setNovaDespesa({ ...novaDespesa, descricao: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Categoria*</label>
-                    <select
-                      className="form-select"
-                      value={novaDespesa.categoria}
-                      onChange={(e) => setNovaDespesa({ ...novaDespesa, categoria: e.target.value })}
-                      required
-                    >
-                      <option value="operacional">Operacional</option>
-                      <option value="utilidades">Utilidades</option>
-                      <option value="alimentacao">Alimentação</option>
-                      <option value="saude">Saúde/Medicamentos</option>
-                      <option value="manutencao">Manutenção</option>
-                      <option value="comunicacao">Comunicação</option>
-                      <option value="outros">Outros</option>
-                    </select>
-                  </div>
-
-                  <div className="row">
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Valor*</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        className="form-control"
-                        value={novaDespesa.valor}
-                        onChange={(e) => setNovaDespesa({ ...novaDespesa, valor: e.target.value })}
-                        required
-                      />
-                    </div>
-
-                    <div className="col-md-6 mb-3">
-                      <label className="form-label">Data*</label>
-                      <input
-                        type="date"
-                        className="form-control"
-                        value={novaDespesa.data}
-                        onChange={(e) => setNovaDespesa({ ...novaDespesa, data: e.target.value })}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label">Observações</label>
-                    <textarea
-                      className="form-control"
-                      rows="3"
-                      value={novaDespesa.observacoes}
-                      onChange={(e) => setNovaDespesa({ ...novaDespesa, observacoes: e.target.value })}
-                    ></textarea>
-                  </div>
-                </div>
-                <div className="modal-footer">
-                  <button type="button" className="btn btn-secondary" onClick={() => setModalNovaDespesa(false)}>
-                    Cancelar
-                  </button>
-                  <button type="submit" className="btn btn-warning">
-                    <i className="bi bi-save me-2"></i>
-                    Salvar Despesa
-                  </button>
-                </div>
-              </form>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-amber-600 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+              <h3 className="text-xl font-semibold text-white flex items-center gap-3">
+                <i className="bi bi-plus-circle text-2xl"></i>
+                Nova Despesa
+              </h3>
+              <button 
+                onClick={() => setModalNovaDespesa(false)}
+                className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+              >
+                <i className="bi bi-x text-white text-2xl"></i>
+              </button>
             </div>
+            
+            <form onSubmit={handleAdicionarDespesa} className="p-6 space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Descrição*</label>
+                <input
+                  type="text"
+                  className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  placeholder="Ex: Conta de luz, Compra de material, etc."
+                  value={novaDespesa.descricao}
+                  onChange={(e) => setNovaDespesa({ ...novaDespesa, descricao: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Categoria*</label>
+                <select
+                  className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  value={novaDespesa.categoria}
+                  onChange={(e) => setNovaDespesa({ ...novaDespesa, categoria: e.target.value })}
+                  required
+                >
+                  <option value="operacional">Operacional</option>
+                  <option value="utilidades">Utilidades</option>
+                  <option value="alimentacao">Alimentação</option>
+                  <option value="saude">Saúde/Medicamentos</option>
+                  <option value="manutencao">Manutenção</option>
+                  <option value="comunicacao">Comunicação</option>
+                  <option value="outros">Outros</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Valor*</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    placeholder="0,00"
+                    value={novaDespesa.valor}
+                    onChange={(e) => setNovaDespesa({ ...novaDespesa, valor: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Data*</label>
+                  <input
+                    type="date"
+                    className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    value={novaDespesa.data}
+                    onChange={(e) => setNovaDespesa({ ...novaDespesa, data: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Observações</label>
+                <textarea
+                  className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
+                  rows="3"
+                  placeholder="Informações adicionais (opcional)"
+                  value={novaDespesa.observacoes}
+                  onChange={(e) => setNovaDespesa({ ...novaDespesa, observacoes: e.target.value })}
+                ></textarea>
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button 
+                  type="button"
+                  onClick={() => setModalNovaDespesa(false)}
+                  className="flex-1 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-1 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <i className="bi bi-save"></i>
+                  Salvar Despesa
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
 
       {/* Modal Pagamento */}
       {modalPagamento && itemSelecionado && (
-        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content">
-              <div className="modal-header bg-success text-white">
-                <h5 className="modal-title">
-                  <i className="bi bi-check-circle me-2"></i>
-                  Confirmar Pagamento
-                </h5>
-                <button className="btn-close btn-close-white" onClick={() => setModalPagamento(false)}></button>
-              </div>
-              <div className="modal-body">
-                <div className="alert alert-info">
-                  <h6>Detalhes do Pagamento:</h6>
-                  <hr />
-                  <p className="mb-2"><strong>Descrição:</strong> {itemSelecionado.descricao}</p>
-                  <p className="mb-2"><strong>Valor:</strong> {formatarMoeda(itemSelecionado.valor)}</p>
-                  <p className="mb-0"><strong>Data:</strong> {new Date().toLocaleDateString('pt-BR')}</p>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 max-w-md w-full">
+            <div className="bg-emerald-600 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+              <h3 className="text-xl font-semibold text-white flex items-center gap-3">
+                <i className="bi bi-check-circle text-2xl"></i>
+                Confirmar Pagamento
+              </h3>
+              <button 
+                onClick={() => setModalPagamento(false)}
+                className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+              >
+                <i className="bi bi-x text-white text-2xl"></i>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 space-y-3">
+                <h4 className="font-semibold text-white text-sm mb-3">Detalhes do Pagamento:</h4>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Descrição:</span>
+                    <span className="text-white font-medium">{itemSelecionado.descricao}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Valor:</span>
+                    <span className="text-emerald-400 font-bold">{formatarMoeda(itemSelecionado.valor)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-400">Data:</span>
+                    <span className="text-white">{new Date().toLocaleDateString('pt-BR')}</span>
+                  </div>
                 </div>
-                <p className="text-muted">Deseja confirmar este pagamento?</p>
               </div>
-              <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setModalPagamento(false)}>
+
+              <p className="text-slate-400 text-center text-sm">
+                Deseja confirmar este pagamento?
+              </p>
+
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setModalPagamento(false)}
+                  className="flex-1 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium transition-colors"
+                >
                   Cancelar
                 </button>
-                <button className="btn btn-success" onClick={confirmarPagamento}>
-                  <i className="bi bi-check-circle me-2"></i>
-                  Confirmar Pagamento
+                <button 
+                  onClick={confirmarPagamento}
+                  className="flex-1 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  <i className="bi bi-check-circle"></i>
+                  Confirmar
                 </button>
               </div>
             </div>

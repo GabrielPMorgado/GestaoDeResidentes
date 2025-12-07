@@ -49,10 +49,177 @@
   --border-radius-xl: 1rem;
   
   /* Transições */
-  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-fast: 150ms;
+  --transition-normal: 300ms;
+  --transition-slow: 500ms;
 }
+
+/* ============================================
+   RESPONSIVIDADE GLOBAL
+   ============================================ */
+
+/* Garantir box-sizing em todos elementos */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+/* Scroll suave */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Body responsivo */
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* Container responsivo padrão */
+.container-responsive {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-responsive {
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-responsive {
+    padding: 2rem;
+  }
+}
+
+/* Imagens responsivas */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* Tabelas responsivas */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-responsive table {
+  min-width: 600px;
+}
+
+/* Cards responsivos */
+.card-responsive {
+  width: 100%;
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .card-responsive {
+    padding: 1.5rem;
+  }
+}
+
+/* Texto responsivo */
+.text-responsive-xs {
+  font-size: 0.75rem;
+}
+
+.text-responsive-sm {
+  font-size: 0.875rem;
+}
+
+.text-responsive-base {
+  font-size: 1rem;
+}
+
+.text-responsive-lg {
+  font-size: 1.125rem;
+}
+
+@media (min-width: 768px) {
+  .text-responsive-xs {
+    font-size: 0.875rem;
+  }
+  .text-responsive-sm {
+    font-size: 1rem;
+  }
+  .text-responsive-base {
+    font-size: 1.125rem;
+  }
+  .text-responsive-lg {
+    font-size: 1.25rem;
+  }
+}
+
+/* Grid responsivo */
+.grid-responsive {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .grid-responsive {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .grid-responsive {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .grid-responsive {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Utilidades para mobile */
+@media (max-width: 639px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+@media (min-width: 640px) {
+  .show-mobile-only {
+    display: none !important;
+  }
+}
+
+/* Espaçamento responsivo */
+.spacing-responsive-sm {
+  padding: 0.5rem;
+}
+
+.spacing-responsive-md {
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .spacing-responsive-sm {
+    padding: 0.75rem;
+  }
+  .spacing-responsive-md {
+    padding: 1.5rem;
+  }
+}
+
+/* ============================================
+   RESET GLOBAL
+   ============================================ */
 
 * {
   margin: 0;
@@ -379,14 +546,250 @@ a:hover {
   border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-/* Responsivo */
+/* ============================================
+   TABELAS RESPONSIVAS
+   ============================================ */
+
+/* Container de tabela responsivo */
+.table-container-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 0.75rem;
+  background: rgba(30, 41, 59, 0.5);
+  backdrop-filter: blur(12px);
+}
+
+/* Tabela base */
+.table-responsive-custom {
+  width: 100%;
+  min-width: 800px;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table-responsive-custom thead {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.table-responsive-custom th {
+  padding: 1rem;
+  text-align: left;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(203, 213, 225);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid rgba(100, 116, 139, 0.3);
+  white-space: nowrap;
+}
+
+.table-responsive-custom td {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(100, 116, 139, 0.2);
+  color: rgb(226, 232, 240);
+  font-size: 0.875rem;
+}
+
+.table-responsive-custom tbody tr {
+  transition: background-color 0.2s;
+}
+
+.table-responsive-custom tbody tr:hover {
+  background-color: rgba(51, 65, 85, 0.5);
+}
+
+/* Scroll horizontal customizado */
+.table-container-responsive::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-container-responsive::-webkit-scrollbar-track {
+  background: rgba(30, 41, 59, 0.5);
+  border-radius: 4px;
+}
+
+.table-container-responsive::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.5);
+  border-radius: 4px;
+}
+
+.table-container-responsive::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
+}
+
+/* Cards para mobile (alternativa às tabelas) */
 @media (max-width: 768px) {
-  h1 { font-size: 2rem; }
-  h2 { font-size: 1.75rem; }
-  h3 { font-size: 1.5rem; }
-  h4 { font-size: 1.25rem; }
+  .hide-on-mobile {
+    display: none;
+  }
   
-  .card-body {
+  .mobile-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .mobile-card-item {
+    background: rgba(30, 41, 59, 0.5);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(100, 116, 139, 0.3);
+    border-radius: 0.75rem;
     padding: 1rem;
   }
+  
+  .mobile-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgba(100, 116, 139, 0.2);
+  }
+  
+  .mobile-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: rgb(255, 255, 255);
+  }
+  
+  .mobile-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .mobile-card-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.25rem 0;
+  }
+  
+  .mobile-card-label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: rgb(148, 163, 184);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .mobile-card-value {
+    font-size: 0.875rem;
+    color: rgb(226, 232, 240);
+    text-align: right;
+  }
+  
+  .mobile-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid rgba(100, 116, 139, 0.2);
+  }
+  
+  .mobile-card-actions button {
+    flex: 1;
+    padding: 0.5rem;
+    font-size: 0.75rem;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-card-list {
+    display: none;
+  }
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  h3 { font-size: 1.125rem; }
+  h4 { font-size: 1rem; }
+  
+  .card-body {
+    padding: 0.75rem;
+  }
+  
+  /* Reduzir padding de tabelas em mobile */
+  .table-responsive-custom th,
+  .table-responsive-custom td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}
+
+@media (max-width: 640px) {
+  h1 { font-size: 1.25rem; }
+  h2 { font-size: 1.125rem; }
+  h3 { font-size: 1rem; }
+  
+  /* Inputs e selects */
+  input, select, textarea {
+    font-size: 16px !important; /* Previne zoom no iOS */
+  }
+}
+
+/* ============================================
+   SCROLLBAR CUSTOMIZADO
+   ============================================ */
+
+/* Scrollbar para Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(51, 65, 85, 0.8) rgba(15, 23, 42, 0.5);
+}
+
+/* Scrollbar para Webkit (Chrome, Safari, Edge) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(51, 65, 85, 0.8);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(71, 85, 105, 1);
+}
+
+/* Scrollbar fino para navegação */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+}
+
+/* Cores customizadas para scrollbar */
+.scrollbar-track-slate-900::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 3px;
+}
+
+.scrollbar-thumb-slate-700::-webkit-scrollbar-thumb {
+  background: rgba(51, 65, 85, 0.8);
+  border-radius: 3px;
+}
+
+.scrollbar-thumb-slate-700::-webkit-scrollbar-thumb:hover {
+  background: rgba(71, 85, 105, 1);
+}
+
+/* Suavizar scroll */
+* {
+  scroll-behavior: smooth;
 }

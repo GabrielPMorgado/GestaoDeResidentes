@@ -82,7 +82,7 @@ const setupAssociations = () => {
   // Relacionamentos Financeiros
   PagamentoMensalidade.belongsTo(Residente, {
     foreignKey: 'residente_id',
-    as: 'residente_mensalidade'
+    as: 'Residente'
   });
 
   Residente.hasMany(PagamentoMensalidade, {
@@ -92,7 +92,7 @@ const setupAssociations = () => {
 
   PagamentoSalario.belongsTo(Profissional, {
     foreignKey: 'profissional_id',
-    as: 'profissional_salario'
+    as: 'Profissional'
   });
 
   Profissional.hasMany(PagamentoSalario, {

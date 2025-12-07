@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNotification } from '../../contexts/NotificationContext'
-import { listarResidentes, atualizarResidente, deletarResidentePermanente } from '../../api/api'
+import { listarResidentes, atualizarResidente, deletarResidentePermanente } from '../../api/axios'
 
 function ResidentesInativos() {
   const { success, error: showError } = useNotification()

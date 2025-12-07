@@ -5,7 +5,7 @@ require('dotenv').config();
 const sequelize = new Sequelize(
   process.env.DB_NAME || 'sistema_residencial',
   process.env.DB_USER || 'root',
-  process.env.DB_PASSWORD || '123456',
+  process.env.DB_PASSWORD || '',
   {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
@@ -26,7 +26,6 @@ const sequelize = new Sequelize(
     
     dialectOptions: {
       charset: 'utf8mb4',
-      collate: 'utf8mb4_unicode_ci',
       connectTimeout: 10000 // 10 segundos
     },
     
@@ -39,7 +38,6 @@ const sequelize = new Sequelize(
     // Definições globais de modelo
     define: {
       charset: 'utf8mb4',
-      collate: 'utf8mb4_unicode_ci',
       timestamps: true,
       underscored: false,
       freezeTableName: true

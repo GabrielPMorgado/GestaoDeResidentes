@@ -37,6 +37,11 @@ const verificarAcessoAgendamento = (req, res, next) => {
     return next();
   }
 
+  // Recepcionista tem acesso total a agendamentos
+  if (req.usuario.tipo === 'recepcionista') {
+    return next();
+  }
+
   // Profissional só pode ver seus próprios agendamentos
   if (req.usuario.tipo === 'profissional') {
     req.filtrarPorProfissional = req.usuario.profissional_id;

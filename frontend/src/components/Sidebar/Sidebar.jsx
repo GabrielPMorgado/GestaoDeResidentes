@@ -4,12 +4,13 @@ import { useNotification } from '../../contexts/NotificationContext'
 
 function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
   const { isAdmin, logout, user } = useAuth()
-  const { showSuccess } = useNotification()
+  const { success: showSuccess } = useNotification()
   const [activeItem, setActiveItem] = useState('dashboard')
   const [expandedSections, setExpandedSections] = useState({
     cadastros: true,
     listagens: true,
     agendamentos: true,
+    atendimento: true,
   })
 
   const handleNavigation = (page) => {
@@ -29,97 +30,147 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
     }))
   }
 
-  const menuSections = [
+  // Menu para Administrador (completo)
+  const menuAdmin = [
     {
       id: 'main',
       items: [
-        { id: 'dashboard', label: 'Dashboard', page: 'dashboard' }
+        { id: 'dashboard', label: 'Dashboard', page: 'dashboard', icon: 'bi-house-door-fill' }
       ]
     },
     {
       id: 'cadastros',
       title: 'Cadastros',
+      icon: 'bi-plus-circle',
       items: [
-        { id: 'cad-residentes', label: 'Residentes', page: 'cadastro-residentes' },
-        { id: 'cad-profissionais', label: 'Profissionais', page: 'cadastro-profissionais' }
+        { id: 'cad-residentes', label: 'Residentes', page: 'cadastro-residentes', icon: 'bi-person-plus-fill' },
+        { id: 'cad-profissionais', label: 'Profissionais', page: 'cadastro-profissionais', icon: 'bi-person-badge-fill' }
       ]
     },
     {
       id: 'listagens',
       title: 'Listagens',
+      icon: 'bi-list-ul',
       items: [
-        { id: 'list-residentes', label: 'Residentes', page: 'listagem-residentes' },
-        { id: 'list-profissionais', label: 'Profissionais', page: 'listagem-profissionais' }
+        { id: 'list-residentes', label: 'Residentes', page: 'listagem-residentes', icon: 'bi-people-fill' },
+        { id: 'list-profissionais', label: 'Profissionais', page: 'listagem-profissionais', icon: 'bi-person-vcard-fill' }
       ]
     },
     {
       id: 'agendamentos',
       title: 'Agendamentos',
+      icon: 'bi-calendar-check',
       items: [
-        { id: 'new-agendamento', label: 'Novo', page: 'cadastro-agendamento' },
-        { id: 'list-agendamentos', label: 'Consultar', page: 'listagem-agendamentos' }
+        { id: 'new-agendamento', label: 'Novo', page: 'cadastro-agendamento', icon: 'bi-calendar-plus' },
+        { id: 'list-agendamentos', label: 'Consultar', page: 'listagem-agendamentos', icon: 'bi-calendar-event' }
       ]
     },
     {
       id: 'inativos',
       title: 'Inativos',
+      icon: 'bi-archive',
       items: [
-        { id: 'res-inativos', label: 'Residentes', page: 'residentes-inativos' },
-        { id: 'prof-inativos', label: 'Profissionais', page: 'profissionais-inativos' }
+        { id: 'res-inativos', label: 'Residentes', page: 'residentes-inativos', icon: 'bi-person-x-fill' },
+        { id: 'prof-inativos', label: 'Profissionais', page: 'profissionais-inativos', icon: 'bi-person-dash-fill' }
       ]
     },
     {
       id: 'analytics',
       title: 'Analytics',
+      icon: 'bi-graph-up',
       items: [
-        { id: 'analytics', label: 'Dashboard', page: 'dashboard-analytics' },
-        { id: 'relatorios', label: 'Relatórios', page: 'relatorios' }
+        { id: 'analytics', label: 'Dashboard', page: 'dashboard-analytics', icon: 'bi-speedometer2' },
+        { id: 'relatorios', label: 'Relatórios', page: 'relatorios', icon: 'bi-file-earmark-bar-graph' }
       ]
     },
     {
       id: 'gestao',
       title: 'Gestão',
+      icon: 'bi-briefcase',
       items: [
-        { id: 'financeira', label: 'Financeira', page: 'gestao-financeira' }
+        { id: 'financeira', label: 'Financeira', page: 'gestao-financeira', icon: 'bi-currency-dollar' }
       ]
     },
     {
       id: 'admin',
       title: 'Administração',
-      adminOnly: true,
+      icon: 'bi-shield-lock',
       items: [
-        { id: 'acessos', label: 'Gerenciar Acessos', page: 'gerenciar-acessos' }
+        { id: 'acessos', label: 'Gerenciar Acessos', page: 'gerenciar-acessos', icon: 'bi-key-fill' }
       ]
     }
   ]
 
-  // Filtrar seções baseado no tipo de usuário
-  const filteredSections = isAdmin() 
-    ? menuSections 
-    : menuSections.filter(section => !section.adminOnly)
+  // Menu para Profissional
+  const menuProfissional = [
+    {
+      id: 'main',
+      items: [
+        { id: 'pacientes-agendados', label: 'Pacientes Agendados', page: 'pacientes-agendados', icon: 'bi-calendar2-check-fill' }
+      ]
+    },
+    {
+      id: 'atendimento',
+      title: 'Atendimento',
+      icon: 'bi-clipboard2-pulse',
+      items: [
+        { id: 'historico-atendimentos', label: 'Histórico', page: 'historico-atendimentos', icon: 'bi-clock-history' }
+      ]
+    }
+  ]
+
+  // Menu para Recepcionista
+  const menuRecepcionista = [
+    {
+      id: 'main',
+      items: [
+        { id: 'dashboard-recep', label: 'Dashboard', page: 'dashboard-recepcionista', icon: 'bi-house-door-fill' }
+      ]
+    },
+    {
+      id: 'agendamentos',
+      title: 'Agendamentos',
+      icon: 'bi-calendar-check',
+      items: [
+        { id: 'novo-agendamento', label: 'Novo Agendamento', page: 'cadastro-agendamento', icon: 'bi-calendar-plus' },
+        { id: 'list-agendamentos', label: 'Consultar', page: 'listagem-agendamentos', icon: 'bi-calendar-event' }
+      ]
+    }
+  ]
+
+  // Selecionar menu baseado no tipo de usuário
+  const getUserMenu = () => {
+    if (isAdmin()) return menuAdmin
+    if (user?.tipo === 'recepcionista') return menuRecepcionista
+    return menuProfissional
+  }
+  
+  const filteredSections = getUserMenu()
 
   return (
     <>
-      <aside className={`fixed top-0 left-0 h-full bg-slate-900 border-r border-slate-700/50 transition-all duration-300 z-50 ${isOpen ? 'w-64' : 'w-16'} overflow-hidden`}>
+      <aside className={`fixed top-0 left-0 h-full bg-slate-900 border-r border-slate-700/50 transition-all duration-300 z-50 flex flex-col
+        ${isOpen ? 'w-64 shadow-2xl' : 'w-16'}
+        lg:${isOpen ? 'w-64' : 'w-16'}
+        ${isOpen ? '' : 'lg:block'}
+        ${isOpen ? 'block' : 'hidden lg:block'}
+      `}>
         {/* Header */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-700/50">
+        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-700/50 flex-shrink-0">
           {isOpen && (
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <span className="text-white text-sm font-bold">SR</span>
-              </div>
-              <span className="font-semibold text-white">Sistema</span>
+              <span className="font-semibold text-white text-lg">Sistema Residencial</span>
             </div>
           )}
           {!isOpen && (
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mx-auto">
+            <div className="text-center">
               <span className="text-white text-xs font-bold">SR</span>
             </div>
           )}
         </div>
         
-        {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4 px-2 custom-scrollbar">
+        {/* Navigation - Scrollable */}
+        <nav className="flex-1 overflow-y-auto py-4 px-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900 hover:scrollbar-thumb-slate-600" style={{scrollBehavior: 'smooth'}}>
           <ul className="space-y-1">
             {filteredSections.map((section) => (
               <li key={section.id}>
@@ -128,7 +179,10 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
                     onClick={() => toggleSection(section.id)}
                     className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors mt-4 mb-2"
                   >
-                    <span>{section.title}</span>
+                    <div className="flex items-center gap-2">
+                      {section.icon && <i className={`bi ${section.icon} text-sm`}></i>}
+                      <span>{section.title}</span>
+                    </div>
                     <span className="text-xs">{expandedSections[section.id] ? '−' : '+'}</span>
                   </button>
                 ) : section.title && !isOpen ? (
@@ -141,7 +195,7 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
                       <li key={item.id}>
                         <button
                           onClick={() => handleNavigation(item.page)}
-                          className={`w-full flex items-center px-3 py-2.5 rounded-lg transition-all ${
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
                             activeItem === item.page
                               ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/20'
                               : 'text-slate-300 hover:bg-slate-800 hover:text-white'
@@ -149,9 +203,12 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
                           title={!isOpen ? item.label : ''}
                         >
                           {isOpen ? (
-                            <span className="text-sm font-medium">{item.label}</span>
+                            <>
+                              {item.icon && <i className={`bi ${item.icon} text-base flex-shrink-0`}></i>}
+                              <span className="text-sm font-medium">{item.label}</span>
+                            </>
                           ) : (
-                            <span className="text-xs font-semibold mx-auto">{item.label.substring(0, 2).toUpperCase()}</span>
+                            <i className={`bi ${item.icon} text-base mx-auto`} title={item.label}></i>
                           )}
                         </button>
                       </li>
@@ -163,43 +220,6 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
           </ul>
         </nav>
 
-        {/* User Info & Logout */}
-        <div className="border-t border-slate-700/50 p-4 space-y-3">
-          {isOpen && (
-            <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700/50">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                  <span className="text-white text-sm font-bold">
-                    {(user?.profissional?.nome_completo || 'Admin').substring(0, 1).toUpperCase()}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium truncate">
-                    {user?.profissional?.nome_completo || 'Admin'}
-                  </p>
-                  <p className="text-slate-400 text-xs truncate">
-                    {isAdmin() ? 'Administrador' : user?.profissional?.profissao || 'Profissional'}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="w-full px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg text-sm font-medium transition-all"
-              >
-                Sair
-              </button>
-            </div>
-          )}
-          {!isOpen && (
-            <button
-              onClick={handleLogout}
-              className="w-full flex justify-center p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-all"
-              title="Sair"
-            >
-              <span className="text-xs font-bold">×</span>
-            </button>
-          )}
-        </div>
       </aside>
 
       {/* Overlay for mobile */}

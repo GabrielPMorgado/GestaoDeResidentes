@@ -4,7 +4,7 @@ import profissionalService from '../../services/profissionalService';
 import { useNotification } from '../../contexts/NotificationContext';
 
 function GerenciarAcessos() {
-  const { showSuccess, showError } = useNotification();
+  const { success: showSuccess, error: showError } = useNotification();
   const [usuarios, setUsuarios] = useState([]);
   const [profissionais, setProfissionais] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -21,14 +21,31 @@ function GerenciarAcessos() {
 
   const carregarDados = async () => {
     try {
-      const [usuariosData, profissionaisData] = await Promise.all([
+      const [usuariosResponse, profissionaisResponse] = await Promise.all([
         authService.listarUsuarios(),
-        profissionalService.listar()
+        profissionalService.listar({ status: 'ativo', limit: 1000 })
       ]);
-      setUsuarios(usuariosData);
-      setProfissionais(profissionaisData.filter(p => p.status === 'ativo'));
+      
+      // Processar usuários
+      const usuariosArray = Array.isArray(usuariosResponse) 
+        ? usuariosResponse 
+        : (usuariosResponse?.data || usuariosResponse?.usuarios || []);
+      
+      setUsuarios(usuariosArray);
+      
+      // Processar profissionais
+      const profissionaisArray = Array.isArray(profissionaisResponse) 
+        ? profissionaisResponse 
+        : (profissionaisResponse?.data?.profissionais || profissionaisResponse?.profissionais || []);
+      
+      const profissionaisAtivos = profissionaisArray.filter(p => p.status === 'ativo');
+      
+      setProfissionais(profissionaisAtivos);
     } catch (error) {
-      showError('Erro ao carregar dados');
+      console.error('❌ Erro ao carregar dados:', error);
+      showError(error?.message || 'Erro ao carregar dados');
+      setUsuarios([]);
+      setProfissionais([]);
     } finally {
       setLoading(false);
     }
@@ -93,11 +110,51 @@ function GerenciarAcessos() {
         </div>
         <button
           onClick={() => setShowModal(true)}
-          className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl flex items-center gap-2"
+          disabled={profissionaisDisponiveis.length === 0}
+          className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <i className="bi bi-plus-lg"></i>
           Criar Novo Acesso
         </button>
+      </div>
+
+      {/* Estatísticas */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
+              <i className="bi bi-people-fill text-2xl text-blue-400"></i>
+            </div>
+            <div>
+              <p className="text-sm text-slate-400">Total de Usuários</p>
+              <h3 className="text-2xl font-bold text-white">{usuarios.length}</h3>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+              <i className="bi bi-person-check-fill text-2xl text-emerald-400"></i>
+            </div>
+            <div>
+              <p className="text-sm text-slate-400">Profissionais Cadastrados</p>
+              <h3 className="text-2xl font-bold text-white">{profissionais.length}</h3>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+              <i className="bi bi-person-plus-fill text-2xl text-amber-400"></i>
+            </div>
+            <div>
+              <p className="text-sm text-slate-400">Disponíveis para Acesso</p>
+              <h3 className="text-2xl font-bold text-white">{profissionaisDisponiveis.length}</h3>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Lista de Usuários */}
@@ -190,7 +247,7 @@ function GerenciarAcessos() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  Profissional
+                  Profissional ({profissionaisDisponiveis.length} disponíveis)
                 </label>
                 <select
                   required
@@ -199,12 +256,21 @@ function GerenciarAcessos() {
                   className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="">Selecione um profissional</option>
-                  {profissionaisDisponiveis.map(p => (
-                    <option key={p.id} value={p.id}>
-                      {p.nome_completo} - {p.profissao}
-                    </option>
-                  ))}
+                  {profissionaisDisponiveis.length === 0 ? (
+                    <option disabled>Nenhum profissional disponível</option>
+                  ) : (
+                    profissionaisDisponiveis.map(p => (
+                      <option key={p.id} value={p.id}>
+                        {p.nome_completo} - {p.profissao}
+                      </option>
+                    ))
+                  )}
                 </select>
+                {profissionaisDisponiveis.length === 0 && (
+                  <p className="text-amber-400 text-sm mt-2">
+                    ℹ️ Todos os profissionais ativos já possuem acesso ao sistema
+                  </p>
+                )}
               </div>
 
               <div>

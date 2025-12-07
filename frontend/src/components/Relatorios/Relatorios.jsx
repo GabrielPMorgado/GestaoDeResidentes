@@ -5,7 +5,7 @@ import {
   listarProfissionais,
   obterEstatisticasAgendamentos,
   listarAgendamentos
-} from '../../api/api'
+} from '../../api/axios'
 
 function Relatorios() {
   const { success: showSuccess, error: showError } = useNotification()

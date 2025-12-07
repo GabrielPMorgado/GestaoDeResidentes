@@ -132,7 +132,7 @@ exports.listarMensalidades = async (req, res) => {
       where,
       include: [{
         model: Residente,
-        as: 'residente',
+        as: 'Residente',
         attributes: ['id', 'nome_completo', 'cpf']
       }],
       order: [['ano_referencia', 'DESC'], ['mes_referencia', 'DESC']]
@@ -152,7 +152,7 @@ exports.obterMensalidade = async (req, res) => {
     const mensalidade = await PagamentoMensalidade.findByPk(req.params.id, {
       include: [{
         model: Residente,
-        as: 'residente'
+        as: 'Residente'
       }]
     })
     
@@ -246,7 +246,7 @@ exports.listarSalarios = async (req, res) => {
       where,
       include: [{
         model: Profissional,
-        as: 'profissional',
+        as: 'Profissional',
         attributes: ['id', 'nome_completo', 'especialidade', 'salario']
       }],
       order: [['ano_referencia', 'DESC'], ['mes_referencia', 'DESC']]
@@ -266,7 +266,7 @@ exports.obterSalario = async (req, res) => {
     const salario = await PagamentoSalario.findByPk(req.params.id, {
       include: [{
         model: Profissional,
-        as: 'profissional'
+        as: 'Profissional'
       }]
     })
     
@@ -404,7 +404,7 @@ exports.obterTransacoes = async (req, res) => {
         where: whereMensalidade,
         include: [{
           model: Residente,
-          as: 'residente',
+          as: 'Residente',
           attributes: ['nome_completo']
         }]
       })
@@ -413,7 +413,7 @@ exports.obterTransacoes = async (req, res) => {
         transacoes.push({
           id: `M-${m.id}`,
           tipo: 'receita',
-          descricao: `Mensalidade - ${m.residente.nome_completo}`,
+          descricao: `Mensalidade - ${m.Residente.nome_completo}`,
           valor: parseFloat(m.valor),
           data: m.data_pagamento,
           categoria: 'Mensalidade',
@@ -431,7 +431,7 @@ exports.obterTransacoes = async (req, res) => {
         where: whereSalario,
         include: [{
           model: Profissional,
-          as: 'profissional',
+          as: 'Profissional',
           attributes: ['nome_completo']
         }]
       })
@@ -441,7 +441,7 @@ exports.obterTransacoes = async (req, res) => {
         transacoes.push({
           id: `S-${s.id}`,
           tipo: 'despesa',
-          descricao: `Salário - ${s.profissional.nome_completo}`,
+          descricao: `Salário - ${s.Profissional.nome_completo}`,
           valor: valorTotal,
           data: s.data_pagamento,
           categoria: 'Salário',

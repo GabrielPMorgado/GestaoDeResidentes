@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { criarAgendamento, listarResidentes, listarProfissionais } from '../../api/api'
+import { criarAgendamento, listarResidentes, listarProfissionais } from '../../api/axios'
 import { useNotification } from '../../contexts/NotificationContext'
 import { LoadingSpinner } from '../Common'
 

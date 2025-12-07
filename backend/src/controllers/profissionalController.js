@@ -90,6 +90,7 @@ exports.listar = async (req, res) => {
   try {
     const { status, busca, profissao, departamento, page = 1, limit = 10 } = req.query;
     
+    
     // Filtros
     const where = {};
     
@@ -114,15 +115,23 @@ exports.listar = async (req, res) => {
       ];
     }
     
+    console.log('🔍 Where clause:', JSON.stringify(where, null, 2));
+    
     // Paginação
     const offset = (page - 1) * limit;
+    
+    console.log('🔢 Paginação: offset=', offset, 'limit=', parseInt(limit));
     
     const { count, rows } = await Profissional.findAndCountAll({
       where,
       limit: parseInt(limit),
       offset: parseInt(offset),
-      order: [['data_cadastro', 'DESC']]
+      order: [['id', 'ASC']],
+      attributes: { exclude: ['senha'] }
     });
+    
+    console.log('✅ Profissionais encontrados:', count);
+    console.log('📄 Primeiros IDs:', rows.slice(0, 3).map(r => r.id));
     
     res.json({
       success: true,
@@ -137,11 +146,13 @@ exports.listar = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Erro ao listar profissionais:', error);
+    console.error('❌ Erro ao listar profissionais:', error);
+    console.error('Stack:', error.stack);
     res.status(500).json({
       success: false,
       message: 'Erro ao listar profissionais',
-      error: error.message
+      error: error.message,
+      details: error.stack
     });
   }
 };
