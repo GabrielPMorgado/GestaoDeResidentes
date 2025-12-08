@@ -78,6 +78,7 @@ function CadastroResidentes() {
     estado_civil: '',
     telefone: '',
     email: '',
+    valor_mensalidade: '',
     cep: '',
     logradouro: '',
     numero: '',
@@ -120,6 +121,10 @@ function CadastroResidentes() {
         return !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? 'Email inválido' : ''
       case 'email_responsavel':
         return value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) ? 'Email inválido' : ''
+      case 'valor_mensalidade':
+        if (!value) return 'Valor da mensalidade é obrigatório'
+        const valorNumerico = parseFloat(value.replace(/[^\d,]/g, '').replace(',', '.'))
+        return isNaN(valorNumerico) || valorNumerico <= 0 ? 'Valor deve ser maior que zero' : ''
       case 'cep':
         return !/^\d{5}-?\d{3}$/.test(value) ? 'CEP inválido' : ''
       case 'logradouro':
@@ -140,7 +145,7 @@ function CadastroResidentes() {
     const stepErrors = {}
     
     if (step === 1) {
-      const fields = ['nome_completo', 'cpf', 'data_nascimento', 'sexo', 'telefone', 'email']
+      const fields = ['nome_completo', 'cpf', 'data_nascimento', 'sexo', 'telefone', 'email', 'valor_mensalidade']
       fields.forEach(field => {
         const error = validateField(field, formData[field])
         if (error) stepErrors[field] = error
@@ -173,6 +178,16 @@ function CadastroResidentes() {
     if (name === 'cpf') formattedValue = formatarCPF(value)
     else if (name === 'telefone' || name === 'telefone_responsavel') formattedValue = formatarTelefone(value)
     else if (name === 'cep') formattedValue = formatarCEP(value)
+    else if (name === 'valor_mensalidade') {
+      // Formatar como moeda brasileira
+      const numeros = value.replace(/\D/g, '')
+      if (numeros) {
+        const numero = parseFloat(numeros) / 100
+        formattedValue = numero.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+      } else {
+        formattedValue = ''
+      }
+    }
     
     setFormData(prev => ({ ...prev, [name]: formattedValue }))
   }
@@ -213,6 +228,7 @@ function CadastroResidentes() {
       estado_civil: '',
       telefone: '',
       email: '',
+      valor_mensalidade: '',
       cep: '',
       logradouro: '',
       numero: '',
@@ -249,7 +265,15 @@ function CadastroResidentes() {
     setLoading(true)
     
     try {
-      await criarResidente(formData)
+      // Converter valor_mensalidade para número antes de enviar
+      const dataToSend = {
+        ...formData,
+        valor_mensalidade: formData.valor_mensalidade 
+          ? parseFloat(formData.valor_mensalidade.replace(/\./g, '').replace(',', '.'))
+          : null
+      }
+      
+      await criarResidente(dataToSend)
       success('Residente cadastrado com sucesso!')
       handleReset()
     } catch (error) {
@@ -445,6 +469,36 @@ function CadastroResidentes() {
                     handleChange={handleChange}
                     handleBlur={handleBlur}
                   />
+
+                  <div>
+                    <label htmlFor="valor_mensalidade" className="block text-sm font-medium text-slate-300 mb-2">
+                      Valor da Mensalidade <span className="text-amber-400">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <span className="text-slate-400">R$</span>
+                      </div>
+                      <input
+                        type="text"
+                        id="valor_mensalidade"
+                        name="valor_mensalidade"
+                        value={formData.valor_mensalidade || ''}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        placeholder="0,00"
+                        className={`w-full pl-12 pr-4 py-3 bg-slate-900/60 border ${
+                          errors.valor_mensalidade && touched.valor_mensalidade 
+                            ? 'border-red-500/50 focus:ring-red-500/50' 
+                            : 'border-slate-700/50 focus:ring-amber-500/50 focus:border-amber-500/50'
+                        } rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all`}
+                      />
+                    </div>
+                    {errors.valor_mensalidade && touched.valor_mensalidade && (
+                      <p className="mt-1.5 text-sm text-red-400">
+                        {errors.valor_mensalidade}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </div>
             )}

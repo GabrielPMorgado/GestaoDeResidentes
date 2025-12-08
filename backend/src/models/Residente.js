@@ -123,6 +123,11 @@ const Residente = sequelize.define('Residente', {
     defaultValue: 'ativo',
     comment: 'Status do residente'
   },
+  valor_mensalidade: {
+    type: DataTypes.DECIMAL(10, 2),
+    allowNull: true,
+    comment: 'Valor da mensalidade do residente'
+  },
   observacoes: {
     type: DataTypes.TEXT,
     allowNull: true,
