@@ -4,12 +4,7 @@ import { useAuth } from '../../contexts/AuthContext'
 function Header({ toggleSidebar, currentPage }) {
   const { user, logout } = useAuth()
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [currentTime, setCurrentTime] = useState(new Date())
-
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
-    return () => clearInterval(timer)
-  }, [])
+  // ...existing code...
 
   // Fechar menu ao clicar fora
   useEffect(() => {
@@ -44,16 +39,10 @@ function Header({ toggleSidebar, currentPage }) {
 
   const currentPageInfo = pageInfo[currentPage] || { name: 'Sistema', icon: 'bi-grid', breadcrumb: ['Início'] }
 
-  const formatTime = (date) => {
-    return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-  }
-
-  const formatDate = (date) => {
-    return date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })
-  }
+  // ...existing code...
 
   const getGreeting = () => {
-    const hour = currentTime.getHours()
+    const hour = new Date().getHours()
     if (hour >= 5 && hour < 12) return 'Bom dia'
     if (hour >= 12 && hour < 18) return 'Boa tarde'
     return 'Boa noite'
@@ -104,22 +93,7 @@ function Header({ toggleSidebar, currentPage }) {
 
           {/* Right Section */}
           <div className="flex items-center gap-2 lg:gap-3">
-            {/* Date & Time */}
-            <div className="hidden xl:flex items-center gap-3 px-4 py-2.5 bg-slate-900/60 backdrop-blur-xl rounded-xl border border-slate-800/60 hover:border-slate-700/80 transition-all shadow-lg shadow-black/5">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
-                  <i className="bi bi-calendar3 text-amber-400 text-sm"></i>
-                </div>
-                <span className="text-sm text-slate-200 font-medium capitalize tracking-wide">{formatDate(currentTime)}</span>
-              </div>
-              <div className="w-px h-5 bg-slate-800"></div>
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                  <i className="bi bi-clock text-blue-400 text-sm"></i>
-                </div>
-                <span className="text-sm text-slate-200 font-semibold tabular-nums tracking-wider">{formatTime(currentTime)}</span>
-              </div>
-            </div>
+            {/* ...existing code... */}
 
             {/* User Menu */}
             <div className="user-menu-container relative">
