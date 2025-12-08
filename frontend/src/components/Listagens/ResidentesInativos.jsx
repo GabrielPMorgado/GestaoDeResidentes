@@ -114,171 +114,112 @@ function ResidentesInativos() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header Premium */}
-        <div className="mb-8">
-          <div className="relative mb-6">
-            <div className="absolute -inset-1 bg-gradient-to-r from-slate-600 via-slate-500 to-slate-600 rounded-3xl blur opacity-20"></div>
-            <div className="relative bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-xl rounded-3xl border border-slate-700/50 p-6 shadow-2xl">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-5">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-400 to-slate-600 rounded-2xl blur opacity-50"></div>
-                    <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-500 to-slate-700 flex items-center justify-center shadow-xl">
-                      <i className="bi bi-person-x-fill text-3xl text-white"></i>
-                    </div>
-                  </div>
-                  <div>
-                    <h1 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-slate-200 to-slate-400 mb-1">
-                      Residentes Inativos
-                    </h1>
-                    <p className="text-slate-400 flex items-center gap-2">
-                      <i className="bi bi-info-circle"></i>
-                      Gerenciar residentes que foram inativados no sistema
-                    </p>
-                  </div>
-                </div>
-                
-                {/* Badge de total */}
-                <div className="flex items-center gap-3">
-                  <div className="relative group">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-slate-500 to-slate-600 rounded-2xl blur opacity-25 group-hover:opacity-40 transition"></div>
-                    <div className="relative bg-gradient-to-br from-slate-700/50 to-slate-800/50 backdrop-blur-xl border border-slate-600/30 rounded-2xl px-6 py-3 shadow-xl">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-slate-500/20 flex items-center justify-center">
-                          <i className="bi bi-people text-xl text-slate-300"></i>
-                        </div>
-                        <div>
-                          <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Total Inativos</p>
-                          <h3 className="text-2xl font-black text-white">{paginacao.total}</h3>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
+        {/* Header com Badge */}
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-white mb-1">Residentes Inativos</h1>
+            <p className="text-slate-400 text-sm">Gerencie residentes que foram inativados no sistema</p>
+          </div>
+          <div className="px-4 py-2 bg-slate-800/60 backdrop-blur-xl rounded-xl border border-slate-700/50">
+            <div className="flex items-center gap-2">
+              <i className="bi bi-people text-slate-400"></i>
+              <span className="text-sm text-slate-300 font-semibold">{paginacao.total} {paginacao.total === 1 ? 'Inativo' : 'Inativos'}</span>
             </div>
           </div>
         </div>
 
-        {/* Filtros Premium */}
-        <div className="relative mb-6">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-700 rounded-2xl blur opacity-20"></div>
-          <div className="relative bg-slate-800/90 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 shadow-xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center">
-                <i className="bi bi-search text-white text-lg"></i>
-              </div>
-              <h3 className="text-lg font-bold text-white">Buscar Residentes</h3>
+        {/* Filtros */}
+        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 mb-6">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+              <i className="bi bi-search text-slate-400"></i>
             </div>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                <i className="bi bi-search text-slate-400"></i>
-              </div>
-              <input
-                type="text"
-                className="w-full pl-12 pr-4 py-3 bg-slate-900/60 border-2 border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-slate-500 focus:ring-4 focus:ring-slate-500/20 transition-all font-medium"
-                placeholder="Digite o nome ou CPF do residente..."
-                value={filtros.busca}
-                onChange={(e) => setFiltros({ ...filtros, busca: e.target.value, pagina: 1 })}
-              />
-            </div>
+            <input
+              type="text"
+              className="w-full pl-12 pr-4 py-3 bg-slate-900/60 border border-slate-700/50 rounded-xl text-slate-300 placeholder-slate-500 focus:outline-none focus:border-slate-600 focus:ring-2 focus:ring-slate-600/50 transition-all"
+              placeholder="Buscar por nome, CPF ou RG..."
+              value={filtros.busca}
+              onChange={(e) => setFiltros({ ...filtros, busca: e.target.value, pagina: 1 })}
+            />
           </div>
         </div>
 
-        {/* Tabela Premium */}
-        <div className="relative">
-          <div className="absolute -inset-0.5 bg-gradient-to-r from-slate-600 to-slate-700 rounded-2xl blur opacity-20"></div>
-          <div className="relative bg-slate-800/90 backdrop-blur-xl rounded-2xl border border-slate-700/50 overflow-hidden shadow-2xl">
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-20">
-                <div className="relative">
-                  <div className="absolute inset-0 bg-gradient-to-r from-slate-600 to-slate-700 rounded-full blur-xl opacity-50"></div>
-                  <svg className="relative animate-spin h-14 w-14 text-slate-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                </div>
-                <p className="text-slate-300 font-medium mt-6">Carregando residentes inativos...</p>
+        {/* Tabela */}
+        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 overflow-hidden">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <svg className="animate-spin h-12 w-12 text-slate-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <p className="text-slate-400">Carregando residentes...</p>
+            </div>
+          ) : residentes.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="w-16 h-16 rounded-full bg-slate-700/30 flex items-center justify-center mb-3">
+                <i className="bi bi-inbox text-3xl text-slate-500"></i>
               </div>
-            ) : residentes.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-20">
-                <div className="w-20 h-20 rounded-full bg-slate-700/30 flex items-center justify-center mb-4">
-                  <i className="bi bi-inbox text-4xl text-slate-500"></i>
-                </div>
-                <p className="text-slate-300 font-medium mb-2">Nenhum residente inativo encontrado</p>
-                <p className="text-slate-500 text-sm">Tente ajustar os filtros de busca</p>
-              </div>
+              <p className="text-slate-300 font-medium mb-1">Nenhum residente inativo</p>
+              <p className="text-slate-500 text-sm">Não há residentes inativos no momento</p>
+            </div>
           ) : (
             <>
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gradient-to-r from-slate-900/90 to-slate-800/90 border-b border-slate-700/50">
+                  <thead className="bg-slate-900/50 border-b border-slate-700/50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-slate-200 uppercase tracking-wider">ID</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-slate-200 uppercase tracking-wider">Nome</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-slate-200 uppercase tracking-wider">CPF</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-slate-200 uppercase tracking-wider">Idade</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-slate-200 uppercase tracking-wider">Contato</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-slate-200 uppercase tracking-wider">Data Entrada</th>
-                      <th className="px-6 py-4 text-left text-xs font-bold text-slate-200 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-4 text-center text-xs font-bold text-slate-200 uppercase tracking-wider" style={{minWidth: '280px'}}>Ações</th>
+                      <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Residente</th>
+                      <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">CPF</th>
+                      <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Idade</th>
+                      <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Contato</th>
+                      <th className="px-6 py-3.5 text-left text-xs font-semibold text-slate-400 uppercase tracking-wider">Entrada</th>
+                      <th className="px-6 py-3.5 text-center text-xs font-semibold text-slate-400 uppercase tracking-wider">Ações</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-700">
+                  <tbody className="divide-y divide-slate-700/50">
                     {paginacao.dados.map((residente) => (
-                      <tr key={residente.id} className="hover:bg-slate-700/30 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">
-                          #{residente.id}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                      <tr key={residente.id} className="hover:bg-slate-700/20 transition-colors">
+                        <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-500 to-slate-600 flex items-center justify-center text-white font-semibold shadow-lg">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-600 to-slate-700 flex items-center justify-center text-white font-semibold text-sm">
                               {residente.nome_completo.charAt(0)}
                             </div>
                             <div>
-                              <div className="text-sm font-medium text-white">{residente.nome_completo}</div>
+                              <div className="text-sm font-semibold text-white">{residente.nome_completo}</div>
                               {residente.email && (
-                                <div className="text-xs text-slate-400">{residente.email}</div>
+                                <div className="text-xs text-slate-400 mt-0.5">{residente.email}</div>
                               )}
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                        <td className="px-6 py-4 text-sm text-slate-300">
                           {formatarCPF(residente.cpf)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
-                          {calcularIdade(residente.data_nascimento)}
+                        <td className="px-6 py-4 text-sm text-slate-300">
+                          {calcularIdade(residente.data_nascimento)} anos
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                        <td className="px-6 py-4 text-sm text-slate-300">
                           {residente.telefone || '-'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">
+                        <td className="px-6 py-4 text-sm text-slate-300">
                           {formatarData(residente.data_entrada)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="px-3 py-1 border rounded-full text-xs font-medium bg-slate-500/10 text-slate-400 border-slate-500/20">
-                            Inativo
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <div className="flex items-center justify-center gap-2 flex-wrap">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-center gap-2">
                             <button
-                              className="group relative px-4 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white rounded-xl transition-all duration-300 flex items-center gap-2 font-medium shadow-lg hover:shadow-emerald-500/20"
+                              className="px-3 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm rounded-lg transition-all flex items-center gap-2 font-medium"
                               onClick={() => handleReativar(residente.id, residente.nome_completo)}
-                              title="Reativar"
+                              title="Reativar residente"
                             >
-                              <div className="absolute -inset-0.5 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
-                              <i className="bi bi-arrow-clockwise relative"></i>
-                              <span className="relative">Reativar</span>
+                              <i className="bi bi-arrow-clockwise"></i>
+                              <span>Reativar</span>
                             </button>
                             <button
-                              className="group relative px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white rounded-xl transition-all duration-300 flex items-center gap-2 font-medium shadow-lg hover:shadow-red-500/20"
+                              className="px-3 py-2 bg-red-600 hover:bg-red-500 text-white text-sm rounded-lg transition-all flex items-center gap-2 font-medium"
                               onClick={() => handleDeletarPermanente(residente.id, residente.nome_completo)}
-                              title="Deletar Permanentemente"
+                              title="Deletar permanentemente"
                             >
-                              <div className="absolute -inset-0.5 bg-gradient-to-r from-red-600 to-red-700 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity"></div>
-                              <i className="bi bi-trash3 relative"></i>
-                              <span className="relative">Deletar</span>
+                              <i className="bi bi-trash3"></i>
                             </button>
                           </div>
                         </td>
@@ -288,16 +229,16 @@ function ResidentesInativos() {
                 </table>
               </div>
 
-              {/* Paginação Premium */}
+              {/* Paginação */}
               {paginacao.paginas > 1 && (
-                <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-slate-900/50 to-slate-800/50 border-t border-slate-700/50">
-                  <div className="text-sm font-medium text-slate-300">
-                    Mostrando {paginacao.dados.length} de {paginacao.total} residentes inativos
+                <div className="flex items-center justify-between px-6 py-4 bg-slate-900/30 border-t border-slate-700/50">
+                  <div className="text-sm text-slate-400">
+                    Mostrando <span className="font-semibold text-slate-300">{paginacao.dados.length}</span> de <span className="font-semibold text-slate-300">{paginacao.total}</span> residentes
                   </div>
 
                   <div className="flex gap-2">
                     <button
-                      className={`px-3 py-2 rounded-xl font-medium transition-all ${paginacao.paginaAtual === 1 ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed' : 'bg-slate-700/50 text-white hover:bg-slate-600/70 hover:scale-105'}`}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${paginacao.paginaAtual === 1 ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed' : 'bg-slate-700/50 text-white hover:bg-slate-700'}`}
                       onClick={() => mudarPagina(paginacao.paginaAtual - 1)}
                       disabled={paginacao.paginaAtual === 1}
                     >
@@ -314,7 +255,7 @@ function ResidentesInativos() {
                         return (
                           <button
                             key={numeroPagina}
-                            className={`px-4 py-2 rounded-xl font-medium transition-all ${paginacao.paginaAtual === numeroPagina ? 'bg-gradient-to-r from-slate-600 to-slate-700 text-white shadow-lg' : 'bg-slate-700/50 text-white hover:bg-slate-600/70 hover:scale-105'}`}
+                            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${paginacao.paginaAtual === numeroPagina ? 'bg-slate-700 text-white' : 'bg-slate-800/50 text-slate-300 hover:bg-slate-700'}`}
                             onClick={() => mudarPagina(numeroPagina)}
                           >
                             {numeroPagina}
@@ -325,7 +266,7 @@ function ResidentesInativos() {
                         numeroPagina === paginacao.paginaAtual + 2
                       ) {
                         return (
-                          <span key={numeroPagina} className="px-2 py-1 text-slate-500">
+                          <span key={numeroPagina} className="px-2 text-slate-600">
                             ...
                           </span>
                         )
@@ -334,7 +275,7 @@ function ResidentesInativos() {
                     })}
                     
                     <button
-                      className={`px-3 py-2 rounded-xl font-medium transition-all ${paginacao.paginaAtual === paginacao.paginas ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed' : 'bg-slate-700/50 text-white hover:bg-slate-600/70 hover:scale-105'}`}
+                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${paginacao.paginaAtual === paginacao.paginas ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed' : 'bg-slate-700/50 text-white hover:bg-slate-700'}`}
                       onClick={() => mudarPagina(paginacao.paginaAtual + 1)}
                       disabled={paginacao.paginaAtual === paginacao.paginas}
                     >
@@ -345,7 +286,6 @@ function ResidentesInativos() {
               )}
             </>
           )}
-          </div>
         </div>
       </div>
     </div>

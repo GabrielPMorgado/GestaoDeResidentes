@@ -219,6 +219,45 @@ exports.deletar = async (req, res) => {
   }
 };
 
+// Reativar residente
+exports.reativar = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const residente = await Residente.findByPk(id);
+    
+    if (!residente) {
+      return res.status(404).json({
+        success: false,
+        message: 'Residente não encontrado'
+      });
+    }
+    
+    if (residente.status === 'ativo') {
+      return res.status(400).json({
+        success: false,
+        message: 'Residente já está ativo'
+      });
+    }
+    
+    await residente.update({ status: 'ativo' });
+    
+    log('info', 'Residente reativado', { id });
+    
+    res.json({
+      success: true,
+      message: 'Residente reativado com sucesso!',
+      residente
+    });
+  } catch (error) {
+    log('error', 'Erro ao reativar residente', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao reativar residente',
+      error: error.message
+    });
+  }
+};
+
 // Deletar residente permanentemente (hard delete - remove do banco)
 exports.deletarPermanente = async (req, res) => {
   try {

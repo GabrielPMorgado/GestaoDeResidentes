@@ -10,6 +10,7 @@ router.get('/estatisticas', residenteController.estatisticas);                //
 router.get('/:id', residenteController.buscarPorId);                          // Buscar por ID
 router.get('/cpf/:cpf', residenteController.buscarPorCpf);                    // Buscar por CPF
 router.put('/:id', validarAtualizarResidente, residenteController.atualizar); // Atualizar
+router.put('/:id/reativar', residenteController.reativar);                    // Reativar
 router.delete('/:id/permanente', residenteController.deletarPermanente);      // Deletar permanentemente
 router.delete('/:id', residenteController.deletar);                           // Deletar (inativar)
 

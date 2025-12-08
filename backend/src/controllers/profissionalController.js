@@ -341,6 +341,43 @@ exports.deletar = async (req, res) => {
   }
 };
 
+// Reativar profissional
+exports.reativar = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const profissional = await Profissional.findByPk(id);
+    
+    if (!profissional) {
+      return res.status(404).json({
+        success: false,
+        message: 'Profissional não encontrado'
+      });
+    }
+    
+    if (profissional.status === 'ativo') {
+      return res.status(400).json({
+        success: false,
+        message: 'Profissional já está ativo'
+      });
+    }
+    
+    await profissional.update({ status: 'ativo' });
+    
+    res.json({
+      success: true,
+      message: 'Profissional reativado com sucesso!',
+      profissional
+    });
+  } catch (error) {
+    console.error('Erro ao reativar profissional:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erro ao reativar profissional',
+      error: error.message
+    });
+  }
+};
+
 // Deletar profissional permanentemente (hard delete - remove do banco)
 exports.deletarPermanente = async (req, res) => {
   try {
