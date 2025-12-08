@@ -35,7 +35,7 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
     {
       id: 'main',
       items: [
-        { id: 'dashboard', label: 'Dashboard', page: 'dashboard', icon: 'bi-house-door-fill' }
+        { id: 'dashboard', label: 'Início', page: 'dashboard', icon: 'bi-house-door-fill' }
       ]
     },
     {
@@ -149,11 +149,9 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
 
   return (
     <>
-      <aside className={`fixed top-0 left-0 h-full bg-slate-900/95 backdrop-blur-sm border-r border-slate-700/50 transition-all duration-300 z-50 flex flex-col shadow-2xl
+      <aside className={`fixed top-0 left-0 h-screen bg-slate-900/95 backdrop-blur-sm border-r border-slate-700/50 transition-all duration-300 z-50 flex flex-col shadow-2xl
         ${isOpen ? 'w-64' : 'w-16'}
-        lg:${isOpen ? 'w-64' : 'w-16'}
-        ${isOpen ? '' : 'lg:block'}
-        ${isOpen ? 'block' : 'hidden lg:block'}
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
         {/* Header */}
         <div className="h-16 flex items-center px-4 border-b border-slate-700/50 flex-shrink-0 bg-slate-800/30">
@@ -221,24 +219,6 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
             ))}
           </ul>
         </nav>
-
-        {/* Logout Button */}
-        <div className="border-t border-slate-700/50 p-3 bg-slate-800/30">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-red-500/10 hover:text-red-400 transition-all duration-200"
-            title={!isOpen ? 'Sair' : ''}
-          >
-            {isOpen ? (
-              <>
-                <i className="bi bi-box-arrow-right text-base"></i>
-                <span className="text-sm font-medium">Sair do Sistema</span>
-              </>
-            ) : (
-              <i className="bi bi-box-arrow-right text-base mx-auto"></i>
-            )}
-          </button>
-        </div>
 
       </aside>
 

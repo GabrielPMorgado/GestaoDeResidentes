@@ -28,7 +28,8 @@ function AppContent() {
   const { state, actions } = useApp()
   const { error: showError } = useNotification()
   const [agendamentoAtual, setAgendamentoAtual] = useState(null)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  // Sidebar sempre aberto no desktop, fechado no mobile
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024)
 
   // Hook de estatísticas com cache automático
   const { data: estatisticas, isLoading: loadingStats } = useEstatisticas()
@@ -53,6 +54,27 @@ function AppContent() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [estatisticas])
+
+  // Fechar sidebar no mobile ao mudar de página
+  useEffect(() => {
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false)
+    }
+  }, [state.currentPage])
+
+  // Gerenciar responsividade do sidebar
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setSidebarOpen(true)
+      } else {
+        setSidebarOpen(false)
+      }
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Se não estiver autenticado, mostrar tela de login
   if (!isAuthenticated()) {
@@ -212,149 +234,187 @@ function AppContent() {
       case 'dashboard':
       default:
         return (
-          <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-3 sm:p-4 md:p-6">
-            {/* Header com gradiente */}
-            <div className="mb-6 sm:mb-8 text-center">
-              <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 mb-3 sm:mb-4 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg shadow-blue-500/50">
-                <i className="bi bi-house-heart text-3xl sm:text-4xl text-white"></i>
+          <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+            {/* Hero Section */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent border-b border-slate-800/50 mb-8">
+              <div className="absolute inset-0 bg-grid-slate-900/[0.04] bg-[size:32px_32px]"></div>
+              <div className="relative px-4 sm:px-6 py-8 sm:py-12">
+                <div className="max-w-7xl mx-auto text-center">
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 tracking-tight">
+                    Bem-vindo ao <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500">Sistema</span>
+                  </h1>
+                  <p className="text-slate-400 text-base sm:text-lg md:text-xl max-w-3xl mx-auto">
+                    Gestão completa de residentes, profissionais e agendamentos em um único lugar
+                  </p>
+                </div>
               </div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500 mb-2 px-4">
-                Sistema de Gerenciamento
-              </h1>
-              <p className="text-slate-400 text-sm sm:text-base md:text-lg px-4">
-                Painel completo para gestão de residentes, profissionais e agendamentos
-              </p>
             </div>
 
-            {/* Estatísticas com Tailwind */}
-            {loadingStats ? (
-              <LoadingSpinner size="lg" text="Carregando estatísticas..." />
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
-                {/* Card Residentes */}
-                <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-600 to-blue-700 p-4 sm:p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2">
-                  <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
-                  <div className="relative">
-                    <div className="flex items-center justify-between mb-3 sm:mb-4">
-                      <div className="p-2 sm:p-3 bg-white/20 rounded-lg sm:rounded-xl backdrop-blur-sm">
-                        <i className="bi bi-people-fill text-2xl sm:text-3xl text-white"></i>
-                      </div>
-                      <span className="text-[10px] sm:text-xs font-semibold text-blue-200 bg-blue-800/50 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
-                        Ativos
-                      </span>
-                    </div>
-                    <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{state.stats.totalResidentes}</h3>
-                    <p className="text-blue-100 font-medium text-sm sm:text-base">Residentes</p>
-                  </div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
+              {/* Estatísticas */}
+              {loadingStats ? (
+                <div className="flex items-center justify-center py-20">
+                  <LoadingSpinner size="lg" text="Carregando estatísticas..." />
                 </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-10">
+                  {/* Card Residentes */}
+                  <div className="group relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm border border-slate-700/50 p-6 transition-all duration-300 hover:scale-105 hover:border-blue-500/50">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full -mr-16 -mt-16"></div>
+                      <div className="relative">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                            <i className="bi bi-people-fill text-3xl text-blue-400"></i>
+                          </div>
+                          <span className="text-xs font-semibold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-3 py-1 rounded-full">
+                            Ativos
+                          </span>
+                        </div>
+                        <h3 className="text-4xl md:text-5xl font-bold text-white mb-2">{state.stats.totalResidentes}</h3>
+                        <p className="text-slate-400 font-medium">Residentes</p>
+                      </div>
+                    </div>
+                  </div>
 
-                {/* Card Profissionais */}
-                <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 p-4 sm:p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2">
-                  <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
-                  <div className="relative">
-                    <div className="flex items-center justify-between mb-3 sm:mb-4">
-                      <div className="p-2 sm:p-3 bg-white/20 rounded-lg sm:rounded-xl backdrop-blur-sm">
-                        <i className="bi bi-person-badge-fill text-2xl sm:text-3xl text-white"></i>
+                  {/* Card Profissionais */}
+                  <div className="group relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/20 to-teal-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm border border-slate-700/50 p-6 transition-all duration-300 hover:scale-105 hover:border-emerald-500/50">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -mr-16 -mt-16"></div>
+                      <div className="relative">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                            <i className="bi bi-person-badge-fill text-3xl text-emerald-400"></i>
+                          </div>
+                          <span className="text-xs font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full">
+                            Ativos
+                          </span>
+                        </div>
+                        <h3 className="text-4xl md:text-5xl font-bold text-white mb-2">{state.stats.totalProfissionais}</h3>
+                        <p className="text-slate-400 font-medium">Profissionais</p>
                       </div>
-                      <span className="text-[10px] sm:text-xs font-semibold text-emerald-200 bg-emerald-800/50 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
-                        Ativos
-                      </span>
                     </div>
-                    <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{state.stats.totalProfissionais}</h3>
-                    <p className="text-emerald-100 font-medium text-sm sm:text-base">Profissionais</p>
                   </div>
-                </div>
 
-                {/* Card Agendamentos Hoje */}
-                <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-amber-600 to-amber-700 p-4 sm:p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2">
-                  <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
-                  <div className="relative">
-                    <div className="flex items-center justify-between mb-3 sm:mb-4">
-                      <div className="p-2 sm:p-3 bg-white/20 rounded-lg sm:rounded-xl backdrop-blur-sm">
-                        <i className="bi bi-calendar-check-fill text-2xl sm:text-3xl text-white"></i>
+                  {/* Card Agendamentos Hoje */}
+                  <div className="group relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 to-orange-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm border border-slate-700/50 p-6 transition-all duration-300 hover:scale-105 hover:border-amber-500/50">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full -mr-16 -mt-16"></div>
+                      <div className="relative">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
+                            <i className="bi bi-calendar-check-fill text-3xl text-amber-400"></i>
+                          </div>
+                          <span className="text-xs font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-full">
+                            Hoje
+                          </span>
+                        </div>
+                        <h3 className="text-4xl md:text-5xl font-bold text-white mb-2">{state.stats.agendamentosHoje}</h3>
+                        <p className="text-slate-400 font-medium">Agendamentos</p>
                       </div>
-                      <span className="text-[10px] sm:text-xs font-semibold text-amber-200 bg-amber-800/50 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
-                        Hoje
-                      </span>
                     </div>
-                    <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{state.stats.agendamentosHoje}</h3>
-                    <p className="text-amber-100 font-medium text-sm sm:text-base">Agendamentos</p>
                   </div>
-                </div>
 
-                {/* Card Total Agendamentos */}
-                <div className="group relative overflow-hidden rounded-xl sm:rounded-2xl bg-gradient-to-br from-purple-600 to-purple-700 p-4 sm:p-6 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1 sm:hover:-translate-y-2">
-                  <div className="absolute top-0 right-0 w-24 h-24 sm:w-32 sm:h-32 bg-white/10 rounded-full -mr-12 sm:-mr-16 -mt-12 sm:-mt-16"></div>
-                  <div className="relative">
-                    <div className="flex items-center justify-between mb-3 sm:mb-4">
-                      <div className="p-2 sm:p-3 bg-white/20 rounded-lg sm:rounded-xl backdrop-blur-sm">
-                        <i className="bi bi-clock-history text-2xl sm:text-3xl text-white"></i>
+                  {/* Card Total Registros */}
+                  <div className="group relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-2xl blur-xl group-hover:blur-2xl transition-all duration-300 opacity-0 group-hover:opacity-100"></div>
+                    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-800/90 to-slate-900/90 backdrop-blur-sm border border-slate-700/50 p-6 transition-all duration-300 hover:scale-105 hover:border-purple-500/50">
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full -mr-16 -mt-16"></div>
+                      <div className="relative">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
+                            <i className="bi bi-clock-history text-3xl text-purple-400"></i>
+                          </div>
+                          <span className="text-xs font-semibold text-purple-400 bg-purple-500/10 border border-purple-500/20 px-3 py-1 rounded-full">
+                            Total
+                          </span>
+                        </div>
+                        <h3 className="text-4xl md:text-5xl font-bold text-white mb-2">{state.stats.totalAgendamentos}</h3>
+                        <p className="text-slate-400 font-medium">Registros</p>
                       </div>
-                      <span className="text-[10px] sm:text-xs font-semibold text-purple-200 bg-purple-800/50 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full">
-                        Total
-                      </span>
                     </div>
-                    <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-1 sm:mb-2">{state.stats.totalAgendamentos}</h3>
-                    <p className="text-purple-100 font-medium text-sm sm:text-base">Registros</p>
                   </div>
-                </div>
               </div>
             )}
 
-            {/* Ações Rápidas com Tailwind */}
-            <div className="mb-6 sm:mb-8">
-              <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white mb-4 sm:mb-6 flex items-center px-2 sm:px-0">
-                <i className="bi bi-lightning-charge-fill text-yellow-400 mr-2 sm:mr-3 text-xl sm:text-2xl"></i>
-                Ações Rápidas
-              </h2>
-              <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <button 
-                  className="group relative overflow-hidden rounded-lg sm:rounded-xl bg-slate-800/50 backdrop-blur-sm border border-slate-700 p-4 sm:p-6 hover:border-blue-500 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/20 active:scale-95"
-                  onClick={() => actions.setCurrentPage('cadastro-residentes')}
-                >
-                  <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                    <div className="p-3 sm:p-4 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 group-hover:scale-110 transition-transform duration-300">
-                      <i className="bi bi-person-plus-fill text-2xl sm:text-3xl text-white"></i>
+              {/* Ações Rápidas */}
+              <div>
+                <div className="mb-6">
+                  <h2 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center">
+                    <div className="w-1 h-8 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full mr-3"></div>
+                    Ações Rápidas
+                  </h2>
+                  <p className="text-slate-400 ml-7">Acesso direto às funcionalidades principais</p>
+                </div>
+                
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                  <button 
+                    className="group relative overflow-hidden rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 p-6 hover:bg-slate-800/80 hover:border-blue-500/50 transition-all duration-300 hover:scale-105 active:scale-95"
+                    onClick={() => actions.setCurrentPage('cadastro-residentes')}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="relative flex flex-col items-center text-center space-y-4">
+                      <div className="p-4 rounded-2xl bg-gradient-to-br from-blue-500/20 to-blue-600/20 border border-blue-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                        <i className="bi bi-person-plus-fill text-4xl text-blue-400"></i>
+                      </div>
+                      <div>
+                        <span className="text-white text-base font-semibold block mb-1">Novo Residente</span>
+                        <span className="text-slate-400 text-sm">Cadastrar novo morador</span>
+                      </div>
                     </div>
-                    <span className="text-slate-200 text-sm sm:text-base font-semibold group-hover:text-white">Novo Residente</span>
-                  </div>
-                </button>
+                  </button>
 
-                <button 
-                  className="group relative overflow-hidden rounded-lg sm:rounded-xl bg-slate-800/50 backdrop-blur-sm border border-slate-700 p-4 sm:p-6 hover:border-emerald-500 transition-all duration-300 hover:shadow-xl hover:shadow-emerald-500/20 active:scale-95"
-                  onClick={() => actions.setCurrentPage('cadastro-profissionais')}
-                >
-                  <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                    <div className="p-3 sm:p-4 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-600 group-hover:scale-110 transition-transform duration-300">
-                      <i className="bi bi-person-badge text-2xl sm:text-3xl text-white"></i>
+                  <button 
+                    className="group relative overflow-hidden rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 p-6 hover:bg-slate-800/80 hover:border-emerald-500/50 transition-all duration-300 hover:scale-105 active:scale-95"
+                    onClick={() => actions.setCurrentPage('cadastro-profissionais')}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="relative flex flex-col items-center text-center space-y-4">
+                      <div className="p-4 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 border border-emerald-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                        <i className="bi bi-person-badge text-4xl text-emerald-400"></i>
+                      </div>
+                      <div>
+                        <span className="text-white text-base font-semibold block mb-1">Novo Profissional</span>
+                        <span className="text-slate-400 text-sm">Cadastrar funcionário</span>
+                      </div>
                     </div>
-                    <span className="text-slate-200 text-sm sm:text-base font-semibold group-hover:text-white">Novo Profissional</span>
-                  </div>
-                </button>
+                  </button>
 
-                <button 
-                  className="group relative overflow-hidden rounded-lg sm:rounded-xl bg-slate-800/50 backdrop-blur-sm border border-slate-700 p-4 sm:p-6 hover:border-amber-500 transition-all duration-300 hover:shadow-xl hover:shadow-amber-500/20 active:scale-95"
-                  onClick={() => actions.setCurrentPage('cadastro-agendamento')}
-                >
-                  <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                    <div className="p-3 sm:p-4 rounded-full bg-gradient-to-br from-amber-500 to-amber-600 group-hover:scale-110 transition-transform duration-300">
-                      <i className="bi bi-calendar-plus text-2xl sm:text-3xl text-white"></i>
+                  <button 
+                    className="group relative overflow-hidden rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 p-6 hover:bg-slate-800/80 hover:border-amber-500/50 transition-all duration-300 hover:scale-105 active:scale-95"
+                    onClick={() => actions.setCurrentPage('cadastro-agendamento')}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="relative flex flex-col items-center text-center space-y-4">
+                      <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-600/20 border border-amber-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                        <i className="bi bi-calendar-plus text-4xl text-amber-400"></i>
+                      </div>
+                      <div>
+                        <span className="text-white text-base font-semibold block mb-1">Novo Agendamento</span>
+                        <span className="text-slate-400 text-sm">Agendar consulta</span>
+                      </div>
                     </div>
-                    <span className="text-slate-200 text-sm sm:text-base font-semibold group-hover:text-white">Novo Agendamento</span>
-                  </div>
-                </button>
+                  </button>
 
-                <button 
-                  className="group relative overflow-hidden rounded-lg sm:rounded-xl bg-slate-800/50 backdrop-blur-sm border border-slate-700 p-4 sm:p-6 hover:border-purple-500 transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/20 active:scale-95"
-                  onClick={() => actions.setCurrentPage('dashboard-analytics')}
-                >
-                  <div className="flex flex-col items-center text-center space-y-2 sm:space-y-3">
-                    <div className="p-3 sm:p-4 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 group-hover:scale-110 transition-transform duration-300">
-                      <i className="bi bi-graph-up text-2xl sm:text-3xl text-white"></i>
+                  <button 
+                    className="group relative overflow-hidden rounded-2xl bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 p-6 hover:bg-slate-800/80 hover:border-purple-500/50 transition-all duration-300 hover:scale-105 active:scale-95"
+                    onClick={() => actions.setCurrentPage('dashboard-analytics')}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="relative flex flex-col items-center text-center space-y-4">
+                      <div className="p-4 rounded-2xl bg-gradient-to-br from-purple-500/20 to-purple-600/20 border border-purple-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                        <i className="bi bi-graph-up text-4xl text-purple-400"></i>
+                      </div>
+                      <div>
+                        <span className="text-white text-base font-semibold block mb-1">Ver Relatórios</span>
+                        <span className="text-slate-400 text-sm">Analytics e gráficos</span>
+                      </div>
                     </div>
-                    <span className="text-slate-200 text-sm sm:text-base font-semibold group-hover:text-white">Ver Relatórios</span>
-                  </div>
-                </button>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -363,20 +423,20 @@ function AppContent() {
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-900 overflow-hidden">
+    <div className="flex min-h-screen bg-slate-900">
       <Sidebar 
         isOpen={sidebarOpen} 
         setIsOpen={setSidebarOpen}
         setCurrentPage={actions.setCurrentPage}
       />
       
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-16'}`}>
+      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${sidebarOpen ? 'lg:ml-64' : 'lg:ml-16'} ml-0`}>
         <Header 
           toggleSidebar={() => setSidebarOpen(!sidebarOpen)} 
           currentPage={state.currentPage}
         />
         
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-y-auto">
           <div className="p-3 sm:p-4 md:p-6">
             {renderPage()}
           </div>

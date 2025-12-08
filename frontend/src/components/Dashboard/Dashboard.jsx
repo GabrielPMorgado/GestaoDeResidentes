@@ -272,10 +272,6 @@ function Dashboard() {
             <div className="flex flex-col lg:flex-row items-center justify-between gap-8">
               <div className="flex-1 text-center lg:text-left">
                 <div className="flex items-center justify-center lg:justify-start gap-3 mb-4">
-                  <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-2xl shadow-purple-500/30 animate-pulse">
-                    <i className="bi bi-house-heart-fill text-3xl sm:text-4xl text-white"></i>
-                  </div>
-                  <div className="h-12 sm:h-16 w-1 bg-gradient-to-b from-blue-500 via-purple-500 to-pink-500"></div>
                   <div>
                     <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
                       Bem-vindo!

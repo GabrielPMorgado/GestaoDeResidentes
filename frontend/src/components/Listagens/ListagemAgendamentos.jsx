@@ -263,39 +263,39 @@ function ListagemAgendamentos() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-3 sm:p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-3 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
-              <i className="bi bi-calendar-check text-2xl sm:text-3xl text-white"></i>
+          <div className="flex items-center gap-3 sm:gap-4 mb-6">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+              <i className="bi bi-calendar-check text-2xl sm:text-3xl text-amber-400"></i>
             </div>
-            <div className="flex-1">
+            <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-white">Listagem de Agendamentos</h1>
-              <p className="text-sm sm:text-base text-slate-400">Gerencie os agendamentos dos residentes</p>
+              <p className="text-sm text-slate-400">Gerencie os agendamentos dos residentes</p>
             </div>
           </div>
 
           {/* Estatísticas */}
           {estatisticas && (
-            <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 sm:p-6">
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                    <i className="bi bi-calendar-check text-xl sm:text-2xl text-amber-400"></i>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 hover:border-amber-500/30 transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                    <i className="bi bi-calendar-check text-xl text-amber-400"></i>
                   </div>
                   <div>
-                    <p className="text-xs sm:text-sm text-slate-400">Total</p>
+                    <p className="text-xs text-slate-400">Total</p>
                     <h3 className="text-xl sm:text-2xl font-bold text-white">{estatisticas?.total || 0}</h3>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 sm:p-6">
-                <div className="flex items-center gap-3 sm:gap-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                    <i className="bi bi-calendar-plus text-xl sm:text-2xl text-blue-400"></i>
+              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 hover:border-blue-500/30 transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center flex-shrink-0">
+                    <i className="bi bi-calendar-plus text-xl text-blue-400"></i>
                   </div>
                   <div>
                     <p className="text-xs sm:text-sm text-slate-400">Agendados</p>
@@ -332,16 +332,16 @@ function ListagemAgendamentos() {
         </div>
 
         {/* Filtros */}
-        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 sm:p-6 mb-4 sm:mb-6">
-          <h3 className="text-base sm:text-lg font-semibold text-white mb-3 sm:mb-4 flex items-center gap-2">
+        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 mb-6">
+          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
             <i className="bi bi-funnel text-amber-400"></i>
             Filtros
           </h3>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-3 sm:gap-4">
-            <div className="sm:col-span-1 md:col-span-2">
-              <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">Status</label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+            <div className="lg:col-span-2">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Status</label>
               <select
-                className="w-full px-3 sm:px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                 name="status"
                 value={filtros.status}
                 onChange={handleFiltroChange}
@@ -356,10 +356,10 @@ function ListagemAgendamentos() {
               </select>
             </div>
 
-            <div className="sm:col-span-1 md:col-span-2">
-              <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">Tipo</label>
+            <div className="lg:col-span-2">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Tipo</label>
               <select
-                className="w-full px-3 sm:px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                 name="tipo_atendimento"
                 value={filtros.tipo_atendimento}
                 onChange={handleFiltroChange}
@@ -376,33 +376,33 @@ function ListagemAgendamentos() {
               </select>
             </div>
 
-            <div className="sm:col-span-1 md:col-span-2">
-              <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">Data Início</label>
+            <div className="lg:col-span-2">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Data Início</label>
               <input
                 type="date"
-                className="w-full px-3 sm:px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                 name="data_inicio"
                 value={filtros.data_inicio}
                 onChange={handleFiltroChange}
               />
             </div>
 
-            <div className="sm:col-span-1 md:col-span-2">
-              <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">Data Fim</label>
+            <div className="lg:col-span-2">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Data Fim</label>
               <input
                 type="date"
-                className="w-full px-3 sm:px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                 name="data_fim"
                 value={filtros.data_fim}
                 onChange={handleFiltroChange}
               />
             </div>
 
-            <div className="sm:col-span-2 md:col-span-2">
-              <label className="block text-xs sm:text-sm font-medium text-slate-300 mb-2">Buscar</label>
+            <div className="sm:col-span-2 lg:col-span-3">
+              <label className="block text-sm font-medium text-slate-300 mb-2">Buscar</label>
               <input
                 type="text"
-                className="w-full px-3 sm:px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-sm sm:text-base text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                 name="busca"
                 value={filtros.busca}
                 onChange={handleFiltroChange}
@@ -410,29 +410,29 @@ function ListagemAgendamentos() {
               />
             </div>
 
-            <div className="sm:col-span-1 md:col-span-1 flex items-end">
+            <div className="flex items-end">
               <button
-                className="w-full px-3 sm:px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors text-sm sm:text-base"
+                className="w-full px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-white rounded-xl transition-all"
                 onClick={limparFiltros}
                 title="Limpar filtros"
               >
                 <i className="bi bi-x-circle"></i>
               </button>
             </div>
-
-            <div className="sm:col-span-1 md:col-span-1 flex items-end">
-              <button
-                className={`w-full px-3 sm:px-4 py-2 rounded-lg transition-colors text-sm sm:text-base ${mostrarCancelados ? 'bg-amber-600 hover:bg-amber-700 text-white' : 'bg-slate-700 hover:bg-slate-600 text-white'}`}
-                onClick={() => setMostrarCancelados(!mostrarCancelados)}
-                title={mostrarCancelados ? "Ocultar cancelados" : "Ver cancelados"}
-              >
-                <i className={`bi ${mostrarCancelados ? 'bi-eye-slash' : 'bi-eye'}`}></i>
-              </button>
-            </div>
+          </div>
+          
+          <div className="mt-3 pt-3 border-t border-slate-700/50 flex items-center justify-between">
+            <button
+              className={`px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${mostrarCancelados ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'}`}
+              onClick={() => setMostrarCancelados(!mostrarCancelados)}
+            >
+              <i className={`bi ${mostrarCancelados ? 'bi-eye-slash' : 'bi-eye'}`}></i>
+              <span className="text-sm">{mostrarCancelados ? 'Ocultar cancelados' : 'Ver cancelados'}</span>
+            </button>
           </div>
         </div>
 
-        {/* Tabela */}
+        {/* Tabela Desktop e Cards Mobile */}
         <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 overflow-hidden">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20">
@@ -449,37 +449,36 @@ function ListagemAgendamentos() {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[1000px]">
+              {/* Tabela Desktop */}
+              <div className="hidden lg:block overflow-x-auto">
+                <table className="w-full">
                   <thead className="bg-slate-900/50 border-b border-slate-700">
                     <tr>
-                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider whitespace-nowrap">Data</th>
-                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider whitespace-nowrap">Horário</th>
-                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Residente</th>
-                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Profissional</th>
-                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider whitespace-nowrap">Tipo</th>
-                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider whitespace-nowrap">Status</th>
-                      <th className="px-4 sm:px-6 py-3 sm:py-4 text-center text-xs font-semibold text-slate-300 uppercase tracking-wider whitespace-nowrap">Ações</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Agendamento</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Residente</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Profissional</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Informações</th>
+                      <th className="px-6 py-4 text-center text-xs font-semibold text-slate-300 uppercase tracking-wider">Ações</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-700/50">
                     {agendamentos.map((agendamento) => (
                       <tr key={agendamento.id} className="hover:bg-slate-700/30 transition-colors">
-                        <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2 text-sm text-slate-300">
-                            <i className="bi bi-calendar3 text-amber-400"></i>
-                            <span>{formatarData(agendamento.data_agendamento)}</span>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex flex-col gap-1">
+                            <div className="flex items-center gap-2 text-sm text-white font-medium">
+                              <i className="bi bi-calendar3 text-amber-400"></i>
+                              {formatarData(agendamento.data_agendamento)}
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-slate-400">
+                              <i className="bi bi-clock"></i>
+                              {formatarHora(agendamento.hora_inicio)} - {formatarHora(agendamento.hora_fim)}
+                            </div>
                           </div>
                         </td>
-                        <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                          <div className="flex items-center gap-2 text-sm text-slate-300">
-                            <i className="bi bi-clock text-blue-400"></i>
-                            <span>{formatarHora(agendamento.hora_inicio)} - {formatarHora(agendamento.hora_fim)}</span>
-                          </div>
-                        </td>
-                        <td className="px-4 sm:px-6 py-3 sm:py-4">
+                        <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-cyan-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
                               {(agendamento.residente?.nome_completo || agendamento.Residente?.nome_completo || 'N')[0]}
                             </div>
                             <div className="min-w-0">
@@ -489,9 +488,9 @@ function ListagemAgendamentos() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 sm:px-6 py-3 sm:py-4">
+                        <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
                               {(agendamento.profissional?.nome_completo || agendamento.Profissional?.nome_completo || 'N')[0]}
                             </div>
                             <div className="min-w-0">
@@ -504,55 +503,55 @@ function ListagemAgendamentos() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                          {getTipoAtendimentoBadge(agendamento.tipo_atendimento)}
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col gap-2">
+                            {getTipoAtendimentoBadge(agendamento.tipo_atendimento)}
+                            {getStatusBadge(agendamento.status)}
+                          </div>
                         </td>
-                        <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                          {getStatusBadge(agendamento.status)}
-                        </td>
-                        <td className="px-4 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                          <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center justify-center gap-2">
                             <button
-                              className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                              className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all hover:scale-110"
                               onClick={() => verDetalhes(agendamento.id)}
                               title="Ver detalhes"
                             >
-                              <i className="bi bi-eye"></i>
+                              <i className="bi bi-eye text-lg"></i>
                             </button>
                             
                             {agendamento.status === 'agendado' && (
                               <>
                                 <button
-                                  className="p-2 text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors"
+                                  className="p-2 text-amber-400 hover:bg-amber-500/10 rounded-lg transition-all hover:scale-110"
                                   onClick={() => abrirModalEditar(agendamento.id)}
                                   title="Editar"
                                 >
-                                  <i className="bi bi-pencil"></i>
+                                  <i className="bi bi-pencil text-lg"></i>
                                 </button>
                                 <button
-                                  className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors"
+                                  className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all hover:scale-110"
                                   onClick={() => handleConfirmar(agendamento.id)}
                                   title="Confirmar"
                                 >
-                                  <i className="bi bi-check-circle"></i>
+                                  <i className="bi bi-check-circle text-lg"></i>
                                 </button>
                                 <button
-                                  className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                  className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-all hover:scale-110"
                                   onClick={() => handleCancelar(agendamento.id)}
                                   title="Cancelar"
                                 >
-                                  <i className="bi bi-x-circle"></i>
+                                  <i className="bi bi-x-circle text-lg"></i>
                                 </button>
                               </>
                             )}
                             
                             {agendamento.status === 'confirmado' && (
                               <button
-                                className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                                className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-all hover:scale-110"
                                 onClick={() => handleCancelar(agendamento.id)}
                                 title="Cancelar"
                               >
-                                <i className="bi bi-x-circle"></i>
+                                <i className="bi bi-x-circle text-lg"></i>
                               </button>
                             )}
                           </div>
@@ -563,13 +562,115 @@ function ListagemAgendamentos() {
                 </table>
               </div>
 
+              {/* Cards Mobile */}
+              <div className="lg:hidden divide-y divide-slate-700/50">
+                {agendamentos.map((agendamento) => (
+                  <div key={agendamento.id} className="p-4 hover:bg-slate-700/30 transition-colors">
+                    <div className="flex items-start gap-4">
+                      {/* Avatar Residente */}
+                      <div className="w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white text-xl font-bold flex-shrink-0">
+                        {(agendamento.residente?.nome_completo || agendamento.Residente?.nome_completo || 'N')[0]}
+                      </div>
+                      
+                      {/* Conteúdo */}
+                      <div className="flex-1 min-w-0">
+                        {/* Nome Residente */}
+                        <h4 className="text-base font-semibold text-white mb-1 truncate">
+                          {agendamento.residente?.nome_completo || agendamento.Residente?.nome_completo || 'N/A'}
+                        </h4>
+                        
+                        {/* Data e Hora */}
+                        <div className="flex flex-wrap items-center gap-3 mb-2">
+                          <div className="flex items-center gap-1.5 text-sm text-slate-300">
+                            <i className="bi bi-calendar3 text-amber-400"></i>
+                            <span>{formatarData(agendamento.data_agendamento)}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5 text-sm text-slate-300">
+                            <i className="bi bi-clock text-blue-400"></i>
+                            <span>{formatarHora(agendamento.hora_inicio)} - {formatarHora(agendamento.hora_fim)}</span>
+                          </div>
+                        </div>
+                        
+                        {/* Profissional */}
+                        <div className="flex items-center gap-2 mb-3">
+                          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                            {(agendamento.profissional?.nome_completo || agendamento.Profissional?.nome_completo || 'N')[0]}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium text-white truncate">
+                              {agendamento.profissional?.nome_completo || agendamento.Profissional?.nome_completo || 'N/A'}
+                            </div>
+                            <div className="text-xs text-slate-400 truncate">
+                              {agendamento.profissional?.profissao || agendamento.Profissional?.profissao || ''}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* Badges */}
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {getTipoAtendimentoBadge(agendamento.tipo_atendimento)}
+                          {getStatusBadge(agendamento.status)}
+                        </div>
+                        
+                        {/* Ações */}
+                        <div className="flex flex-wrap gap-2">
+                          <button
+                            className="px-3 py-1.5 text-sm text-blue-400 bg-blue-500/10 hover:bg-blue-500/20 rounded-lg transition-all flex items-center gap-1.5"
+                            onClick={() => verDetalhes(agendamento.id)}
+                          >
+                            <i className="bi bi-eye"></i>
+                            <span>Detalhes</span>
+                          </button>
+                          
+                          {agendamento.status === 'agendado' && (
+                            <>
+                              <button
+                                className="px-3 py-1.5 text-sm text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 rounded-lg transition-all flex items-center gap-1.5"
+                                onClick={() => abrirModalEditar(agendamento.id)}
+                              >
+                                <i className="bi bi-pencil"></i>
+                                <span>Editar</span>
+                              </button>
+                              <button
+                                className="px-3 py-1.5 text-sm text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20 rounded-lg transition-all flex items-center gap-1.5"
+                                onClick={() => handleConfirmar(agendamento.id)}
+                              >
+                                <i className="bi bi-check-circle"></i>
+                                <span>Confirmar</span>
+                              </button>
+                              <button
+                                className="px-3 py-1.5 text-sm text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-all flex items-center gap-1.5"
+                                onClick={() => handleCancelar(agendamento.id)}
+                              >
+                                <i className="bi bi-x-circle"></i>
+                                <span>Cancelar</span>
+                              </button>
+                            </>
+                          )}
+                          
+                          {agendamento.status === 'confirmado' && (
+                            <button
+                              className="px-3 py-1.5 text-sm text-red-400 bg-red-500/10 hover:bg-red-500/20 rounded-lg transition-all flex items-center gap-1.5"
+                              onClick={() => handleCancelar(agendamento.id)}
+                            >
+                              <i className="bi bi-x-circle"></i>
+                              <span>Cancelar</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               {/* Paginação */}
               {totalPaginas > 1 && (
-                <div className="flex items-center justify-between px-6 py-4 border-t border-slate-700">
-                  <div className="flex items-center gap-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t border-slate-700">
+                  <div className="flex flex-wrap items-center gap-3">
                     <label className="text-sm text-slate-400">Itens por página:</label>
                     <select
-                      className="px-3 py-1 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="px-3 py-1.5 bg-slate-900/50 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 transition-all"
                       value={itensPorPagina}
                       onChange={(e) => {
                         setItensPorPagina(Number(e.target.value))
@@ -589,31 +690,47 @@ function ListagemAgendamentos() {
 
                   <div className="flex gap-2">
                     <button
-                      className={`px-3 py-1 rounded-lg transition-colors ${paginaAtual === 1 ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-700 text-white hover:bg-slate-600'}`}
+                      className={`px-3 py-2 rounded-xl transition-all ${
+                        paginaAtual === 1 
+                          ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed' 
+                          : 'bg-slate-700/50 text-white hover:bg-slate-700'
+                      }`}
                       onClick={() => setPaginaAtual(1)}
                       disabled={paginaAtual === 1}
                     >
                       <i className="bi bi-chevron-double-left"></i>
                     </button>
                     <button
-                      className={`px-3 py-1 rounded-lg transition-colors ${paginaAtual === 1 ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-700 text-white hover:bg-slate-600'}`}
+                      className={`px-3 py-2 rounded-xl transition-all ${
+                        paginaAtual === 1 
+                          ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed' 
+                          : 'bg-slate-700/50 text-white hover:bg-slate-700'
+                      }`}
                       onClick={() => setPaginaAtual(paginaAtual - 1)}
                       disabled={paginaAtual === 1}
                     >
                       <i className="bi bi-chevron-left"></i>
                     </button>
-                    <span className="px-4 py-1 bg-amber-600 text-white rounded-lg">
+                    <span className="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 text-white rounded-xl font-semibold shadow-lg shadow-amber-500/30">
                       {paginaAtual}
                     </span>
                     <button
-                      className={`px-3 py-1 rounded-lg transition-colors ${paginaAtual === totalPaginas ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-700 text-white hover:bg-slate-600'}`}
+                      className={`px-3 py-2 rounded-xl transition-all ${
+                        paginaAtual === totalPaginas 
+                          ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed' 
+                          : 'bg-slate-700/50 text-white hover:bg-slate-700'
+                      }`}
                       onClick={() => setPaginaAtual(paginaAtual + 1)}
                       disabled={paginaAtual === totalPaginas}
                     >
                       <i className="bi bi-chevron-right"></i>
                     </button>
                     <button
-                      className={`px-3 py-1 rounded-lg transition-colors ${paginaAtual === totalPaginas ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-700 text-white hover:bg-slate-600'}`}
+                      className={`px-3 py-2 rounded-xl transition-all ${
+                        paginaAtual === totalPaginas 
+                          ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed' 
+                          : 'bg-slate-700/50 text-white hover:bg-slate-700'
+                      }`}
                       onClick={() => setPaginaAtual(totalPaginas)}
                       disabled={paginaAtual === totalPaginas}
                     >
