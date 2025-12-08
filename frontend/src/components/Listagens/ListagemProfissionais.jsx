@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { atualizarProfissional, listarHistoricoConsultasProfissional } from '../../api/axios'
+import { atualizarProfissional, listarHistoricoConsultasProfissional, buscarAgendamentosPorProfissional } from '../../api/axios'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useProfissionaisAtivos, useInativarProfissional } from '../../hooks'
 
@@ -16,6 +16,8 @@ function ListagemProfissionais() {
   const [profissionalSelecionado, setProfissionalSelecionado] = useState(null)
   const [historicoConsultas, setHistoricoConsultas] = useState([])
   const [loadingHistorico, setLoadingHistorico] = useState(false)
+  const [agendamentos, setAgendamentos] = useState([])
+  const [loadingAgendamentos, setLoadingAgendamentos] = useState(false)
   
   const [filtros, setFiltros] = useState({
     status: '',
@@ -98,9 +100,31 @@ function ListagemProfissionais() {
     }
   }
 
-  const handleVisualizar = (profissional) => {
+  const handleVisualizar = async (profissional) => {
     setProfissionalSelecionado(profissional)
     setShowVisualizarModal(true)
+    setLoadingAgendamentos(true)
+    setAgendamentos([])
+    
+    try {
+      console.log('🔍 Buscando agendamentos para profissional ID:', profissional.id)
+      const response = await buscarAgendamentosPorProfissional(profissional.id)
+      console.log('📋 Resposta da API:', response)
+      
+      if (response.success) {
+        const dados = response.data || []
+        console.log('✅ Agendamentos encontrados:', dados.length, dados)
+        setAgendamentos(dados)
+      } else {
+        console.log('⚠️ API retornou sem sucesso:', response)
+        setAgendamentos([])
+      }
+    } catch (error) {
+      console.error('❌ Erro ao buscar agendamentos:', error)
+      setAgendamentos([])
+    } finally {
+      setLoadingAgendamentos(false)
+    }
   }
 
   const handleEditar = (profissional) => {
@@ -173,6 +197,7 @@ function ListagemProfissionais() {
     setShowHistoricoModal(false)
     setProfissionalSelecionado(null)
     setHistoricoConsultas([])
+    setAgendamentos([])
   }
 
   const aplicarFiltros = () => {
@@ -631,6 +656,83 @@ function ListagemProfissionais() {
                 <div>
                   <label className="text-sm text-slate-400">Email</label>
                   <p className="text-white font-medium mt-1">{profissionalSelecionado.email || '-'}</p>
+                </div>
+                
+                {/* Seção de Agendamentos */}
+                <div className="col-span-full">
+                  <h4 className="text-lg font-semibold text-white mb-4 flex items-center gap-2 mt-6 pt-4 border-t border-slate-700">
+                    <i className="bi bi-calendar-check-fill text-emerald-400"></i>
+                    Agendamentos
+                  </h4>
+                </div>
+                
+                <div className="col-span-full">
+                  {loadingAgendamentos ? (
+                    <div className="flex justify-center py-8">
+                      <svg className="animate-spin h-8 w-8 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </div>
+                  ) : agendamentos.length === 0 ? (
+                    <div className="text-center py-8 bg-slate-900/50 rounded-xl border border-slate-700">
+                      <i className="bi bi-calendar-x text-4xl text-slate-600 mb-2"></i>
+                      <p className="text-slate-400">Nenhum agendamento encontrado</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-96 overflow-y-auto">
+                      {agendamentos.map((agendamento) => (
+                        <div key={agendamento.id} className="bg-slate-900/50 border border-slate-700 rounded-xl p-4 hover:border-emerald-500/30 transition-colors">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className={`px-3 py-1 rounded-lg text-xs font-medium border ${
+                                  agendamento.status === 'agendado' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
+                                  agendamento.status === 'confirmado' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                                  agendamento.status === 'em_atendimento' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
+                                  agendamento.status === 'concluido' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                  agendamento.status === 'cancelado' ? 'bg-red-500/10 text-red-400 border-red-500/20' :
+                                  'bg-slate-500/10 text-slate-400 border-slate-500/20'
+                                }`}>
+                                  {agendamento.status === 'agendado' ? 'Agendado' :
+                                   agendamento.status === 'confirmado' ? 'Confirmado' :
+                                   agendamento.status === 'em_atendimento' ? 'Em Atendimento' :
+                                   agendamento.status === 'concluido' ? 'Concluído' :
+                                   agendamento.status === 'cancelado' ? 'Cancelado' :
+                                   agendamento.status}
+                                </span>
+                                <span className="text-xs text-slate-500">
+                                  {agendamento.tipo_atendimento || 'Consulta'}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2 text-white font-medium mb-1">
+                                <i className="bi bi-person text-emerald-400"></i>
+                                <span>{agendamento.residente?.nome_completo || agendamento.Residente?.nome_completo || 'Residente não identificado'}</span>
+                              </div>
+                              <div className="flex items-center gap-3 text-sm text-slate-400">
+                                <div className="flex items-center gap-1">
+                                  <i className="bi bi-calendar3"></i>
+                                  <span>{new Date(agendamento.data_agendamento || agendamento.data_consulta).toLocaleDateString('pt-BR')}</span>
+                                </div>
+                                {agendamento.hora_inicio && (
+                                  <div className="flex items-center gap-1">
+                                    <i className="bi bi-clock"></i>
+                                    <span>{agendamento.hora_inicio}</span>
+                                    {agendamento.hora_fim && <span> - {agendamento.hora_fim}</span>}
+                                  </div>
+                                )}
+                              </div>
+                              {agendamento.observacoes && (
+                                <p className="text-sm text-slate-400 mt-2 line-clamp-2">
+                                  {agendamento.observacoes}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

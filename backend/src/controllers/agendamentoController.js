@@ -45,6 +45,11 @@ exports.listar = async (req, res) => {
     // Se o usuário é profissional, filtrar apenas seus agendamentos
     if (req.filtrarPorProfissional) {
       where.profissional_id = req.filtrarPorProfissional;
+      console.log(`🔒 Filtrando agendamentos do profissional ID: ${req.filtrarPorProfissional}`);
+    } else if (profissional_id) {
+      // Admin/Recepcionista pode filtrar por profissional específico
+      where.profissional_id = profissional_id;
+      console.log(`🔍 Admin filtrando por profissional ID: ${profissional_id}`);
     }
     
     if (status) {
@@ -53,10 +58,6 @@ exports.listar = async (req, res) => {
     
     if (residente_id) {
       where.residente_id = residente_id;
-    }
-    
-    if (profissional_id && !req.filtrarPorProfissional) {
-      where.profissional_id = profissional_id;
     }
     
     if (tipo_atendimento) {
@@ -87,6 +88,8 @@ exports.listar = async (req, res) => {
     // Paginação
     const offset = (page - 1) * limit;
     
+    console.log('📊 Filtros aplicados:', JSON.stringify(where, null, 2));
+    
     const { count, rows } = await Agendamento.findAndCountAll({
       where,
       limit: parseInt(limit),
@@ -105,6 +108,9 @@ exports.listar = async (req, res) => {
         }
       ]
     });
+    
+    console.log(`✅ Encontrados ${count} agendamentos (retornando ${rows.length})`);
+    
     res.json({
       success: true,
       data: {
@@ -211,6 +217,14 @@ exports.buscarPorProfissional = async (req, res) => {
   try {
     const { profissional_id } = req.params;
     
+    // Se o usuário é profissional, só pode ver seus próprios agendamentos
+    if (req.filtrarPorProfissional && req.filtrarPorProfissional !== parseInt(profissional_id)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Você só pode visualizar seus próprios agendamentos'
+      });
+    }
+    
     const agendamentos = await Agendamento.findAll({
       where: { profissional_id },
       order: [['data_agendamento', 'DESC'], ['hora_inicio', 'DESC']],
@@ -228,12 +242,14 @@ exports.buscarPorProfissional = async (req, res) => {
       ]
     });
     
+    console.log(`✅ Encontrados ${agendamentos.length} agendamentos para profissional ${profissional_id}`);
+    
     res.json({
       success: true,
       data: agendamentos
     });
   } catch (error) {
-    console.error('Erro ao buscar agendamentos do profissional:', error);
+    console.error('❌ Erro ao buscar agendamentos do profissional:', error);
     res.status(500).json({
       success: false,
       message: 'Erro ao buscar agendamentos do profissional',

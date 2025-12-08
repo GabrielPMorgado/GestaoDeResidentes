@@ -22,8 +22,9 @@ function PacientesAgendados({ onIniciarAtendimento }) {
   const carregarAgendamentos = async () => {
     setLoading(true)
     try {
+      // Para profissionais, usar profissional_id; para admin, não filtrar
       const params = {
-        profissional_id: user?.id,
+        profissional_id: user?.tipo === 'profissional' ? user?.profissional_id : undefined,
         data_inicio: filtros.data,
         data_fim: filtros.data,
         status: filtros.status || undefined,
@@ -31,7 +32,9 @@ function PacientesAgendados({ onIniciarAtendimento }) {
         busca: filtros.busca || undefined
       }
 
+      console.log('📋 Carregando agendamentos com params:', params)
       const response = await api.get('/agendamentos', { params })
+      console.log('✅ Resposta:', response.data)
       
       if (response.data?.success) {
         const agendamentosData = response.data.data?.agendamentos || []
