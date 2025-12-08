@@ -1,13 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { criarAgendamento, listarResidentes, listarProfissionais } from '../../api/axios'
 import { useNotification } from '../../contexts/NotificationContext'
 import { LoadingSpinner } from '../Common'
 
 function CadastroAgendamento() {
   const { success, error: showError } = useNotification()
-  const dateInputRef = useRef(null)
-  const timeInicioRef = useRef(null)
-  const timeFimRef = useRef(null)
   
   const [formData, setFormData] = useState({
     residente_id: '',
@@ -58,14 +55,25 @@ function CadastroAgendamento() {
         return !value ? 'Selecione um profissional' : ''
       case 'data_agendamento':
         if (!value) return 'Informe a data'
-        // Validar apenas se for uma data completa e válida
+        // Validar apenas se for uma data completa e válida (YYYY-MM-DD tem 10 caracteres)
         if (value.length === 10) {
-          const dataAgendamento = new Date(value + 'T00:00:00')
-          const hoje = new Date()
-          hoje.setHours(0, 0, 0, 0)
-          if (isNaN(dataAgendamento.getTime())) return 'Data inválida'
-          return dataAgendamento < hoje ? 'Data não pode ser no passado' : ''
+          try {
+            // Separar ano, mês e dia do formato YYYY-MM-DD
+            const [ano, mes, dia] = value.split('-').map(Number)
+            // Verificar se os valores são válidos
+            if (!ano || !mes || !dia || ano < 1900 || mes < 1 || mes > 12 || dia < 1 || dia > 31) {
+              return 'Data inválida'
+            }
+            const dataAgendamento = new Date(ano, mes - 1, dia) // mês é 0-indexed
+            const hoje = new Date()
+            hoje.setHours(0, 0, 0, 0)
+            if (isNaN(dataAgendamento.getTime())) return 'Data inválida'
+            return dataAgendamento < hoje ? 'Data não pode ser no passado' : ''
+          } catch (error) {
+            return 'Data inválida'
+          }
         }
+        // Se ainda está digitando (menos de 10 caracteres), não validar
         return ''
       case 'hora_inicio':
         return !value ? 'Informe a hora de início' : ''
@@ -87,10 +95,8 @@ function CadastroAgendamento() {
   const handleChange = (e) => {
     const { name, value } = e.target
     
-    // Não atualizar formData para campos de data/hora - deixar não controlados
-    if (name !== 'data_agendamento' && name !== 'hora_inicio' && name !== 'hora_fim') {
-      setFormData(prev => ({ ...prev, [name]: value }))
-    }
+    // Atualizar formData normalmente para todos os campos
+    setFormData(prev => ({ ...prev, [name]: value }))
     
     // Limpar erro ao começar a digitar
     if (touched[name] && errors[name]) {
@@ -108,19 +114,11 @@ function CadastroAgendamento() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    // Capturar valores dos inputs de data/hora via refs
-    const finalData = {
-      ...formData,
-      data_agendamento: dateInputRef.current?.value || formData.data_agendamento,
-      hora_inicio: timeInicioRef.current?.value || formData.hora_inicio,
-      hora_fim: timeFimRef.current?.value || formData.hora_fim
-    }
-    
     const fields = ['residente_id', 'profissional_id', 'data_agendamento', 'hora_inicio', 'hora_fim', 'tipo_atendimento', 'titulo']
     const newErrors = {}
     
     fields.forEach(field => {
-      const error = validateField(field, finalData[field])
+      const error = validateField(field, formData[field])
       if (error) newErrors[field] = error
     })
     
@@ -134,7 +132,7 @@ function CadastroAgendamento() {
     setLoading(true)
 
     try {
-      await criarAgendamento(finalData)
+      await criarAgendamento(formData)
       success('Agendamento criado com sucesso!')
       handleReset()
     } catch (err) {
@@ -149,16 +147,12 @@ function CadastroAgendamento() {
       residente_id: '', profissional_id: '', data_agendamento: '', hora_inicio: '',
       hora_fim: '', tipo_atendimento: '', titulo: '', descricao: '', local: '', observacoes: ''
     })
-    if (dateInputRef.current) dateInputRef.current.value = ''
-    if (timeInicioRef.current) timeInicioRef.current.value = ''
-    if (timeFimRef.current) timeFimRef.current.value = ''
     setErrors({})
     setTouched({})
   }
 
-  const InputField = ({ label, name, type = 'text', required = false, icon, inputRef, ...props }) => {
-    // Para campos de data/hora, usar ref e defaultValue
-    const isDateOrTime = type === 'date' || type === 'time'
+  const InputField = ({ label, name, type = 'text', required = false, icon, ...props }) => {
+    const inputValue = formData[name] ?? ''
     
     return (
       <div>
@@ -166,17 +160,13 @@ function CadastroAgendamento() {
           {label} {required && <span className="text-amber-400">*</span>}
         </label>
         <input
-          key={name}
           type={type}
           id={name}
           name={name}
-          ref={inputRef}
-          {...(isDateOrTime 
-            ? { defaultValue: formData[name] } 
-            : { value: formData[name] || '' }
-          )}
+          value={inputValue}
           onChange={handleChange}
           onBlur={handleBlur}
+          autoComplete="off"
           className={`w-full px-4 py-3 bg-slate-900/60 border ${
             errors[name] && touched[name] 
               ? 'border-red-500/50 focus:ring-red-500/50' 
@@ -292,7 +282,8 @@ function CadastroAgendamento() {
                   name="data_agendamento"
                   type="date"
                   required
-                  inputRef={dateInputRef}
+                  min={new Date().toISOString().split('T')[0]}
+                  max={new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString().split('T')[0]}
                 />
 
                 <InputField
@@ -300,7 +291,7 @@ function CadastroAgendamento() {
                   name="hora_inicio"
                   type="time"
                   required
-                  inputRef={timeInicioRef}
+                  step="300"
                 />
 
                 <InputField
@@ -308,7 +299,7 @@ function CadastroAgendamento() {
                   name="hora_fim"
                   type="time"
                   required
-                  inputRef={timeFimRef}
+                  step="300"
                 />
               </div>
             </div>

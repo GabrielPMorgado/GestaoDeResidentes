@@ -4,16 +4,37 @@ import { useAuth } from '../../contexts/AuthContext'
 import api from '../../api/axios'
 
 function PacientesAgendados({ onIniciarAtendimento }) {
-  const { error: showError } = useNotification()
+  const { error: showError, success: showSuccess } = useNotification()
   const { user } = useAuth()
   const [agendamentos, setAgendamentos] = useState([])
   const [loading, setLoading] = useState(true)
+  const [mostrarBoasVindas, setMostrarBoasVindas] = useState(true)
+  const [modoProximos, setModoProximos] = useState(false)
   const [filtros, setFiltros] = useState({
     busca: '',
     data: new Date().toISOString().split('T')[0],
     tipo_atendimento: '',
     status: ''
   })
+
+  // Notificação de boas-vindas (mostrar apenas uma vez por sessão)
+  useEffect(() => {
+    const jaExibiuBoasVindas = sessionStorage.getItem('boasVindasExibida')
+    if (!jaExibiuBoasVindas) {
+      const horaAtual = new Date().getHours()
+      let saudacao = 'Bom dia'
+      if (horaAtual >= 12 && horaAtual < 18) saudacao = 'Boa tarde'
+      else if (horaAtual >= 18) saudacao = 'Boa noite'
+      
+      setTimeout(() => {
+        showSuccess(`${saudacao}, ${user?.nome || 'Profissional'}! Seus pacientes agendados estão prontos para atendimento.`)
+        sessionStorage.setItem('boasVindasExibida', 'true')
+        setMostrarBoasVindas(false)
+      }, 500)
+    } else {
+      setMostrarBoasVindas(false)
+    }
+  }, [])
 
   useEffect(() => {
     carregarAgendamentos()
@@ -83,6 +104,22 @@ function PacientesAgendados({ onIniciarAtendimento }) {
     return alertas
   }
 
+  // Função para filtrar próximos atendimentos (próximas 2 horas)
+  const getProximosAtendimentos = () => {
+    const agora = new Date()
+    const horaAtual = `${String(agora.getHours()).padStart(2, '0')}:${String(agora.getMinutes()).padStart(2, '0')}`
+    const duasHorasDepois = new Date(agora.getTime() + 2 * 60 * 60 * 1000)
+    const horaLimite = `${String(duasHorasDepois.getHours()).padStart(2, '0')}:${String(duasHorasDepois.getMinutes()).padStart(2, '0')}`
+    
+    return agendamentos.filter(ag => {
+      const horaInicio = ag.hora_inicio?.substring(0, 5) || '00:00'
+      return horaInicio >= horaAtual && horaInicio <= horaLimite && 
+             (ag.status === 'agendado' || ag.status === 'confirmado')
+    })
+  }
+
+  const agendamentosFiltrados = modoProximos ? getProximosAtendimentos() : agendamentos
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
       <div className="max-w-7xl mx-auto">
@@ -97,6 +134,39 @@ function PacientesAgendados({ onIniciarAtendimento }) {
               <p className="text-slate-400">Atendimentos para hoje - {new Date(filtros.data).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })}</p>
             </div>
           </div>
+
+          {/* Atalho Rápido - Próximos Atendimentos */}
+          {getProximosAtendimentos().length > 0 && (
+            <div className="mb-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 backdrop-blur-xl rounded-xl border border-amber-500/30 p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center animate-pulse">
+                    <i className="bi bi-clock-history text-2xl text-amber-400"></i>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      Próximos Atendimentos
+                      <span className="px-2 py-0.5 bg-amber-500/20 border border-amber-500/30 rounded-full text-xs font-semibold text-amber-400">
+                        {getProximosAtendimentos().length}
+                      </span>
+                    </h3>
+                    <p className="text-sm text-slate-400">Agendados para as próximas 2 horas</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setModoProximos(!modoProximos)}
+                  className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-300 ${
+                    modoProximos
+                      ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/30'
+                      : 'bg-slate-700/50 text-slate-300 hover:bg-slate-700'
+                  }`}
+                >
+                  <i className={`bi ${modoProximos ? 'bi-list' : 'bi-funnel'} mr-2`}></i>
+                  {modoProximos ? 'Ver Todos' : 'Filtrar Próximos'}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Estatísticas Rápidas */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -229,14 +299,27 @@ function PacientesAgendados({ onIniciarAtendimento }) {
               </svg>
               <p className="text-slate-400">Carregando agendamentos...</p>
             </div>
-          ) : agendamentos.length === 0 ? (
+          ) : agendamentosFiltrados.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-20">
               <i className="bi bi-calendar-x text-6xl text-slate-600 mb-4"></i>
-              <p className="text-slate-400">Nenhum agendamento encontrado para esta data</p>
+              <p className="text-slate-400">
+                {modoProximos 
+                  ? 'Nenhum atendimento nas próximas 2 horas'
+                  : 'Nenhum agendamento encontrado para esta data'
+                }
+              </p>
+              {modoProximos && (
+                <button
+                  onClick={() => setModoProximos(false)}
+                  className="mt-4 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-lg hover:bg-emerald-500/20 transition-all"
+                >
+                  Ver todos os agendamentos
+                </button>
+              )}
             </div>
           ) : (
             <div className="divide-y divide-slate-700/50">
-              {agendamentos.map((agendamento) => {
+              {agendamentosFiltrados.map((agendamento) => {
                 const residente = agendamento.Residente || agendamento.residente
                 const alertas = getAlertasResidente(residente)
                 
