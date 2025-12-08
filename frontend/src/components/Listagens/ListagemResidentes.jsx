@@ -8,8 +8,18 @@ function ListagemResidentes({ onVerHistorico }) {
   
   // React Query - Cache automático
   const { data: residentesData = [], isLoading: loading, refetch } = useResidentesAtivos()
-  const { data: estatisticas } = useEstatisticas()
   const inativarMutation = useInativarResidente()
+  
+  // Calcular estatísticas localmente
+  const estatisticas = useMemo(() => {
+    const dados = Array.isArray(residentesData) ? residentesData : []
+    return {
+      total: dados.length,
+      ativos: dados.filter(r => r.status === 'ativo').length,
+      inativos: dados.filter(r => r.status === 'inativo').length,
+      suspensos: dados.filter(r => r.status === 'suspenso').length
+    }
+  }, [residentesData])
   
   const [showVisualizarModal, setShowVisualizarModal] = useState(false)
   const [showEditarModal, setShowEditarModal] = useState(false)
@@ -216,67 +226,67 @@ function ListagemResidentes({ onVerHistorico }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-3 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-4 mb-6">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
-              <i className="bi bi-people-fill text-3xl text-white"></i>
+        <div className="mb-6 sm:mb-8">
+          <div className="flex items-center gap-3 sm:gap-4 mb-6">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+              <i className="bi bi-people-fill text-2xl sm:text-3xl text-amber-400"></i>
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-white">Listagem de Residentes</h1>
-              <p className="text-slate-400">Gerenciamento completo dos residentes cadastrados</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">Listagem de Residentes</h1>
+              <p className="text-sm text-slate-400">Gerenciamento completo dos residentes cadastrados</p>
             </div>
           </div>
 
           {/* Estatísticas */}
           {estatisticas && (
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                    <i className="bi bi-people-fill text-2xl text-blue-400"></i>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 hover:border-amber-500/30 transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                    <i className="bi bi-people-fill text-xl text-amber-400"></i>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-400">Total</p>
-                    <h3 className="text-2xl font-bold text-white">{estatisticas?.total || 0}</h3>
+                    <p className="text-xs text-slate-400">Total</p>
+                    <h3 className="text-xl sm:text-2xl font-bold text-white">{estatisticas?.total || 0}</h3>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                    <i className="bi bi-check-circle-fill text-2xl text-emerald-400"></i>
+              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 hover:border-emerald-500/30 transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                    <i className="bi bi-check-circle-fill text-xl text-emerald-400"></i>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-400">Ativos</p>
-                    <h3 className="text-2xl font-bold text-white">{estatisticas?.ativos || 0}</h3>
+                    <p className="text-xs text-slate-400">Ativos</p>
+                    <h3 className="text-xl sm:text-2xl font-bold text-white">{estatisticas?.ativos || 0}</h3>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-slate-500/10 flex items-center justify-center">
-                    <i className="bi bi-x-circle-fill text-2xl text-slate-400"></i>
+              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 hover:border-slate-500/30 transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-slate-500/10 flex items-center justify-center flex-shrink-0">
+                    <i className="bi bi-x-circle-fill text-xl text-slate-400"></i>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-400">Inativos</p>
-                    <h3 className="text-2xl font-bold text-white">{estatisticas?.inativos || 0}</h3>
+                    <p className="text-xs text-slate-400">Inativos</p>
+                    <h3 className="text-xl sm:text-2xl font-bold text-white">{estatisticas?.inativos || 0}</h3>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
-                    <i className="bi bi-exclamation-triangle-fill text-2xl text-amber-400"></i>
+              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 hover:border-orange-500/30 transition-all">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0">
+                    <i className="bi bi-exclamation-triangle-fill text-xl text-orange-400"></i>
                   </div>
                   <div>
-                    <p className="text-sm text-slate-400">Suspensos</p>
-                    <h3 className="text-2xl font-bold text-white">{estatisticas?.suspensos || 0}</h3>
+                    <p className="text-xs text-slate-400">Suspensos</p>
+                    <h3 className="text-xl sm:text-2xl font-bold text-white">{estatisticas?.suspensos || 0}</h3>
                   </div>
                 </div>
               </div>
@@ -285,16 +295,16 @@ function ListagemResidentes({ onVerHistorico }) {
         </div>
 
         {/* Filtros */}
-        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-6 mb-6">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <i className="bi bi-funnel text-blue-400"></i>
+        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 sm:p-6 mb-6">
+          <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <i className="bi bi-funnel text-amber-400"></i>
             Filtros
           </h3>
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-            <div className="md:col-span-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
+            <div className="lg:col-span-1">
               <label className="block text-sm font-medium text-slate-300 mb-2">Status</label>
               <select 
-                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 bg-slate-900/60 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                 value={filtros.status}
                 onChange={(e) => setFiltros(prev => ({ ...prev, status: e.target.value }))}
               >
@@ -305,11 +315,11 @@ function ListagemResidentes({ onVerHistorico }) {
               </select>
             </div>
 
-            <div className="md:col-span-3">
+            <div className="sm:col-span-2 lg:col-span-3">
               <label className="block text-sm font-medium text-slate-300 mb-2">Buscar</label>
               <input
                 type="text"
-                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 bg-slate-900/60 border border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                 placeholder="Nome, CPF ou quarto..."
                 value={filtros.busca}
                 onChange={(e) => setFiltros(prev => ({ ...prev, busca: e.target.value }))}
@@ -317,10 +327,10 @@ function ListagemResidentes({ onVerHistorico }) {
               />
             </div>
 
-            <div className="md:col-span-1">
+            <div className="lg:col-span-1">
               <label className="block text-sm font-medium text-slate-300 mb-2">Por página</label>
               <select 
-                className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2.5 bg-slate-900/60 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
                 value={filtros.limite}
                 onChange={(e) => setFiltros(prev => ({ ...prev, limite: parseInt(e.target.value), pagina: 1 }))}
               >
@@ -331,15 +341,15 @@ function ListagemResidentes({ onVerHistorico }) {
               </select>
             </div>
 
-            <div className="md:col-span-1 flex items-end gap-2">
+            <div className="lg:col-span-1 flex items-end gap-2">
               <button 
-                className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl transition-all shadow-lg shadow-amber-500/20 font-medium"
                 onClick={aplicarFiltros}
               >
                 <i className="bi bi-search"></i>
               </button>
               <button 
-                className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                className="flex-1 px-4 py-2.5 bg-slate-700/50 hover:bg-slate-700 text-white rounded-xl transition-all"
                 onClick={limparFiltros}
               >
                 <i className="bi bi-x-lg"></i>
@@ -365,83 +375,100 @@ function ListagemResidentes({ onVerHistorico }) {
             </div>
           ) : (
             <>
-              <div className="overflow-x-auto">
+              {/* Tabela Desktop */}
+              <div className="hidden lg:block overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-slate-900/50 border-b border-slate-700">
+                  <thead className="bg-slate-900/80 border-b border-slate-700/50">
                     <tr>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">ID</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Nome</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">CPF</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Idade</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Quarto</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Entrada</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-4 text-center text-xs font-semibold text-slate-300 uppercase tracking-wider">Ações</th>
+                      <th className="px-4 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Residente</th>
+                      <th className="px-4 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Contato</th>
+                      <th className="px-4 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Informações</th>
+                      <th className="px-4 py-4 text-left text-xs font-semibold text-slate-300 uppercase tracking-wider">Status</th>
+                      <th className="px-4 py-4 text-center text-xs font-semibold text-slate-300 uppercase tracking-wider">Ações</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-700">
+                  <tbody className="divide-y divide-slate-700/50">
                     {paginacao.dados.map((residente) => (
-                      <tr key={residente.id} className="hover:bg-slate-700/30 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">#{residente.id}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                      <tr key={residente.id} className="hover:bg-slate-700/20 transition-all group">
+                        <td className="px-4 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-semibold">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-amber-500/20 flex-shrink-0">
                               {residente.nome_completo.charAt(0)}
                             </div>
-                            <div>
-                              <div className="font-medium text-white">{residente.nome_completo}</div>
-                              {residente.email && (
-                                <div className="text-sm text-slate-400">{residente.email}</div>
-                              )}
+                            <div className="min-w-0">
+                              <div className="font-semibold text-white truncate">{residente.nome_completo}</div>
+                              <div className="text-xs text-slate-400">ID: #{residente.id}</div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{formatarCPF(residente.cpf)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{calcularIdade(residente.data_nascimento)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {residente.numero_quarto ? (
-                            <span className="px-3 py-1 bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 rounded-full text-xs font-medium">
-                              Quarto {residente.numero_quarto}
-                            </span>
-                          ) : (
-                            <span className="text-slate-500">-</span>
-                          )}
+                        <td className="px-4 py-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 text-sm text-slate-300">
+                              <i className="bi bi-credit-card text-amber-400"></i>
+                              <span className="font-mono">{formatarCPF(residente.cpf)}</span>
+                            </div>
+                            {residente.telefone && (
+                              <div className="flex items-center gap-2 text-sm text-slate-400">
+                                <i className="bi bi-telephone"></i>
+                                <span>{residente.telefone}</span>
+                              </div>
+                            )}
+                          </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-300">{formatarData(residente.data_entrada)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`px-3 py-1 border rounded-full text-xs font-medium ${getBadgeStatus(residente.status)}`}>
-                            {residente.status}
+                        <td className="px-4 py-4">
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2">
+                              <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-md text-xs font-medium">
+                                {calcularIdade(residente.data_nascimento)}
+                              </span>
+                              {residente.numero_quarto && (
+                                <span className="px-2 py-0.5 bg-purple-500/10 text-purple-400 border border-purple-500/20 rounded-md text-xs font-medium">
+                                  <i className="bi bi-door-closed"></i> Quarto {residente.numero_quarto}
+                                </span>
+                              )}
+                            </div>
+                            {residente.data_entrada && (
+                              <div className="text-xs text-slate-400">
+                                Entrada: {formatarData(residente.data_entrada)}
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 border rounded-lg text-xs font-semibold ${getBadgeStatus(residente.status)}`}>
+                            <i className={`bi ${residente.status === 'ativo' ? 'bi-check-circle-fill' : residente.status === 'suspenso' ? 'bi-exclamation-circle-fill' : 'bi-x-circle-fill'}`}></i>
+                            {residente.status.charAt(0).toUpperCase() + residente.status.slice(1)}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                          <div className="flex items-center justify-center gap-2">
+                        <td className="px-4 py-4">
+                          <div className="flex items-center justify-center gap-1">
                             <button 
-                              className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-colors"
+                              className="p-2 text-amber-400 hover:bg-amber-500/10 rounded-lg transition-all hover:scale-110"
                               title="Visualizar"
                               onClick={() => handleVisualizar(residente)}
                             >
-                              <i className="bi bi-eye"></i>
+                              <i className="bi bi-eye text-lg"></i>
                             </button>
                             <button 
-                              className="p-2 text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition-colors"
+                              className="p-2 text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all hover:scale-110"
                               title="Histórico"
                               onClick={() => handleVerHistorico(residente)}
                             >
-                              <i className="bi bi-clock-history"></i>
+                              <i className="bi bi-clock-history text-lg"></i>
                             </button>
                             <button 
-                              className="p-2 text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors"
+                              className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all hover:scale-110"
                               title="Editar"
                               onClick={() => handleEditar(residente)}
                             >
-                              <i className="bi bi-pencil"></i>
+                              <i className="bi bi-pencil text-lg"></i>
                             </button>
                             <button 
-                              className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                              className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-all hover:scale-110"
                               title="Inativar"
                               onClick={() => handleDeletar(residente.id, residente.nome_completo)}
                             >
-                              <i className="bi bi-trash"></i>
+                              <i className="bi bi-trash text-lg"></i>
                             </button>
                           </div>
                         </td>
@@ -451,14 +478,88 @@ function ListagemResidentes({ onVerHistorico }) {
                 </table>
               </div>
 
+              {/* Cards Mobile */}
+              <div className="lg:hidden space-y-3 p-4">
+                {paginacao.dados.map((residente) => (
+                  <div key={residente.id} className="bg-slate-900/40 rounded-xl border border-slate-700/50 p-4 hover:border-amber-500/30 transition-all">
+                    {/* Header do Card */}
+                    <div className="flex items-start gap-3 mb-3 pb-3 border-b border-slate-700/50">
+                      <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-amber-500/20 flex-shrink-0">
+                        {residente.nome_completo.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-white truncate">{residente.nome_completo}</h3>
+                        <p className="text-xs text-slate-400">ID: #{residente.id}</p>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 mt-1 border rounded-md text-xs font-semibold ${getBadgeStatus(residente.status)}`}>
+                          <i className={`bi ${residente.status === 'ativo' ? 'bi-check-circle-fill' : residente.status === 'suspenso' ? 'bi-exclamation-circle-fill' : 'bi-x-circle-fill'} text-xs`}></i>
+                          {residente.status.charAt(0).toUpperCase() + residente.status.slice(1)}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Informações */}
+                    <div className="space-y-2 mb-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <i className="bi bi-credit-card text-amber-400 w-4"></i>
+                        <span className="text-slate-300 font-mono text-xs">{formatarCPF(residente.cpf)}</span>
+                      </div>
+                      {residente.telefone && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <i className="bi bi-telephone text-amber-400 w-4"></i>
+                          <span className="text-slate-300 text-xs">{residente.telefone}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center gap-2 text-sm">
+                        <i className="bi bi-calendar text-amber-400 w-4"></i>
+                        <span className="text-slate-300 text-xs">{calcularIdade(residente.data_nascimento)}</span>
+                      </div>
+                      {residente.numero_quarto && (
+                        <div className="flex items-center gap-2 text-sm">
+                          <i className="bi bi-door-closed text-amber-400 w-4"></i>
+                          <span className="text-slate-300 text-xs">Quarto {residente.numero_quarto}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Ações */}
+                    <div className="flex items-center gap-2 pt-3 border-t border-slate-700/50">
+                      <button 
+                        className="flex-1 px-3 py-2 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 rounded-lg transition-all text-sm font-medium"
+                        onClick={() => handleVisualizar(residente)}
+                      >
+                        <i className="bi bi-eye"></i> Ver
+                      </button>
+                      <button 
+                        className="flex-1 px-3 py-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-all text-sm font-medium"
+                        onClick={() => handleVerHistorico(residente)}
+                      >
+                        <i className="bi bi-clock-history"></i> Histórico
+                      </button>
+                      <button 
+                        className="px-3 py-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-lg transition-all"
+                        onClick={() => handleEditar(residente)}
+                      >
+                        <i className="bi bi-pencil"></i>
+                      </button>
+                      <button 
+                        className="px-3 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg transition-all"
+                        onClick={() => handleDeletar(residente.id, residente.nome_completo)}
+                      >
+                        <i className="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               {/* Paginação */}
-              <div className="flex items-center justify-between px-6 py-4 border-t border-slate-700">
-                <div className="text-sm text-slate-400">
-                  Mostrando {paginacao.dados.length} de {paginacao.total} residentes
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-4 sm:px-6 py-4 border-t border-slate-700/50 bg-slate-900/40">
+                <div className="text-sm text-slate-400 text-center sm:text-left">
+                  <span className="font-medium text-white">{paginacao.dados.length}</span> de <span className="font-medium text-white">{paginacao.total}</span> residentes
                 </div>
-                <div className="flex gap-2">
+                <div className="flex items-center gap-2">
                   <button 
-                    className={`px-4 py-2 rounded-lg transition-colors ${paginacao.paginaAtual === 1 ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-700 text-white hover:bg-slate-600'}`}
+                    className={`px-3 py-2 rounded-lg transition-all ${paginacao.paginaAtual === 1 ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed' : 'bg-slate-700/50 text-white hover:bg-slate-700'}`}
                     onClick={() => mudarPagina(paginacao.paginaAtual - 1)}
                     disabled={paginacao.paginaAtual === 1}
                   >
@@ -474,7 +575,7 @@ function ListagemResidentes({ onVerHistorico }) {
                       return (
                         <button 
                           key={numeroPagina}
-                          className={`px-4 py-2 rounded-lg transition-colors ${paginacao.paginaAtual === numeroPagina ? 'bg-blue-600 text-white' : 'bg-slate-700 text-white hover:bg-slate-600'}`}
+                          className={`px-3 py-2 rounded-lg transition-all font-medium ${paginacao.paginaAtual === numeroPagina ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30' : 'bg-slate-700/50 text-white hover:bg-slate-700'}`}
                           onClick={() => mudarPagina(numeroPagina)}
                         >
                           {numeroPagina}
@@ -489,7 +590,7 @@ function ListagemResidentes({ onVerHistorico }) {
                     return null
                   })}
                   <button 
-                    className={`px-4 py-2 rounded-lg transition-colors ${paginacao.paginaAtual === paginacao.paginas ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-700 text-white hover:bg-slate-600'}`}
+                    className={`px-3 py-2 rounded-lg transition-all ${paginacao.paginaAtual === paginacao.paginas ? 'bg-slate-800/50 text-slate-600 cursor-not-allowed' : 'bg-slate-700/50 text-white hover:bg-slate-700'}`}
                     onClick={() => mudarPagina(paginacao.paginaAtual + 1)}
                     disabled={paginacao.paginaAtual === paginacao.paginas}
                   >
