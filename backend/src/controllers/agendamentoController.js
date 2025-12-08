@@ -42,6 +42,11 @@ exports.listar = async (req, res) => {
     // Filtros
     const where = {};
     
+    // Se o usuário é profissional, filtrar apenas seus agendamentos
+    if (req.filtrarPorProfissional) {
+      where.profissional_id = req.filtrarPorProfissional;
+    }
+    
     if (status) {
       where.status = status;
     }
@@ -50,7 +55,7 @@ exports.listar = async (req, res) => {
       where.residente_id = residente_id;
     }
     
-    if (profissional_id) {
+    if (profissional_id && !req.filtrarPorProfissional) {
       where.profissional_id = profissional_id;
     }
     
@@ -392,18 +397,24 @@ exports.confirmar = async (req, res) => {
 // Estatísticas de agendamentos
 exports.estatisticas = async (req, res) => {
   try {
-    const total = await Agendamento.count();
-    const agendados = await Agendamento.count({ where: { status: 'agendado' } });
-    const confirmados = await Agendamento.count({ where: { status: 'confirmado' } });
-    const em_atendimento = await Agendamento.count({ where: { status: 'em_atendimento' } });
-    const concluidos = await Agendamento.count({ where: { status: 'concluido' } });
-    const cancelados = await Agendamento.count({ where: { status: 'cancelado' } });
-    const faltas = await Agendamento.count({ where: { status: 'falta' } });
+    // Filtrar por profissional se necessário
+    const whereBase = {};
+    if (req.filtrarPorProfissional) {
+      whereBase.profissional_id = req.filtrarPorProfissional;
+    }
+    
+    const total = await Agendamento.count({ where: whereBase });
+    const agendados = await Agendamento.count({ where: { ...whereBase, status: 'agendado' } });
+    const confirmados = await Agendamento.count({ where: { ...whereBase, status: 'confirmado' } });
+    const em_atendimento = await Agendamento.count({ where: { ...whereBase, status: 'em_atendimento' } });
+    const concluidos = await Agendamento.count({ where: { ...whereBase, status: 'concluido' } });
+    const cancelados = await Agendamento.count({ where: { ...whereBase, status: 'cancelado' } });
+    const faltas = await Agendamento.count({ where: { ...whereBase, status: 'falta' } });
     
     // Agendamentos de hoje
     const hoje = new Date().toISOString().split('T')[0];
     const hoje_total = await Agendamento.count({
-      where: { data_agendamento: hoje }
+      where: { ...whereBase, data_agendamento: hoje }
     });
     
     res.json({

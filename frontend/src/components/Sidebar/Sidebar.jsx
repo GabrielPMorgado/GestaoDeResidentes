@@ -149,66 +149,68 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
 
   return (
     <>
-      <aside className={`fixed top-0 left-0 h-full bg-slate-900 border-r border-slate-700/50 transition-all duration-300 z-50 flex flex-col
-        ${isOpen ? 'w-64 shadow-2xl' : 'w-16'}
+      <aside className={`fixed top-0 left-0 h-full bg-slate-900/95 backdrop-blur-sm border-r border-slate-700/50 transition-all duration-300 z-50 flex flex-col shadow-2xl
+        ${isOpen ? 'w-64' : 'w-16'}
         lg:${isOpen ? 'w-64' : 'w-16'}
         ${isOpen ? '' : 'lg:block'}
         ${isOpen ? 'block' : 'hidden lg:block'}
       `}>
         {/* Header */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-slate-700/50 flex-shrink-0">
-          {isOpen && (
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-white text-lg">Sistema Residencial</span>
+        <div className="h-16 flex items-center px-4 border-b border-slate-700/50 flex-shrink-0 bg-slate-800/30">
+          {isOpen ? (
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
+                <i className="bi bi-hospital text-amber-400 text-lg"></i>
+              </div>
+              <span className="font-semibold text-white text-base">Sistema Residencial</span>
             </div>
-          )}
-          {!isOpen && (
-            <div className="text-center">
-              <span className="text-white text-xs font-bold">SR</span>
+          ) : (
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center mx-auto">
+              <i className="bi bi-hospital text-amber-400 text-lg"></i>
             </div>
           )}
         </div>
         
         {/* Navigation - Scrollable */}
-        <nav className="flex-1 overflow-y-auto py-4 px-2 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-slate-900 hover:scrollbar-thumb-slate-600" style={{scrollBehavior: 'smooth'}}>
+        <nav className="flex-1 overflow-y-auto py-4 px-3 scrollbar-thin scrollbar-thumb-slate-700/50 scrollbar-track-transparent hover:scrollbar-thumb-slate-600">
           <ul className="space-y-1">
             {filteredSections.map((section) => (
               <li key={section.id}>
                 {section.title && isOpen ? (
                   <button
                     onClick={() => toggleSection(section.id)}
-                    className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors mt-4 mb-2"
+                    className="w-full flex items-center justify-between px-2 py-2 text-xs font-semibold text-slate-500 hover:text-slate-300 transition-colors mt-4 mb-1.5"
                   >
-                    <div className="flex items-center gap-2">
-                      {section.icon && <i className={`bi ${section.icon} text-sm`}></i>}
-                      <span>{section.title}</span>
-                    </div>
-                    <span className="text-xs">{expandedSections[section.id] ? '−' : '+'}</span>
+                    <span className="uppercase tracking-wider">{section.title}</span>
+                    <i className={`bi ${expandedSections[section.id] ? 'bi-chevron-up' : 'bi-chevron-down'} text-xs`}></i>
                   </button>
                 ) : section.title && !isOpen ? (
-                  <div className="h-px bg-slate-700/50 my-3"></div>
+                  <div className="h-px bg-slate-700/30 my-3"></div>
                 ) : null}
                 
                 {(!section.title || expandedSections[section.id]) && (
-                  <ul className="space-y-0.5">
+                  <ul className="space-y-1">
                     {section.items.map((item) => (
                       <li key={item.id}>
                         <button
                           onClick={() => handleNavigation(item.page)}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative group ${
                             activeItem === item.page
-                              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/20'
-                              : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                              ? 'bg-amber-500/10 text-amber-400'
+                              : 'text-slate-400 hover:bg-slate-800/60 hover:text-white'
                           }`}
                           title={!isOpen ? item.label : ''}
                         >
+                          {activeItem === item.page && (
+                            <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-amber-400 rounded-r"></div>
+                          )}
                           {isOpen ? (
                             <>
-                              {item.icon && <i className={`bi ${item.icon} text-base flex-shrink-0`}></i>}
+                              {item.icon && <i className={`bi ${item.icon} text-lg`}></i>}
                               <span className="text-sm font-medium">{item.label}</span>
                             </>
                           ) : (
-                            <i className={`bi ${item.icon} text-base mx-auto`} title={item.label}></i>
+                            <i className={`bi ${item.icon} text-lg mx-auto`} title={item.label}></i>
                           )}
                         </button>
                       </li>
@@ -220,12 +222,30 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
           </ul>
         </nav>
 
+        {/* Logout Button */}
+        <div className="border-t border-slate-700/50 p-3 bg-slate-800/30">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-slate-300 hover:bg-red-500/10 hover:text-red-400 transition-all duration-200"
+            title={!isOpen ? 'Sair' : ''}
+          >
+            {isOpen ? (
+              <>
+                <i className="bi bi-box-arrow-right text-base"></i>
+                <span className="text-sm font-medium">Sair do Sistema</span>
+              </>
+            ) : (
+              <i className="bi bi-box-arrow-right text-base mx-auto"></i>
+            )}
+          </button>
+        </div>
+
       </aside>
 
       {/* Overlay for mobile */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
           onClick={() => setIsOpen(false)}
         ></div>
       )}

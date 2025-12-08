@@ -7,15 +7,15 @@ import AppContent from './AppContent'
 
 function App() {
   return (
-    <ErrorBoundary>
-      <AuthProvider>
-        <AppProvider>
-          <NotificationProvider>
+    <AuthProvider>
+      <AppProvider>
+        <NotificationProvider>
+          <ErrorBoundary>
             <AppContent />
-          </NotificationProvider>
-        </AppProvider>
-      </AuthProvider>
-    </ErrorBoundary>
+          </ErrorBoundary>
+        </NotificationProvider>
+      </AppProvider>
+    </AuthProvider>
   )
 
 }

@@ -46,6 +46,11 @@ const profissionalService = {
     return response.data;
   },
 
+  inativar: async (id) => {
+    const response = await api.delete(`/profissionais/${id}`);
+    return response.data;
+  },
+
   deletar: async (id) => {
     const response = await api.delete(`/profissionais/${id}`);
     return response.data;

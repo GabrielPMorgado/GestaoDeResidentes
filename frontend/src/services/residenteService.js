@@ -36,6 +36,11 @@ const residenteService = {
     return response.data;
   },
 
+  inativar: async (id) => {
+    const response = await api.delete(`/residentes/${id}`);
+    return response.data;
+  },
+
   deletar: async (id) => {
     const response = await api.delete(`/residentes/${id}`);
     return response.data;
