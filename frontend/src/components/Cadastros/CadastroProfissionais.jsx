@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { criarProfissional } from '../../api/axios'
 import { formatarCPF, formatarCelular, formatarCEP } from '../../utils/formatters'
 import { useNotification } from '../../contexts/NotificationContext'
+import { useCriarProfissional } from '../../hooks'
 
 // Componente Input fora para evitar recriação
 const Input = ({ label, name, type = 'text', required = false, icon, formData, errors, touched, handleChange, handleBlur, ...props }) => (
@@ -69,6 +70,7 @@ const Select = ({ label, name, options, required = false, icon, formData, errors
 
 function CadastroProfissionais() {
   const { success, error: showError } = useNotification()
+  const criarProfissionalMutation = useCriarProfissional()
   const [formData, setFormData] = useState({
     nome_completo: '',
     cpf: '',
@@ -185,8 +187,8 @@ function CadastroProfissionais() {
     setLoading(true)
 
     try {
-      await criarProfissional(formData)
-      success('Profissional cadastrado com sucesso!')
+      await criarProfissionalMutation.mutateAsync(formData)
+      success('Profissional cadastrado com sucesso! A lista será atualizada automaticamente.')
       handleReset()
     } catch (err) {
       showError(err.response?.data?.message || 'Erro ao cadastrar profissional')

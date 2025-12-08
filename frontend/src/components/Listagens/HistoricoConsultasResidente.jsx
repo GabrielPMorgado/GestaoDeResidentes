@@ -3,24 +3,20 @@ import { listarHistoricoConsultas, listarAgendamentos } from '../../api/axios'
 
 function HistoricoConsultasResidente({ residenteId, residenteNome, onVoltar }) {
   const [historicoConsultas, setHistoricoConsultas] = useState([])
-  const [consultasFiltradas, setConsultasFiltradas] = useState([])
   const [loading, setLoading] = useState(true)
   
-  // Filtros
-  const [filtroDia, setFiltroDia] = useState('')
-  const [filtroMes, setFiltroMes] = useState('')
-  const [filtroAno, setFiltroAno] = useState('')
-  const [filtroStatus, setFiltroStatus] = useState('todos')
+  // Filtros melhorados
+  const [filtros, setFiltros] = useState({
+    profissional: '',
+    tipo: '',
+    periodo: 'todos', // todos, ultima-semana, ultimo-mes, ultimo-ano
+    status: 'todos'
+  })
 
   useEffect(() => {
     carregarHistorico()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [residenteId])
-
-  useEffect(() => {
-    aplicarFiltros()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [historicoConsultas, filtroDia, filtroMes, filtroAno, filtroStatus])
 
   const carregarHistorico = async () => {
     setLoading(true)
@@ -64,48 +60,67 @@ function HistoricoConsultasResidente({ residenteId, residenteNome, onVoltar }) {
       todasConsultas.sort((a, b) => new Date(b.data_consulta) - new Date(a.data_consulta))
       
       setHistoricoConsultas(todasConsultas)
-      setConsultasFiltradas(todasConsultas)
     } catch (err) {
-
       setHistoricoConsultas([])
-      setConsultasFiltradas([])
     } finally {
       setLoading(false)
     }
   }
 
-  const aplicarFiltros = () => {
-    let consultasFiltro = [...historicoConsultas]
+  const filtrarHistorico = () => {
+    let consultasFiltradas = [...historicoConsultas]
 
-    // Filtro por data
-    if (filtroDia || filtroMes || filtroAno) {
-      consultasFiltro = consultasFiltro.filter(consulta => {
-        const dataConsulta = new Date(consulta.data_consulta)
-        const dia = dataConsulta.getDate()
-        const mes = dataConsulta.getMonth() + 1
-        const ano = dataConsulta.getFullYear()
-
-        const matchDia = !filtroDia || dia === parseInt(filtroDia)
-        const matchMes = !filtroMes || mes === parseInt(filtroMes)
-        const matchAno = !filtroAno || ano === parseInt(filtroAno)
-
-        return matchDia && matchMes && matchAno
-      })
+    // Filtrar por profissional
+    if (filtros.profissional) {
+      consultasFiltradas = consultasFiltradas.filter(c => 
+        c.profissional?.nome_completo?.toLowerCase().includes(filtros.profissional.toLowerCase())
+      )
     }
 
-    // Filtro por status
-    if (filtroStatus !== 'todos') {
-      consultasFiltro = consultasFiltro.filter(c => c.status === filtroStatus)
+    // Filtrar por tipo de consulta
+    if (filtros.tipo) {
+      consultasFiltradas = consultasFiltradas.filter(c => c.tipo_consulta === filtros.tipo)
     }
 
-    setConsultasFiltradas(consultasFiltro)
+    // Filtrar por status
+    if (filtros.status !== 'todos') {
+      consultasFiltradas = consultasFiltradas.filter(c => c.status === filtros.status)
+    }
+
+    // Filtrar por período
+    if (filtros.periodo !== 'todos') {
+      const hoje = new Date()
+      const dataLimite = new Date()
+      
+      switch (filtros.periodo) {
+        case 'ultima-semana':
+          dataLimite.setDate(hoje.getDate() - 7)
+          break
+        case 'ultimo-mes':
+          dataLimite.setMonth(hoje.getMonth() - 1)
+          break
+        case 'ultimo-ano':
+          dataLimite.setFullYear(hoje.getFullYear() - 1)
+          break
+      }
+
+      consultasFiltradas = consultasFiltradas.filter(c => 
+        new Date(c.data_consulta) >= dataLimite
+      )
+    }
+
+    return consultasFiltradas
   }
 
+  const consultasFiltradas = filtrarHistorico()
+
   const limparFiltros = () => {
-    setFiltroDia('')
-    setFiltroMes('')
-    setFiltroAno('')
-    setFiltroStatus('todos')
+    setFiltros({
+      profissional: '',
+      tipo: '',
+      periodo: 'todos',
+      status: 'todos'
+    })
   }
 
   const formatarData = (data) => {
@@ -183,100 +198,99 @@ function HistoricoConsultasResidente({ residenteId, residenteNome, onVoltar }) {
             </div>
             
             <div className="p-8">
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
-              <div>
-                <label className="block text-sm font-bold text-purple-300 mb-3 flex items-center gap-2 uppercase tracking-wider">
-                  <i className="bi bi-calendar-day text-purple-400"></i>
-                  Dia
-                </label>
-                <select 
-                  className="w-full px-4 py-3 bg-slate-900/50 border-2 border-purple-500/20 rounded-xl text-white focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all duration-300 font-semibold hover:border-purple-500/40 cursor-pointer"
-                  value={filtroDia}
-                  onChange={(e) => setFiltroDia(e.target.value)}
-                >
-                  <option value="">Selecione...</option>
-                  {Array.from({ length: 31 }, (_, i) => i + 1).map(dia => (
-                    <option key={dia} value={dia}>{dia}</option>
-                  ))}
-                </select>
-              </div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div>
+                  <label className="block text-sm font-bold text-purple-300 mb-3 flex items-center gap-2 uppercase tracking-wider">
+                    <i className="bi bi-person text-purple-400"></i>
+                    Profissional
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Nome do profissional..."
+                    value={filtros.profissional}
+                    onChange={(e) => setFiltros({ ...filtros, profissional: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-900/50 border-2 border-purple-500/20 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 focus:ring-4 focus:ring-purple-500/20 transition-all duration-300 font-semibold hover:border-purple-500/40"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-bold text-pink-300 mb-3 flex items-center gap-2 uppercase tracking-wider">
+                    <i className="bi bi-heart-pulse text-pink-400"></i>
+                    Tipo
+                  </label>
+                  <select 
+                    className="w-full px-4 py-3 bg-slate-900/50 border-2 border-pink-500/20 rounded-xl text-white focus:outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/20 transition-all duration-300 font-semibold hover:border-pink-500/40 cursor-pointer"
+                    value={filtros.tipo}
+                    onChange={(e) => setFiltros({ ...filtros, tipo: e.target.value })}
+                  >
+                    <option value="">Todos</option>
+                    <option value="consulta">Consulta</option>
+                    <option value="enfermagem">Enfermagem</option>
+                    <option value="fisioterapia">Fisioterapia</option>
+                    <option value="psicologia">Psicologia</option>
+                    <option value="nutricao">Nutrição</option>
+                    <option value="exame">Exame</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-bold text-cyan-300 mb-3 flex items-center gap-2 uppercase tracking-wider">
+                    <i className="bi bi-calendar-range text-cyan-400"></i>
+                    Período
+                  </label>
+                  <select 
+                    className="w-full px-4 py-3 bg-slate-900/50 border-2 border-cyan-500/20 rounded-xl text-white focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/20 transition-all duration-300 font-semibold hover:border-cyan-500/40 cursor-pointer"
+                    value={filtros.periodo}
+                    onChange={(e) => setFiltros({ ...filtros, periodo: e.target.value })}
+                  >
+                    <option value="todos">Todos</option>
+                    <option value="ultima-semana">Última semana</option>
+                    <option value="ultimo-mes">Último mês</option>
+                    <option value="ultimo-ano">Último ano</option>
+                  </select>
+                </div>
               
-              <div>
-                <label className="block text-sm font-bold text-pink-300 mb-3 flex items-center gap-2 uppercase tracking-wider">
-                  <i className="bi bi-calendar-month text-pink-400"></i>
-                  Mês
-                </label>
-                <select 
-                  className="w-full px-4 py-3 bg-slate-900/50 border-2 border-pink-500/20 rounded-xl text-white focus:outline-none focus:border-pink-500 focus:ring-4 focus:ring-pink-500/20 transition-all duration-300 font-semibold hover:border-pink-500/40 cursor-pointer"
-                  value={filtroMes}
-                  onChange={(e) => setFiltroMes(e.target.value)}
-                >
-                  <option value="">Selecione...</option>
-                  <option value="1">📅 Janeiro</option>
-                  <option value="2">📅 Fevereiro</option>
-                  <option value="3">📅 Março</option>
-                  <option value="4">📅 Abril</option>
-                  <option value="5">📅 Maio</option>
-                  <option value="6">📅 Junho</option>
-                  <option value="7">📅 Julho</option>
-                  <option value="8">📅 Agosto</option>
-                  <option value="9">📅 Setembro</option>
-                  <option value="10">📅 Outubro</option>
-                  <option value="11">📅 Novembro</option>
-                  <option value="12">📅 Dezembro</option>
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-bold text-cyan-300 mb-3 flex items-center gap-2 uppercase tracking-wider">
-                  <i className="bi bi-calendar-year text-cyan-400"></i>
-                  Ano
-                </label>
-                <select 
-                  className="w-full px-4 py-3 bg-slate-900/50 border-2 border-cyan-500/20 rounded-xl text-white focus:outline-none focus:border-cyan-500 focus:ring-4 focus:ring-cyan-500/20 transition-all duration-300 font-semibold hover:border-cyan-500/40 cursor-pointer"
-                  value={filtroAno}
-                  onChange={(e) => setFiltroAno(e.target.value)}
-                >
-                  <option value="">Selecione...</option>
-                  {Array.from({ length: 10 }, (_, i) => new Date().getFullYear() - i).map(ano => (
-                    <option key={ano} value={ano}>{ano}</option>
-                  ))}
-                </select>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-bold text-indigo-300 mb-3 flex items-center gap-2 uppercase tracking-wider">
-                  <i className="bi bi-funnel-fill text-indigo-400"></i>
-                  Status
-                </label>
-                <select 
-                  className="w-full px-4 py-3 bg-slate-900/50 border-2 border-indigo-500/20 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all duration-300 font-semibold hover:border-indigo-500/40 cursor-pointer"
-                  value={filtroStatus}
-                  onChange={(e) => setFiltroStatus(e.target.value)}
-                >
-                  <option value="todos">📋 Todos</option>
-                  <option value="realizada">✅ Realizadas</option>
-                  <option value="confirmado">✔️ Confirmadas</option>
-                  <option value="pendente">⏳ Pendentes</option>
-                  <option value="cancelado">❌ Canceladas</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-emerald-300 mb-3 flex items-center gap-2 uppercase tracking-wider">
-                  <i className="bi bi-bar-chart-fill text-emerald-400"></i>
-                  Total
-                </label>
-                <div className="relative group/counter">
-                  <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-xl blur opacity-25 group-hover/counter:opacity-50 transition"></div>
-                  <div className="relative bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border-2 border-emerald-500/30 rounded-xl py-3 text-center backdrop-blur">
-                    <strong className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400 block">{consultasFiltradas.length}</strong>
-                    <small className="text-slate-400 text-xs font-bold uppercase tracking-wider">consulta(s)</small>
-                  </div>
+                <div>
+                  <label className="block text-sm font-bold text-indigo-300 mb-3 flex items-center gap-2 uppercase tracking-wider">
+                    <i className="bi bi-funnel-fill text-indigo-400"></i>
+                    Status
+                  </label>
+                  <select 
+                    className="w-full px-4 py-3 bg-slate-900/50 border-2 border-indigo-500/20 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/20 transition-all duration-300 font-semibold hover:border-indigo-500/40 cursor-pointer"
+                    value={filtros.status}
+                    onChange={(e) => setFiltros({ ...filtros, status: e.target.value })}
+                  >
+                    <option value="todos">📋 Todos</option>
+                    <option value="realizada">✅ Realizadas</option>
+                    <option value="confirmado">✔️ Confirmadas</option>
+                    <option value="pendente">⏳ Pendentes</option>
+                    <option value="cancelado">❌ Canceladas</option>
+                  </select>
                 </div>
               </div>
+              
+              {/* Botão Limpar Filtros */}
+              {(filtros.profissional || filtros.tipo || filtros.periodo !== 'todos' || filtros.status !== 'todos') && (
+                <div className="flex justify-center pt-4">
+                  <button
+                    onClick={limparFiltros}
+                    className="px-8 py-3 bg-gradient-to-r from-red-500/20 to-pink-500/20 hover:from-red-500/30 hover:to-pink-500/30 border-2 border-red-500/30 rounded-xl text-red-300 font-bold transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-red-500/20 flex items-center gap-2"
+                  >
+                    <i className="bi bi-x-circle"></i>
+                    Limpar Filtros
+                  </button>
+                </div>
+              )}
+              
+              {/* Contador de Resultados */}
+              {(filtros.profissional || filtros.tipo || filtros.periodo !== 'todos' || filtros.status !== 'todos') && (
+                <div className="text-center pt-4">
+                  <p className="text-slate-400 font-semibold">
+                    Mostrando <span className="text-purple-400 font-bold">{consultasFiltradas.length}</span> de <span className="text-cyan-400 font-bold">{historicoConsultas.length}</span> registros
+                  </p>
+                </div>
+              )}
             </div>
-          </div>
           </div>
         </div>
 

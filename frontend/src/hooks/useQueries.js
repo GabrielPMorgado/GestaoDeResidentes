@@ -89,8 +89,10 @@ export const useInativarResidente = () => {
   return useMutation({
     mutationFn: residenteService.inativar,
     onSuccess: async () => {
+      // Invalidar todas as queries de residentes (ativos, inativos, todos)
       await queryClient.invalidateQueries({ queryKey: ['residentes'] })
-      await queryClient.refetchQueries({ queryKey: ['residentes'] })
+      await queryClient.refetchQueries({ queryKey: ['residentes', 'ativos'] })
+      await queryClient.refetchQueries({ queryKey: ['residentes', 'inativos'] })
     }
   })
 }
@@ -101,8 +103,10 @@ export const useReativarResidente = () => {
   return useMutation({
     mutationFn: residenteService.reativar,
     onSuccess: async () => {
+      // Invalidar todas as queries de residentes (ativos, inativos, todos)
       await queryClient.invalidateQueries({ queryKey: ['residentes'] })
-      await queryClient.refetchQueries({ queryKey: ['residentes'] })
+      await queryClient.refetchQueries({ queryKey: ['residentes', 'ativos'] })
+      await queryClient.refetchQueries({ queryKey: ['residentes', 'inativos'] })
     }
   })
 }
@@ -190,8 +194,10 @@ export const useInativarProfissional = () => {
   return useMutation({
     mutationFn: profissionalService.inativar,
     onSuccess: async () => {
+      // Invalidar todas as queries de profissionais (ativos, inativos, todos)
       await queryClient.invalidateQueries({ queryKey: ['profissionais'] })
-      await queryClient.refetchQueries({ queryKey: ['profissionais'] })
+      await queryClient.refetchQueries({ queryKey: ['profissionais', 'ativos'] })
+      await queryClient.refetchQueries({ queryKey: ['profissionais', 'inativos'] })
     }
   })
 }
@@ -202,8 +208,10 @@ export const useReativarProfissional = () => {
   return useMutation({
     mutationFn: profissionalService.reativar,
     onSuccess: async () => {
+      // Invalidar todas as queries de profissionais (ativos, inativos, todos)
       await queryClient.invalidateQueries({ queryKey: ['profissionais'] })
-      await queryClient.refetchQueries({ queryKey: ['profissionais'] })
+      await queryClient.refetchQueries({ queryKey: ['profissionais', 'ativos'] })
+      await queryClient.refetchQueries({ queryKey: ['profissionais', 'inativos'] })
     }
   })
 }
@@ -262,6 +270,18 @@ export const useCancelarAgendamento = () => {
   
   return useMutation({
     mutationFn: ({ id, dados }) => agendamentoService.cancelar(id, dados),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['agendamentos'] })
+      await queryClient.refetchQueries({ queryKey: ['agendamentos'] })
+    }
+  })
+}
+
+export const useConfirmarAgendamento = () => {
+  const queryClient = useQueryClient()
+  
+  return useMutation({
+    mutationFn: agendamentoService.confirmar,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['agendamentos'] })
       await queryClient.refetchQueries({ queryKey: ['agendamentos'] })

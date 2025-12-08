@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { atualizarProfissional, listarHistoricoConsultasProfissional, buscarAgendamentosPorProfissional } from '../../api/axios'
 import { useNotification } from '../../contexts/NotificationContext'
-import { useProfissionaisAtivos, useInativarProfissional } from '../../hooks'
+import { useProfissionaisAtivos, useInativarProfissional, useAtualizarProfissional } from '../../hooks'
 
 function ListagemProfissionais() {
   const { success, error: showError } = useNotification()
@@ -9,6 +9,7 @@ function ListagemProfissionais() {
   // React Query - Cache automático
   const { data: profissionaisData = [], isLoading: loading } = useProfissionaisAtivos()
   const inativarMutation = useInativarProfissional()
+  const atualizarMutation = useAtualizarProfissional()
   
   const [showVisualizarModal, setShowVisualizarModal] = useState(false)
   const [showEditarModal, setShowEditarModal] = useState(false)
@@ -159,15 +160,12 @@ function ListagemProfissionais() {
 
   const handleSalvarEdicao = async () => {
     try {
-      const response = await atualizarProfissional(profissionalSelecionado.id, profissionalSelecionado)
-      
-      if (response.success) {
-        success('Profissional atualizado com sucesso!')
-        setShowEditarModal(false)
-        carregarProfissionais()
-      } else {
-        throw new Error(response.message || 'Erro ao atualizar')
-      }
+      await atualizarMutation.mutateAsync({ 
+        id: profissionalSelecionado.id, 
+        dados: profissionalSelecionado 
+      })
+      success('Profissional atualizado com sucesso! A lista será atualizada automaticamente.')
+      setShowEditarModal(false)
     } catch (err) {
       showError(err.message || 'Erro ao atualizar profissional')
     }

@@ -5,7 +5,7 @@ import {
   buscarAgendamentoPorId,
   atualizarAgendamento
 } from '../../api/axios'
-import { useAgendamentos, useCancelarAgendamento } from '../../hooks'
+import { useAgendamentos, useCancelarAgendamento, useConfirmarAgendamento, useAtualizarAgendamento } from '../../hooks'
 
 function ListagemAgendamentos() {
   const { success, error: showError } = useNotification()
@@ -13,6 +13,8 @@ function ListagemAgendamentos() {
   // React Query - Cache automático
   const { data: agendamentosData = [], isLoading: loading, refetch } = useAgendamentos()
   const cancelarMutation = useCancelarAgendamento()
+  const confirmarMutation = useConfirmarAgendamento()
+  const atualizarMutation = useAtualizarAgendamento()
   
   // Debug: verificar dados
   console.log('📊 agendamentosData:', agendamentosData)
@@ -138,14 +140,8 @@ function ListagemAgendamentos() {
     if (!window.confirm('Deseja confirmar este agendamento?')) return
 
     try {
-      const response = await confirmarAgendamento(id)
-      
-      if (response.success) {
-        success('Agendamento confirmado com sucesso!')
-        refetch() // Recarregar dados do React Query
-      } else {
-        throw new Error(response.message || 'Erro ao confirmar')
-      }
+      await confirmarMutation.mutateAsync(id)
+      success('Agendamento confirmado com sucesso! A lista será atualizada automaticamente.')
     } catch (error) {
       showError(error.message || 'Erro ao confirmar agendamento')
     }
@@ -209,10 +205,9 @@ function ListagemAgendamentos() {
         observacoes: editarModal.observacoes
       }
       
-      await atualizarAgendamento(editarModal.id, dados)
-      success('Agendamento atualizado com sucesso!')
+      await atualizarMutation.mutateAsync({ id: editarModal.id, dados })
+      success('Agendamento atualizado com sucesso! A lista será atualizada automaticamente.')
       setEditarModal(null)
-      refetch() // Recarregar dados do React Query
     } catch (error) {
       showError(error.message || 'Erro ao atualizar agendamento')
     }

@@ -12,17 +12,17 @@ const profissionalService = {
   },
 
   listarAtivos: async () => {
-    const response = await api.get('/profissionais');
+    const response = await api.get('/profissionais', { params: { status: 'ativo', limit: 1000 } });
     return response.data;
   },
 
   listarTodos: async () => {
-    const response = await api.get('/profissionais/todos');
+    const response = await api.get('/profissionais', { params: { limit: 1000 } });
     return response.data;
   },
 
   listarInativos: async () => {
-    const response = await api.get('/profissionais/inativos');
+    const response = await api.get('/profissionais', { params: { status: 'inativo', limit: 1000 } });
     return response.data;
   },
 

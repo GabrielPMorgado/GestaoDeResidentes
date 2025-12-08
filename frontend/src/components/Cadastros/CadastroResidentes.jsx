@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { criarResidente } from '../../api/axios'
 import { formatarCPF, formatarTelefone, formatarCEP } from '../../utils/formatters'
 import { useNotification } from '../../contexts/NotificationContext'
+import { useCriarResidente } from '../../hooks'
 
 // Componente Input fora para evitar recriação
 const Input = ({ label, name, type = 'text', required = false, icon, formData, errors, touched, handleChange, handleBlur, ...props }) => (
@@ -69,6 +70,7 @@ const Select = ({ label, name, options, required = false, icon, formData, errors
 
 function CadastroResidentes() {
   const { success, error: showError } = useNotification()
+  const criarResidenteMutation = useCriarResidente()
   const [formData, setFormData] = useState({
     nome_completo: '',
     cpf: '',
@@ -273,8 +275,8 @@ function CadastroResidentes() {
           : null
       }
       
-      await criarResidente(dataToSend)
-      success('Residente cadastrado com sucesso!')
+      await criarResidenteMutation.mutateAsync(dataToSend)
+      success('Residente cadastrado com sucesso! A lista será atualizada automaticamente.')
       handleReset()
     } catch (error) {
       console.error('Erro ao cadastrar residente:', error)

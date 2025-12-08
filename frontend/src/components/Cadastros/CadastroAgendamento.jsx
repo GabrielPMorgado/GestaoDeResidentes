@@ -1,10 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { criarAgendamento, listarResidentes, listarProfissionais } from '../../api/axios'
 import { useNotification } from '../../contexts/NotificationContext'
 import { LoadingSpinner } from '../Common'
+import { useCriarAgendamento } from '../../hooks'
 
 function CadastroAgendamento() {
   const { success, error: showError } = useNotification()
+  const criarAgendamentoMutation = useCriarAgendamento()
+  const dateInputRef = useRef(null)
+  const horaInicioRef = useRef(null)
+  const horaFimRef = useRef(null)
   
   const [formData, setFormData] = useState({
     residente_id: '',
@@ -114,15 +119,29 @@ function CadastroAgendamento() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
+    // Capturar valores dos refs para campos de data/hora
+    const dataToSubmit = {
+      ...formData,
+      data_agendamento: dateInputRef.current?.value || formData.data_agendamento,
+      hora_inicio: horaInicioRef.current?.value || formData.hora_inicio,
+      hora_fim: horaFimRef.current?.value || formData.hora_fim
+    }
+    
+    console.log('📋 Dados para enviar:', dataToSubmit)
+    
     const fields = ['residente_id', 'profissional_id', 'data_agendamento', 'hora_inicio', 'hora_fim', 'tipo_atendimento', 'titulo']
     const newErrors = {}
     
     fields.forEach(field => {
-      const error = validateField(field, formData[field])
-      if (error) newErrors[field] = error
+      const error = validateField(field, dataToSubmit[field])
+      if (error) {
+        console.log(`❌ Erro no campo ${field}:`, error)
+        newErrors[field] = error
+      }
     })
     
     if (Object.keys(newErrors).length > 0) {
+      console.log('❌ Erros encontrados:', newErrors)
       setErrors(newErrors)
       fields.forEach(field => setTouched(prev => ({ ...prev, [field]: true })))
       showError('Por favor, corrija os erros no formulário')
@@ -132,10 +151,13 @@ function CadastroAgendamento() {
     setLoading(true)
 
     try {
-      await criarAgendamento(formData)
-      success('Agendamento criado com sucesso!')
+      console.log('🚀 Enviando agendamento...')
+      const response = await criarAgendamentoMutation.mutateAsync(dataToSubmit)
+      console.log('✅ Resposta:', response)
+      success('Agendamento criado com sucesso! A lista será atualizada automaticamente.')
       handleReset()
     } catch (err) {
+      console.error('❌ Erro ao criar:', err)
       showError(err.response?.data?.message || 'Erro ao criar agendamento')
     } finally {
       setLoading(false)
@@ -147,12 +169,16 @@ function CadastroAgendamento() {
       residente_id: '', profissional_id: '', data_agendamento: '', hora_inicio: '',
       hora_fim: '', tipo_atendimento: '', titulo: '', descricao: '', local: '', observacoes: ''
     })
+    if (dateInputRef.current) dateInputRef.current.value = ''
+    if (horaInicioRef.current) horaInicioRef.current.value = ''
+    if (horaFimRef.current) horaFimRef.current.value = ''
     setErrors({})
     setTouched({})
   }
 
-  const InputField = ({ label, name, type = 'text', required = false, icon, ...props }) => {
-    const inputValue = formData[name] ?? ''
+  const InputField = ({ label, name, type = 'text', required = false, icon, inputRef, ...props }) => {
+    // Para inputs de data/hora usar como não-controlados (via ref)
+    const isDateOrTime = type === 'date' || type === 'time'
     
     return (
       <div>
@@ -163,15 +189,29 @@ function CadastroAgendamento() {
           type={type}
           id={name}
           name={name}
-          value={inputValue}
-          onChange={handleChange}
+          ref={inputRef}
+          {...(isDateOrTime 
+            ? { 
+                defaultValue: formData[name],
+                onChange: (e) => {
+                  // Atualizar blur para validação
+                  if (inputRef) {
+                    handleBlur(e)
+                  }
+                }
+              }
+            : { 
+                value: formData[name] ?? '',
+                onChange: handleChange
+              }
+          )}
           onBlur={handleBlur}
-          autoComplete="off"
           className={`w-full px-4 py-3 bg-slate-900/60 border ${
             errors[name] && touched[name] 
               ? 'border-red-500/50 focus:ring-red-500/50' 
               : 'border-slate-700/50 focus:ring-amber-500/50 focus:border-amber-500/50'
-          } rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all`}
+          } rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all
+          ${type === 'date' ? '[color-scheme:dark]' : ''}`}
           {...props}
         />
         {errors[name] && touched[name] && (
@@ -277,30 +317,79 @@ function CadastroAgendamento() {
                 Data e Horário
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <InputField
-                  label="Data"
-                  name="data_agendamento"
-                  type="date"
-                  required
-                  min={new Date().toISOString().split('T')[0]}
-                  max={new Date(new Date().setFullYear(new Date().getFullYear() + 2)).toISOString().split('T')[0]}
-                />
+                <div>
+                  <label htmlFor="data_agendamento" className="block text-sm font-medium text-slate-300 mb-2">
+                    Data <span className="text-amber-400">*</span>
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="date"
+                      id="data_agendamento"
+                      name="data_agendamento"
+                      ref={dateInputRef}
+                      defaultValue={new Date().toISOString().split('T')[0]}
+                      min={new Date().toISOString().split('T')[0]}
+                      max="2025-12-31"
+                      onBlur={handleBlur}
+                      className={`w-full px-4 py-3 bg-slate-900/60 border ${
+                        errors.data_agendamento && touched.data_agendamento
+                          ? 'border-red-500/50 focus:ring-red-500/50' 
+                          : 'border-slate-700/50 focus:ring-amber-500/50 focus:border-amber-500/50'
+                      } rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all [color-scheme:dark]`}
+                    />
+                  </div>
+                  {errors.data_agendamento && touched.data_agendamento && (
+                    <p className="mt-1.5 text-sm text-red-400">
+                      {errors.data_agendamento}
+                    </p>
+                  )}
+                </div>
 
-                <InputField
-                  label="Hora Início"
-                  name="hora_inicio"
-                  type="time"
-                  required
-                  step="300"
-                />
+                <div>
+                  <label htmlFor="hora_inicio" className="block text-sm font-medium text-slate-300 mb-2">
+                    Hora Início <span className="text-amber-400">*</span>
+                  </label>
+                  <input
+                    type="time"
+                    id="hora_inicio"
+                    name="hora_inicio"
+                    ref={horaInicioRef}
+                    onBlur={handleBlur}
+                    className={`w-full px-4 py-3 bg-slate-900/60 border ${
+                      errors.hora_inicio && touched.hora_inicio
+                        ? 'border-red-500/50 focus:ring-red-500/50' 
+                        : 'border-slate-700/50 focus:ring-amber-500/50 focus:border-amber-500/50'
+                    } rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all`}
+                  />
+                  {errors.hora_inicio && touched.hora_inicio && (
+                    <p className="mt-1.5 text-sm text-red-400">
+                      {errors.hora_inicio}
+                    </p>
+                  )}
+                </div>
 
-                <InputField
-                  label="Hora Término"
-                  name="hora_fim"
-                  type="time"
-                  required
-                  step="300"
-                />
+                <div>
+                  <label htmlFor="hora_fim" className="block text-sm font-medium text-slate-300 mb-2">
+                    Hora Término <span className="text-amber-400">*</span>
+                  </label>
+                  <input
+                    type="time"
+                    id="hora_fim"
+                    name="hora_fim"
+                    ref={horaFimRef}
+                    onBlur={handleBlur}
+                    className={`w-full px-4 py-3 bg-slate-900/60 border ${
+                      errors.hora_fim && touched.hora_fim
+                        ? 'border-red-500/50 focus:ring-red-500/50' 
+                        : 'border-slate-700/50 focus:ring-amber-500/50 focus:border-amber-500/50'
+                    } rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all`}
+                  />
+                  {errors.hora_fim && touched.hora_fim && (
+                    <p className="mt-1.5 text-sm text-red-400">
+                      {errors.hora_fim}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 

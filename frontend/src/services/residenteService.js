@@ -7,17 +7,17 @@ const residenteService = {
   },
 
   listarAtivos: async () => {
-    const response = await api.get('/residentes');
+    const response = await api.get('/residentes', { params: { status: 'ativo', limit: 1000 } });
     return response.data;
   },
 
   listarTodos: async () => {
-    const response = await api.get('/residentes/todos');
+    const response = await api.get('/residentes', { params: { limit: 1000 } });
     return response.data;
   },
 
   listarInativos: async () => {
-    const response = await api.get('/residentes/inativos');
+    const response = await api.get('/residentes', { params: { status: 'inativo', limit: 1000 } });
     return response.data;
   },
 

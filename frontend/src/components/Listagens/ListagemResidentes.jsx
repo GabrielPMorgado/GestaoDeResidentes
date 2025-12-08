@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import api, { atualizarResidente } from '../../api/axios'
 import { useNotification } from '../../contexts/NotificationContext'
-import { useResidentesAtivos, useEstatisticas, useInativarResidente } from '../../hooks'
+import { useResidentesAtivos, useEstatisticas, useInativarResidente, useAtualizarResidente } from '../../hooks'
 
 function ListagemResidentes({ onVerHistorico }) {
   const { success, error: showError } = useNotification()
@@ -9,6 +9,7 @@ function ListagemResidentes({ onVerHistorico }) {
   // React Query - Cache automático
   const { data: residentesData = [], isLoading: loading, refetch } = useResidentesAtivos()
   const inativarMutation = useInativarResidente()
+  const atualizarMutation = useAtualizarResidente()
   
   // Calcular estatísticas localmente
   const estatisticas = useMemo(() => {
@@ -118,15 +119,12 @@ function ListagemResidentes({ onVerHistorico }) {
 
   const handleSalvarEdicao = async () => {
     try {
-      const response = await atualizarResidente(residenteSelecionado.id, residenteSelecionado)
-      
-      if (response.success) {
-        success('Residente atualizado com sucesso!')
-        setShowEditarModal(false)
-        carregarResidentes()
-      } else {
-        throw new Error(response.message || 'Erro ao atualizar')
-      }
+      await atualizarMutation.mutateAsync({ 
+        id: residenteSelecionado.id, 
+        dados: residenteSelecionado 
+      })
+      success('Residente atualizado com sucesso! A lista será atualizada automaticamente.')
+      setShowEditarModal(false)
     } catch (err) {
       showError(err.message || 'Erro ao atualizar residente')
     }

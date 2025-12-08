@@ -10,6 +10,15 @@ function PacientesAgendados({ onIniciarAtendimento }) {
   const [loading, setLoading] = useState(true)
   const [mostrarBoasVindas, setMostrarBoasVindas] = useState(true)
   const [modoProximos, setModoProximos] = useState(false)
+  const [residenteSelecionado, setResidenteSelecionado] = useState(null)
+  const [historicoConsultas, setHistoricoConsultas] = useState([])
+  const [loadingHistorico, setLoadingHistorico] = useState(false)
+  const [filtroHistorico, setFiltroHistorico] = useState({
+    profissional: '',
+    tipo: '',
+    periodo: 'todos', // todos, ultima-semana, ultimo-mes, ultimo-ano
+    status: 'todos'
+  })
   const [filtros, setFiltros] = useState({
     busca: '',
     data: new Date().toISOString().split('T')[0],
@@ -119,6 +128,95 @@ function PacientesAgendados({ onIniciarAtendimento }) {
   }
 
   const agendamentosFiltrados = modoProximos ? getProximosAtendimentos() : agendamentos
+
+  const abrirHistorico = async (residente) => {
+    setResidenteSelecionado(residente)
+    setLoadingHistorico(true)
+    setHistoricoConsultas([]) // Resetar antes de carregar
+    
+    try {
+      const response = await api.get(`/historico-consultas/residente/${residente.id}`)
+      
+      if (response.data?.success) {
+        // A API retorna em response.data.data.consultas
+        const historico = response.data.data?.consultas || []
+        setHistoricoConsultas(Array.isArray(historico) ? historico : [])
+      } else {
+        setHistoricoConsultas([])
+      }
+    } catch (error) {
+      console.error('Erro ao carregar histórico:', error)
+      showError('Erro ao carregar histórico do paciente')
+      setHistoricoConsultas([])
+    } finally {
+      setLoadingHistorico(false)
+    }
+  }
+
+  const fecharHistorico = () => {
+    setResidenteSelecionado(null)
+    setHistoricoConsultas([])
+    setFiltroHistorico({ profissional: '', tipo: '', periodo: 'todos' })
+  }
+
+  const filtrarHistorico = () => {
+    let consultasFiltradas = [...historicoConsultas]
+
+    // Filtrar por profissional
+    if (filtroHistorico.profissional) {
+      consultasFiltradas = consultasFiltradas.filter(c => 
+        c.profissional?.nome_completo?.toLowerCase().includes(filtroHistorico.profissional.toLowerCase())
+      )
+    }
+
+    // Filtrar por tipo de consulta
+    if (filtroHistorico.tipo) {
+      consultasFiltradas = consultasFiltradas.filter(c => c.tipo_consulta === filtroHistorico.tipo)
+    }
+
+    // Filtrar por período
+    if (filtroHistorico.periodo !== 'todos') {
+      const hoje = new Date()
+      const dataLimite = new Date()
+      
+      switch (filtroHistorico.periodo) {
+        case 'ultima-semana':
+          dataLimite.setDate(hoje.getDate() - 7)
+          break
+        case 'ultimo-mes':
+          dataLimite.setMonth(hoje.getMonth() - 1)
+          break
+        case 'ultimo-ano':
+          dataLimite.setFullYear(hoje.getFullYear() - 1)
+          break
+      }
+
+      consultasFiltradas = consultasFiltradas.filter(c => 
+        new Date(c.data_consulta) >= dataLimite
+      )
+    }
+
+    // Filtrar por status
+    if (filtroHistorico.status !== 'todos') {
+      consultasFiltradas = consultasFiltradas.filter(c => c.status === filtroHistorico.status)
+    }
+
+    return consultasFiltradas
+  }
+
+  const consultasFiltradas = filtrarHistorico()
+
+  const calcularIdade = (dataNascimento) => {
+    if (!dataNascimento) return 'N/A'
+    const hoje = new Date()
+    const nascimento = new Date(dataNascimento)
+    let idade = hoje.getFullYear() - nascimento.getFullYear()
+    const mes = hoje.getMonth() - nascimento.getMonth()
+    if (mes < 0 || (mes === 0 && hoje.getDate() < nascimento.getDate())) {
+      idade--
+    }
+    return idade
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
@@ -418,6 +516,7 @@ function PacientesAgendados({ onIniciarAtendimento }) {
                           )}
 
                           <button
+                            onClick={() => abrirHistorico(residente)}
                             className="px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-medium transition-colors flex items-center gap-2"
                           >
                             <i className="bi bi-journal-medical"></i>
@@ -433,6 +532,300 @@ function PacientesAgendados({ onIniciarAtendimento }) {
           )}
         </div>
       </div>
+
+      {/* Modal de Histórico do Paciente */}
+      {residenteSelecionado && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={fecharHistorico}>
+          <div className="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 max-w-6xl w-full max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            {/* Header do Modal */}
+            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-xl flex items-center justify-center">
+                    <i className="bi bi-person-fill text-3xl text-white"></i>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">{residenteSelecionado.nome_completo}</h2>
+                    <p className="text-blue-100">Prontuário do Paciente</p>
+                  </div>
+                </div>
+                <button
+                  onClick={fecharHistorico}
+                  className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-colors"
+                >
+                  <i className="bi bi-x-lg text-white text-xl"></i>
+                </button>
+              </div>
+            </div>
+
+            {/* Conteúdo do Modal */}
+            <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
+              {/* Informações do Paciente */}
+              <div className="p-6 border-b border-slate-700">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <i className="bi bi-info-circle text-blue-400"></i>
+                  Informações Pessoais
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-slate-900/50 rounded-lg p-4">
+                    <p className="text-xs text-slate-400 mb-1">CPF</p>
+                    <p className="text-white font-medium">{residenteSelecionado.cpf || 'Não informado'}</p>
+                  </div>
+                  <div className="bg-slate-900/50 rounded-lg p-4">
+                    <p className="text-xs text-slate-400 mb-1">Data de Nascimento</p>
+                    <p className="text-white font-medium">
+                      {residenteSelecionado.data_nascimento 
+                        ? new Date(residenteSelecionado.data_nascimento).toLocaleDateString('pt-BR')
+                        : 'Não informado'
+                      }
+                    </p>
+                  </div>
+                  <div className="bg-slate-900/50 rounded-lg p-4">
+                    <p className="text-xs text-slate-400 mb-1">Idade</p>
+                    <p className="text-white font-medium">{calcularIdade(residenteSelecionado.data_nascimento)} anos</p>
+                  </div>
+                  <div className="bg-slate-900/50 rounded-lg p-4">
+                    <p className="text-xs text-slate-400 mb-1">Telefone</p>
+                    <p className="text-white font-medium">{residenteSelecionado.telefone || 'Não informado'}</p>
+                  </div>
+                  <div className="bg-slate-900/50 rounded-lg p-4">
+                    <p className="text-xs text-slate-400 mb-1">Quarto</p>
+                    <p className="text-white font-medium">{residenteSelecionado.quarto || 'Não informado'}</p>
+                  </div>
+                  <div className="bg-slate-900/50 rounded-lg p-4">
+                    <p className="text-xs text-slate-400 mb-1">Status</p>
+                    <p className={`font-medium ${residenteSelecionado.status === 'ativo' ? 'text-emerald-400' : 'text-red-400'}`}>
+                      {residenteSelecionado.status === 'ativo' ? 'Ativo' : 'Inativo'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Condições Médicas */}
+                {residenteSelecionado.condicoes_medicas && (
+                  <div className="mt-4 bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
+                    <p className="text-xs text-amber-400 font-semibold mb-2 flex items-center gap-2">
+                      <i className="bi bi-exclamation-triangle-fill"></i>
+                      Condições Médicas
+                    </p>
+                    <p className="text-white">{residenteSelecionado.condicoes_medicas}</p>
+                  </div>
+                )}
+
+                {/* Medicamentos */}
+                {residenteSelecionado.medicamentos && (
+                  <div className="mt-4 bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                    <p className="text-xs text-blue-400 font-semibold mb-2 flex items-center gap-2">
+                      <i className="bi bi-capsule"></i>
+                      Medicamentos em Uso
+                    </p>
+                    <p className="text-white">{residenteSelecionado.medicamentos}</p>
+                  </div>
+                )}
+
+                {/* Responsável */}
+                {residenteSelecionado.responsavel_nome && (
+                  <div className="mt-4 bg-slate-900/50 rounded-lg p-4">
+                    <p className="text-xs text-slate-400 font-semibold mb-2">Responsável</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
+                        <p className="text-xs text-slate-500">Nome</p>
+                        <p className="text-white">{residenteSelecionado.responsavel_nome}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500">Telefone</p>
+                        <p className="text-white">{residenteSelecionado.responsavel_telefone || 'Não informado'}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Histórico de Consultas */}
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                    <i className="bi bi-clock-history text-emerald-400"></i>
+                    Histórico de Consultas
+                    <span className="px-2 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-full text-xs font-semibold text-emerald-400">
+                      {consultasFiltradas.length} {consultasFiltradas.length === 1 ? 'registro' : 'registros'}
+                      {consultasFiltradas.length !== historicoConsultas.length && (
+                        <span className="text-slate-400"> de {historicoConsultas.length}</span>
+                      )}
+                    </span>
+                  </h3>
+                </div>
+
+                {/* Filtros do Histórico */}
+                <div className="bg-slate-900/50 rounded-xl border border-slate-700 p-4 mb-4">
+                  <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                    <i className="bi bi-funnel text-amber-400"></i>
+                    Filtrar Consultas
+                  </h4>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1.5">Buscar Profissional</label>
+                      <input
+                        type="text"
+                        placeholder="Nome do profissional..."
+                        value={filtroHistorico.profissional}
+                        onChange={(e) => setFiltroHistorico({ ...filtroHistorico, profissional: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1.5">Tipo de Consulta</label>
+                      <select
+                        value={filtroHistorico.tipo}
+                        onChange={(e) => setFiltroHistorico({ ...filtroHistorico, tipo: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      >
+                        <option value="">Todos os tipos</option>
+                        <option value="consulta">Consulta</option>
+                        <option value="enfermagem">Enfermagem</option>
+                        <option value="fisioterapia">Fisioterapia</option>
+                        <option value="psicologia">Psicologia</option>
+                        <option value="nutricao">Nutrição</option>
+                        <option value="exame">Exame</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1.5">Período</label>
+                      <select
+                        value={filtroHistorico.periodo}
+                        onChange={(e) => setFiltroHistorico({ ...filtroHistorico, periodo: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      >
+                        <option value="todos">Todos os períodos</option>
+                        <option value="ultima-semana">Última semana</option>
+                        <option value="ultimo-mes">Último mês</option>
+                        <option value="ultimo-ano">Último ano</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs text-slate-400 mb-1.5">Status</label>
+                      <select
+                        value={filtroHistorico.status}
+                        onChange={(e) => setFiltroHistorico({ ...filtroHistorico, status: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      >
+                        <option value="todos">Todos os status</option>
+                        <option value="realizada">✅ Realizadas</option>
+                        <option value="confirmado">✔️ Confirmadas</option>
+                        <option value="pendente">⏳ Pendentes</option>
+                        <option value="cancelado">❌ Canceladas</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {(filtroHistorico.profissional || filtroHistorico.tipo || filtroHistorico.periodo !== 'todos' || filtroHistorico.status !== 'todos') && (
+                    <button
+                      onClick={() => setFiltroHistorico({ profissional: '', tipo: '', periodo: 'todos', status: 'todos' })}
+                      className="mt-3 px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-white text-xs rounded-lg transition-colors flex items-center gap-2"
+                    >
+                      <i className="bi bi-x-circle"></i>
+                      Limpar Filtros
+                    </button>
+                  )}
+                </div>
+
+                {loadingHistorico ? (
+                  <div className="flex items-center justify-center py-12">
+                    <svg className="animate-spin h-10 w-10 text-emerald-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                ) : consultasFiltradas.length === 0 ? (
+                  <div className="text-center py-12 bg-slate-900/50 rounded-lg border-2 border-dashed border-slate-700">
+                    <i className="bi bi-journal-medical text-5xl text-slate-600 mb-3"></i>
+                    <p className="text-slate-400">
+                      {historicoConsultas.length === 0 
+                        ? 'Nenhuma consulta registrada' 
+                        : 'Nenhuma consulta encontrada com os filtros aplicados'
+                      }
+                    </p>
+                    {historicoConsultas.length > 0 && (
+                      <button
+                        onClick={() => setFiltroHistorico({ profissional: '', tipo: '', periodo: 'todos' })}
+                        className="mt-3 px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-lg hover:bg-emerald-500/20 transition-all text-sm"
+                      >
+                        Limpar filtros
+                      </button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {consultasFiltradas.map((consulta, index) => (
+                      <div key={consulta.id} className="bg-slate-900/50 rounded-xl border border-slate-700 p-5 hover:border-slate-600 transition-colors">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                              <i className="bi bi-calendar-check text-emerald-400 text-lg"></i>
+                            </div>
+                            <div>
+                              <p className="text-white font-semibold">
+                                {new Date(consulta.data_consulta).toLocaleDateString('pt-BR', { 
+                                  day: '2-digit', 
+                                  month: 'long', 
+                                  year: 'numeric' 
+                                })}
+                              </p>
+                              <p className="text-sm text-slate-400">
+                                {consulta.profissional?.nome_completo || consulta.Profissional?.nome_completo || 'Profissional não identificado'} - {consulta.profissional?.especialidade || consulta.Profissional?.profissao || 'N/A'}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="px-3 py-1 bg-blue-500/10 border border-blue-500/30 rounded-full text-xs font-semibold text-blue-400">
+                            #{consulta.id}
+                          </span>
+                        </div>
+
+                        {consulta.queixa_principal && (
+                          <div className="mb-3">
+                            <p className="text-xs text-amber-400 font-semibold mb-1">Queixa Principal</p>
+                            <p className="text-white text-sm">{consulta.queixa_principal}</p>
+                          </div>
+                        )}
+
+                        {consulta.diagnostico && (
+                          <div className="mb-3">
+                            <p className="text-xs text-blue-400 font-semibold mb-1">Diagnóstico</p>
+                            <p className="text-white text-sm">{consulta.diagnostico}</p>
+                          </div>
+                        )}
+
+                        {consulta.procedimentos && (
+                          <div className="mb-3">
+                            <p className="text-xs text-emerald-400 font-semibold mb-1">Procedimentos</p>
+                            <p className="text-white text-sm">{consulta.procedimentos}</p>
+                          </div>
+                        )}
+
+                        {consulta.prescricao && (
+                          <div className="mb-3">
+                            <p className="text-xs text-purple-400 font-semibold mb-1">Prescrição</p>
+                            <p className="text-white text-sm">{consulta.prescricao}</p>
+                          </div>
+                        )}
+
+                        {consulta.observacoes && (
+                          <div className="mt-3 pt-3 border-t border-slate-700">
+                            <p className="text-xs text-slate-400 font-semibold mb-1">Observações</p>
+                            <p className="text-slate-300 text-sm">{consulta.observacoes}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

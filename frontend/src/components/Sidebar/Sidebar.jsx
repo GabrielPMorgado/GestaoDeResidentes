@@ -7,10 +7,14 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
   const { success: showSuccess } = useNotification()
   const [activeItem, setActiveItem] = useState('dashboard')
   const [expandedSections, setExpandedSections] = useState({
-    cadastros: true,
-    listagens: true,
-    agendamentos: true,
-    atendimento: true,
+    cadastros: false,
+    listagens: false,
+    agendamentos: false,
+    atendimento: false,
+    inativos: false,
+    analytics: false,
+    gestao: false,
+    admin: false,
   })
 
   const handleNavigation = (page) => {
