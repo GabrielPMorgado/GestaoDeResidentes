@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, memo } from 'react'
 import { useNotification } from '../../contexts/NotificationContext'
 import {
   Chart as ChartJS,
@@ -36,8 +36,6 @@ ChartJS.register(
 
 function Dashboard() {
   const { error: showError } = useNotification()
-  
-  // React Query - Cache automático
   const { data: residentes = [], isLoading: loadingResidentes } = useResidentes()
   const { data: profissionais = [], isLoading: loadingProfissionais } = useProfissionais()
   const { data: agendamentos = [], isLoading: loadingAgendamentos } = useAgendamentos()
@@ -625,4 +623,4 @@ function Dashboard() {
   )
 }
 
-export default Dashboard
+export default memo(Dashboard)
