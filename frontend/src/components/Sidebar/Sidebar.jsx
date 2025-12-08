@@ -112,14 +112,6 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
       items: [
         { id: 'pacientes-agendados', label: 'Pacientes Agendados', page: 'pacientes-agendados', icon: 'bi-calendar2-check-fill' }
       ]
-    },
-    {
-      id: 'atendimento',
-      title: 'Atendimento',
-      icon: 'bi-clipboard2-pulse',
-      items: [
-        { id: 'historico-atendimentos', label: 'Histórico', page: 'historico-atendimentos', icon: 'bi-clock-history' }
-      ]
     }
   ]
 
