@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { authService } from '../../services/authService';
 import profissionalService from '../../services/profissionalService';
 import { useNotification } from '../../contexts/NotificationContext';
@@ -15,31 +15,23 @@ function GerenciarAcessos() {
     senha: ''
   });
 
-  useEffect(() => {
-    carregarDados();
-  }, []);
 
-  const carregarDados = async () => {
+  const carregarDados = useCallback(async () => {
     try {
       const [usuariosResponse, profissionaisResponse] = await Promise.all([
         authService.listarUsuarios(),
         profissionalService.listar({ status: 'ativo', limit: 1000 })
       ]);
-      
       // Processar usuários
       const usuariosArray = Array.isArray(usuariosResponse) 
         ? usuariosResponse 
         : (usuariosResponse?.data || usuariosResponse?.usuarios || []);
-      
       setUsuarios(usuariosArray);
-      
       // Processar profissionais
       const profissionaisArray = Array.isArray(profissionaisResponse) 
         ? profissionaisResponse 
         : (profissionaisResponse?.data?.profissionais || profissionaisResponse?.profissionais || []);
-      
       const profissionaisAtivos = profissionaisArray.filter(p => p.status === 'ativo');
-      
       setProfissionais(profissionaisAtivos);
     } catch (error) {
       console.error('❌ Erro ao carregar dados:', error);
@@ -49,7 +41,13 @@ function GerenciarAcessos() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showError]);
+
+  useEffect(() => {
+    carregarDados();
+  }, [carregarDados]);
+
+  // Função carregarDados já está declarada acima com useCallback
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -69,7 +67,7 @@ function GerenciarAcessos() {
       await authService.alterarStatusUsuario(id, !ativoAtual);
       showSuccess(`Usuário ${!ativoAtual ? 'ativado' : 'desativado'} com sucesso!`);
       carregarDados();
-    } catch (error) {
+    } catch {
       showError('Erro ao alterar status');
     }
   };

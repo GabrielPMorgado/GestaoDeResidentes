@@ -339,10 +339,10 @@ exports.obterResumoFinanceiro = async (req, res) => {
 
     const mensalidadesPagas = await PagamentoMensalidade.findAll({
       where: { ...where, status: 'pago' },
-      attributes: ['valor']
+      attributes: ['valor_mensalidade']
     })
     
-    const receitaTotal = mensalidadesPagas.reduce((sum, m) => sum + parseFloat(m.valor), 0)
+    const receitaTotal = mensalidadesPagas.reduce((sum, m) => sum + parseFloat(m.valor_mensalidade), 0)
 
     const salariosPagos = await PagamentoSalario.findAll({
       where: { ...where, status: 'pago' },

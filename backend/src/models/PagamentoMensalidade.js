@@ -17,7 +17,7 @@ const PagamentoMensalidade = sequelize.define('PagamentoMensalidade', {
     },
     onDelete: 'CASCADE'
   },
-  valor: {
+  valor_mensalidade: {
     type: DataTypes.DECIMAL(10, 2),
     allowNull: false
   },

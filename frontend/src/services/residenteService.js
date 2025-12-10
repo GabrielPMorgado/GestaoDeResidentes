@@ -6,6 +6,11 @@ const residenteService = {
     return response.data;
   },
 
+
+  listar: async () => {
+    const response = await api.get('/residentes', { params: { limit: 1000 } });
+    return response.data;
+  },
   listarAtivos: async () => {
     const response = await api.get('/residentes', { params: { status: 'ativo', limit: 1000 } });
     return response.data;
