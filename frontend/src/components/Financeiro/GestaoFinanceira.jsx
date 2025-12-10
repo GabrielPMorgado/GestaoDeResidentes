@@ -158,9 +158,17 @@ function GestaoFinanceira() {
   const handleAdicionarDespesa = async (e) => {
     e.preventDefault()
     try {
+      // Garante o formato YYYY-MM-DD
+      const dataDespesa = novaDespesa.data ? new Date(novaDespesa.data).toISOString().split('T')[0] : '';
+      console.log('Enviando despesa:', {
+        ...novaDespesa,
+        valor: parseFloat(novaDespesa.valor),
+        data_despesa: dataDespesa
+      });
       await financeiroService.criarDespesa({
         ...novaDespesa,
-        valor: parseFloat(novaDespesa.valor)
+        valor: parseFloat(novaDespesa.valor),
+        data_despesa: dataDespesa
       })
 
       setModalNovaDespesa(false)
@@ -939,13 +947,13 @@ function GestaoFinanceira() {
                   onChange={(e) => setNovaDespesa({ ...novaDespesa, categoria: e.target.value })}
                   required
                 >
-                  <option value="operacional">Operacional</option>
-                  <option value="utilidades">Utilidades</option>
-                  <option value="alimentacao">Alimentação</option>
-                  <option value="saude">Saúde/Medicamentos</option>
-                  <option value="manutencao">Manutenção</option>
-                  <option value="comunicacao">Comunicação</option>
-                  <option value="outros">Outros</option>
+                  <option value="Operacional">Operacional</option>
+                  <option value="Utilidades">Utilidades</option>
+                  <option value="Alimentação">Alimentação</option>
+                  <option value="Saúde">Saúde</option>
+                  <option value="Manutenção">Manutenção</option>
+                  <option value="Comunicação">Comunicação</option>
+                  <option value="Outros">Outros</option>
                 </select>
               </div>
 
