@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useAuth } from '../../contexts/AuthContext'
 import api from '../../api/axios'
@@ -8,7 +8,7 @@ function PacientesAgendados({ onIniciarAtendimento }) {
   const { user } = useAuth()
   const [agendamentos, setAgendamentos] = useState([])
   const [loading, setLoading] = useState(true)
-  const [mostrarBoasVindas, setMostrarBoasVindas] = useState(true)
+  // Removido mostrarBoasVindas pois não é utilizado
   const [modoProximos, setModoProximos] = useState(false)
   const [residenteSelecionado, setResidenteSelecionado] = useState(null)
   const [historicoConsultas, setHistoricoConsultas] = useState([])
@@ -26,30 +26,7 @@ function PacientesAgendados({ onIniciarAtendimento }) {
     status: ''
   })
 
-  // Notificação de boas-vindas (mostrar apenas uma vez por sessão)
-  useEffect(() => {
-    const jaExibiuBoasVindas = sessionStorage.getItem('boasVindasExibida')
-    if (!jaExibiuBoasVindas) {
-      const horaAtual = new Date().getHours()
-      let saudacao = 'Bom dia'
-      if (horaAtual >= 12 && horaAtual < 18) saudacao = 'Boa tarde'
-      else if (horaAtual >= 18) saudacao = 'Boa noite'
-      
-      setTimeout(() => {
-        showSuccess(`${saudacao}, ${user?.nome || 'Profissional'}! Seus pacientes agendados estão prontos para atendimento.`)
-        sessionStorage.setItem('boasVindasExibida', 'true')
-        setMostrarBoasVindas(false)
-      }, 500)
-    } else {
-      setMostrarBoasVindas(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    carregarAgendamentos()
-  }, [filtros])
-
-  const carregarAgendamentos = async () => {
+  const carregarAgendamentos = useCallback(async () => {
     setLoading(true)
     try {
       // Para profissionais, usar profissional_id; para admin, não filtrar
@@ -79,12 +56,33 @@ function PacientesAgendados({ onIniciarAtendimento }) {
         setAgendamentos(agendamentosData)
       }
     } catch (error) {
+      console.error(error)
       showError('Erro ao carregar agendamentos')
       setAgendamentos([])
     } finally {
       setLoading(false)
     }
-  }
+  }, [user, filtros, showError])
+
+  // Notificação de boas-vindas (mostrar apenas uma vez por sessão)
+  useEffect(() => {
+    const jaExibiuBoasVindas = sessionStorage.getItem('boasVindasExibida')
+    if (!jaExibiuBoasVindas) {
+      const horaAtual = new Date().getHours()
+      let saudacao = 'Bom dia'
+      if (horaAtual >= 12 && horaAtual < 18) saudacao = 'Boa tarde'
+      else if (horaAtual >= 18) saudacao = 'Boa noite'
+      
+      setTimeout(() => {
+        showSuccess(`${saudacao}, ${user?.nome || 'Profissional'}! Seus pacientes agendados estão prontos para atendimento.`)
+        sessionStorage.setItem('boasVindasExibida', 'true')
+      }, 500)
+    }
+  }, [showSuccess, user?.nome])
+
+  useEffect(() => {
+    carregarAgendamentos()
+  }, [filtros, carregarAgendamentos])
 
   const getStatusBadge = (status) => {
     const configs = {
@@ -107,10 +105,9 @@ function PacientesAgendados({ onIniciarAtendimento }) {
 
   const formatarHora = (hora) => hora?.substring(0, 5) || ''
 
-  const getAlertasResidente = (residente) => {
-    const alertas = []
+  const getAlertasResidente = () => {
     // Aqui você pode adicionar lógica para buscar alertas do banco
-    return alertas
+    return []
   }
 
   // Função para filtrar próximos atendimentos (próximas 2 horas)
@@ -758,7 +755,7 @@ function PacientesAgendados({ onIniciarAtendimento }) {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {consultasFiltradas.map((consulta, index) => (
+                    {consultasFiltradas.map((consulta) => (
                       <div key={consulta.id} className="bg-slate-900/50 rounded-xl border border-slate-700 p-5 hover:border-slate-600 transition-colors">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-3">

@@ -1,4 +1,5 @@
 # 🏥 Sistema de Gerenciamento Residencial
+# DESENVOLVIDO POR: Gabriel Pinto Morgado - RA 10482429109.
 
 > Sistema completo para gerenciamento de instituições residenciais de longa permanência (ILPI), incluindo gestão de residentes, profissionais, agendamentos médicos, histórico clínico e controle financeiro.
 

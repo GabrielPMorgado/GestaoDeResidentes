@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useAuth } from '../../contexts/AuthContext'
 import api from '../../api/axios'
@@ -14,7 +14,7 @@ function RegistroClinico({ agendamento, onVoltar, onFinalizar }) {
   const [dadosAtendimento, setDadosAtendimento] = useState({
     agendamento_id: agendamento?.id,
     residente_id: residente?.id,
-    profissional_id: user?.id,
+    profissional_id: user?.profissional_id,
     data_atendimento: new Date().toISOString().split('T')[0],
     hora_atendimento: new Date().toTimeString().split(' ')[0].substring(0, 5),
     
@@ -47,20 +47,20 @@ function RegistroClinico({ agendamento, onVoltar, onFinalizar }) {
     arquivo: null
   })
 
-  useEffect(() => {
-    // Atualizar status do agendamento para "em_atendimento"
-    if (agendamento && agendamento.status !== 'em_atendimento') {
-      atualizarStatusAgendamento('em_atendimento')
-    }
-  }, [])
-
-  const atualizarStatusAgendamento = async (status) => {
+  const atualizarStatusAgendamento = useCallback(async (status) => {
     try {
       await api.put(`/agendamentos/${agendamento.id}`, { status })
     } catch (error) {
       console.error('Erro ao atualizar status:', error)
     }
-  }
+  }, [agendamento])
+
+  useEffect(() => {
+    // Atualizar status do agendamento para "em_atendimento"
+    if (agendamento && agendamento.status !== 'em_atendimento') {
+      atualizarStatusAgendamento('em_atendimento')
+    }
+  }, [agendamento, atualizarStatusAgendamento])
 
   const adicionarProcedimento = () => {
     if (!novoProcedimento.nome) {
@@ -94,6 +94,7 @@ function RegistroClinico({ agendamento, onVoltar, onFinalizar }) {
       })
       success('Rascunho salvo com sucesso!')
     } catch (error) {
+      console.error(error)
       showError('Erro ao salvar rascunho')
     } finally {
       setSalvando(false)
@@ -134,6 +135,7 @@ function RegistroClinico({ agendamento, onVoltar, onFinalizar }) {
       success('Atendimento registrado com sucesso!')
       onFinalizar()
     } catch (error) {
+      console.error(error)
       showError('Erro ao salvar atendimento')
     } finally {
       setSalvando(false)
