@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
+import { useApp } from '../../contexts/AppContext'
 
 function Header({ toggleSidebar, currentPage }) {
   const { user, logout } = useAuth()
+  const { actions } = useApp()
   const [showUserMenu, setShowUserMenu] = useState(false)
   // ...existing code...
 
@@ -167,6 +169,25 @@ function Header({ toggleSidebar, currentPage }) {
                         </p>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Menu Options */}
+                  <div className="p-2 border-b border-slate-800/80">
+                    <button 
+                      onClick={() => {
+                        setShowUserMenu(false)
+                        actions.setCurrentPage('trocar-senha')
+                      }}
+                      className="w-full px-3 py-2.5 text-left text-sm text-slate-300 hover:bg-slate-800/50 hover:text-amber-400 transition-all duration-200 rounded-lg flex items-center justify-between font-semibold group border border-transparent hover:border-amber-500/30"
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center group-hover:bg-amber-500/20 transition-all border border-amber-500/20 group-hover:border-amber-500/40">
+                          <i className="bi bi-key text-base group-hover:scale-110 transition-transform"></i>
+                        </div>
+                        <span className="text-sm">Trocar Senha</span>
+                      </span>
+                      <i className="bi bi-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
+                    </button>
                   </div>
 
                   {/* Logout */}

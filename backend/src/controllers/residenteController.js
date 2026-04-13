@@ -75,8 +75,7 @@ exports.listar = async (req, res) => {
     log('error', 'Erro ao listar residentes', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao listar residentes',
-      error: error.message
+      message: 'Erro ao listar residentes'
     });
   }
 };
@@ -102,8 +101,7 @@ exports.buscarPorId = async (req, res) => {
     log('error', 'Erro ao buscar residente', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao buscar residente',
-      error: error.message
+      message: 'Erro ao buscar residente'
     });
   }
 };
@@ -129,8 +127,7 @@ exports.buscarPorCpf = async (req, res) => {
     log('error', 'Erro ao buscar residente por CPF', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao buscar residente',
-      error: error.message
+      message: 'Erro ao buscar residente'
     });
   }
 };
@@ -213,8 +210,7 @@ exports.deletar = async (req, res) => {
     log('error', 'Erro ao inativar residente', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao inativar residente',
-      error: error.message
+      message: 'Erro ao inativar residente'
     });
   }
 };
@@ -252,8 +248,7 @@ exports.reativar = async (req, res) => {
     log('error', 'Erro ao reativar residente', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao reativar residente',
-      error: error.message
+      message: 'Erro ao reativar residente'
     });
   }
 };
@@ -285,8 +280,7 @@ exports.deletarPermanente = async (req, res) => {
     log('error', 'Erro ao deletar residente permanentemente', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao deletar residente permanentemente',
-      error: error.message
+      message: 'Erro ao deletar residente permanentemente'
     });
   }
 };
@@ -314,8 +308,7 @@ exports.estatisticas = async (req, res) => {
     log('error', 'Erro ao buscar estatísticas', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao buscar estatísticas',
-      error: error.message
+      message: 'Erro ao buscar estatísticas'
     });
   }
 };

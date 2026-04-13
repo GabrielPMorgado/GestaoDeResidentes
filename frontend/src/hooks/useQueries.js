@@ -321,7 +321,7 @@ export const useRegistrarDespesa = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: financeiroService.registrarDespesa,
+    mutationFn: financeiroService.criarDespesa,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['despesas'] })
     }
@@ -332,7 +332,7 @@ export const useRegistrarMensalidade = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: financeiroService.registrarMensalidade,
+    mutationFn: financeiroService.criarMensalidade,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['mensalidades'] })
     }
@@ -343,7 +343,7 @@ export const useRegistrarSalario = () => {
   const queryClient = useQueryClient()
   
   return useMutation({
-    mutationFn: financeiroService.registrarSalario,
+    mutationFn: financeiroService.criarSalario,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['salarios'] })
     }
@@ -383,7 +383,7 @@ export const useEstatisticas = () => {
         totalResidentes: listaResidentes.length,
         totalProfissionais: listaProfissionais.length,
         totalAgendamentos: listaAgendamentos.length,
-        agendamentosHoje: listaAgendamentos.filter(ag => ag.data === hoje).length
+        agendamentosHoje: listaAgendamentos.filter(ag => ag.data_agendamento === hoje).length
       }
     },
     staleTime: 2 * 60 * 1000, // 2 minutos para estatísticas

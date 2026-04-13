@@ -49,7 +49,7 @@ function Dashboard() {
     
     const hoje = new Date().toISOString().split('T')[0]
     const agendamentosHoje = agendamentos.filter(ag => 
-      ag.data_agendamento?.startsWith(hoje) || ag.data_consulta?.startsWith(hoje)
+      ag.data_agendamento?.startsWith(hoje)
     ).length
     
     const concluidos = agendamentos.filter(ag => ag.status === 'concluido').length
@@ -88,7 +88,10 @@ function Dashboard() {
     const generoCount = {
       masculino: residentes.filter(r => r.sexo?.toLowerCase() === 'masculino').length,
       feminino: residentes.filter(r => r.sexo?.toLowerCase() === 'feminino').length,
-      outro: residentes.filter(r => !['masculino', 'feminino'].includes(r.sexo?.toLowerCase())).length
+      outro: residentes.filter(r => {
+        const sexo = r.sexo?.toLowerCase()
+        return sexo && !['masculino', 'feminino'].includes(sexo)
+      }).length
     }
 
     const generoData = {
@@ -135,7 +138,7 @@ function Dashboard() {
     }
 
     agendamentos.forEach(ag => {
-      const dataConsulta = (ag.data_agendamento || ag.data_consulta || '').split('T')[0]
+      const dataConsulta = (ag.data_agendamento || '').split('T')[0]
       if (agendamentosPorDia.hasOwnProperty(dataConsulta)) {
         agendamentosPorDia[dataConsulta]++
       }
@@ -157,7 +160,7 @@ function Dashboard() {
       meses.push(data.toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' }))
       
       const count = agendamentos.filter(ag => 
-        (ag.data_agendamento || ag.data_consulta || '').startsWith(mesAno)
+        (ag.data_agendamento || '').startsWith(mesAno)
       ).length
       
       agendamentosPorMesCount.push(count)

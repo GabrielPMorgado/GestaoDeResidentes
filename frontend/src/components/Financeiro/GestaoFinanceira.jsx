@@ -38,8 +38,8 @@ function GestaoFinanceira() {
   const [resumoFinanceiro, setResumoFinanceiro] = useState({
     receitaTotal: 0,
     despesaTotal: 0,
-    saldoAtual: 0,
-    lucroLiquido: 0
+    saldo: 0,
+    margemLucro: 0
   })
 
   const [mensalidades, setMensalidades] = useState([])
@@ -55,7 +55,7 @@ function GestaoFinanceira() {
   // Form states
   const [novaDespesa, setNovaDespesa] = useState({
     descricao: '',
-    categoria: 'operacional',
+    categoria: 'Operacional',
     valor: '',
     data: new Date().toISOString().split('T')[0],
     status: 'pendente',
@@ -98,12 +98,12 @@ function GestaoFinanceira() {
         id: m.id,
         residenteId: m.residente_id,
         residenteNome: m.residente?.nome_completo || 'N/A',
-        valor: parseFloat(m.valor),
+        valor: parseFloat(m.valor_mensalidade),
         dataVencimento: m.data_vencimento,
         status: m.status || 'pendente',
         tipo: 'receita',
         categoria: 'Mensalidade',
-        descricao: `Mensalidade - ${m.residente?.nome_completo}`
+        descricao: `Mensalidade - ${m.residente?.nome_completo || 'N/A'}`
       }))
 
       const salariosData = salariosRes.map(s => ({
@@ -115,7 +115,7 @@ function GestaoFinanceira() {
         status: s.status || 'pendente',
         tipo: 'despesa',
         categoria: 'Salário',
-        descricao: `Salário - ${s.profissional?.nome_completo}`
+        descricao: `Salário - ${s.profissional?.nome_completo || 'N/A'}`
       }))
 
       const despesasData = despesasRes.map(d => ({
@@ -123,7 +123,7 @@ function GestaoFinanceira() {
         descricao: d.descricao,
         categoria: d.categoria,
         valor: parseFloat(d.valor),
-        dataVencimento: d.data,
+        dataVencimento: d.data_despesa,
         status: d.status || 'pendente',
         tipo: 'despesa'
       }))
@@ -158,23 +158,20 @@ function GestaoFinanceira() {
   const handleAdicionarDespesa = async (e) => {
     e.preventDefault()
     try {
-      // Garante o formato YYYY-MM-DD
       const dataDespesa = novaDespesa.data ? new Date(novaDespesa.data).toISOString().split('T')[0] : '';
-      console.log('Enviando despesa:', {
-        ...novaDespesa,
-        valor: parseFloat(novaDespesa.valor),
-        data_despesa: dataDespesa
-      });
       await financeiroService.criarDespesa({
-        ...novaDespesa,
+        descricao: novaDespesa.descricao,
+        categoria: novaDespesa.categoria,
         valor: parseFloat(novaDespesa.valor),
-        data_despesa: dataDespesa
+        data_despesa: dataDespesa,
+        status: novaDespesa.status,
+        observacoes: novaDespesa.observacoes
       })
 
       setModalNovaDespesa(false)
       setNovaDespesa({
         descricao: '',
-        categoria: 'operacional',
+        categoria: 'Operacional',
         valor: '',
         data: new Date().toISOString().split('T')[0],
         status: 'pendente',
@@ -324,9 +321,10 @@ function GestaoFinanceira() {
                 value={filtros.ano}
                 onChange={(e) => setFiltros({ ...filtros, ano: parseInt(e.target.value) })}
               >
-                <option value={2023}>2023</option>
-                <option value={2024}>2024</option>
-                <option value={2025}>2025</option>
+                {Array.from({ length: 5 }, (_, i) => {
+                  const year = new Date().getFullYear() - 3 + i
+                  return <option key={year} value={year}>{year}</option>
+                })}
               </select>
               <button 
                 className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-medium transition-all duration-200 flex items-center gap-2 text-sm"
@@ -371,18 +369,18 @@ function GestaoFinanceira() {
             </div>
 
             {/* Saldo do Mês */}
-            <div className={`bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 hover:border-${resumoFinanceiro.saldoAtual >= 0 ? 'blue' : 'orange'}-500/50 transition-all duration-300`}>
+            <div className={`bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 ${resumoFinanceiro.saldo >= 0 ? 'hover:border-blue-500/50' : 'hover:border-orange-500/50'} transition-all duration-300`}>
               <div className="flex items-start justify-between mb-4">
-                <div className={`w-12 h-12 rounded-xl bg-${resumoFinanceiro.saldoAtual >= 0 ? 'blue' : 'orange'}-500/10 flex items-center justify-center`}>
-                  <i className={`bi bi-wallet2 text-2xl text-${resumoFinanceiro.saldoAtual >= 0 ? 'blue' : 'orange'}-400`}></i>
+                <div className={`w-12 h-12 rounded-xl ${resumoFinanceiro.saldo >= 0 ? 'bg-blue-500/10' : 'bg-orange-500/10'} flex items-center justify-center`}>
+                  <i className={`bi bi-wallet2 text-2xl ${resumoFinanceiro.saldo >= 0 ? 'text-blue-400' : 'text-orange-400'}`}></i>
                 </div>
-                <span className={`text-xs px-2 py-1 bg-${resumoFinanceiro.saldoAtual >= 0 ? 'blue' : 'orange'}-500/10 text-${resumoFinanceiro.saldoAtual >= 0 ? 'blue' : 'orange'}-400 rounded-lg`}>
-                  {resumoFinanceiro.saldoAtual >= 0 ? 'Superávit' : 'Déficit'}
+                <span className={`text-xs px-2 py-1 ${resumoFinanceiro.saldo >= 0 ? 'bg-blue-500/10 text-blue-400' : 'bg-orange-500/10 text-orange-400'} rounded-lg`}>
+                  {resumoFinanceiro.saldo >= 0 ? 'Superávit' : 'Déficit'}
                 </span>
               </div>
               <p className="text-sm text-slate-400 mb-1">Saldo do Mês</p>
-              <h3 className={`text-2xl sm:text-3xl font-bold mb-2 ${resumoFinanceiro.saldoAtual >= 0 ? 'text-blue-400' : 'text-orange-400'}`}>
-                {formatarMoeda(resumoFinanceiro.saldoAtual)}
+              <h3 className={`text-2xl sm:text-3xl font-bold mb-2 ${resumoFinanceiro.saldo >= 0 ? 'text-blue-400' : 'text-orange-400'}`}>
+                {formatarMoeda(resumoFinanceiro.saldo)}
               </h3>
               <p className="text-xs text-slate-500">Balanço do período</p>
             </div>
@@ -398,7 +396,7 @@ function GestaoFinanceira() {
                 </span>
               </div>
               <p className="text-sm text-slate-400 mb-1">Margem de Lucro</p>
-              <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">{resumoFinanceiro.lucroLiquido}%</h3>
+              <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">{resumoFinanceiro.margemLucro}%</h3>
               <p className="text-xs text-slate-500">Lucro líquido do período</p>
             </div>
           </div>

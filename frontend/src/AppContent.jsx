@@ -4,6 +4,8 @@ import { useApp } from './contexts/AppContext'
 import { useNotification } from './contexts/NotificationContext'
 import { useEstatisticas } from './hooks'
 import Login from './components/Login/Login'
+import RedefinirSenha from './components/Login/RedefinirSenha'
+import TrocarSenha from './components/Perfil/TrocarSenha'
 import Header from './components/Header/Header'
 import Sidebar from './components/Sidebar/Sidebar'
 import CadastroResidentes from './components/Cadastros/CadastroResidentes'
@@ -31,7 +33,10 @@ function AppContent() {
   // Sidebar sempre aberto no desktop, fechado no mobile
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 1024)
 
-  // Hook de estatísticas com cache automático
+  // Rota para redefinição de senha (acesso público)
+  const isResetPasswordRoute = window.location.pathname === '/redefinir-senha';
+
+  // Hook de estatísticas com cache automático (só carregar se não for rota pública)
   const { data: estatisticas, isLoading: loadingStats } = useEstatisticas()
 
   useEffect(() => {
@@ -76,12 +81,20 @@ function AppContent() {
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
+  // Rota pública de redefinição de senha
+  if (isResetPasswordRoute) {
+    return <RedefinirSenha />;
+  }
+
   // Se não estiver autenticado, mostrar tela de login
   if (!isAuthenticated()) {
     return <Login />
   }
 
   const renderPage = () => {
+    // Trocar senha acessível para todos os tipos de usuário
+    if (state.currentPage === 'trocar-senha') return <TrocarSenha />
+
     // Rotas para recepcionistas
     if (!isAdmin() && user?.tipo === 'recepcionista') {
       switch(state.currentPage) {

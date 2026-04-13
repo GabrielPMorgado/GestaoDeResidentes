@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { criarAgendamento, listarResidentes, listarProfissionais } from '../../api/axios'
+import { listarResidentes, listarProfissionais } from '../../api/axios'
 import { useNotification } from '../../contexts/NotificationContext'
 import { LoadingSpinner } from '../Common'
 import { useCriarAgendamento } from '../../hooks'
@@ -127,21 +127,17 @@ function CadastroAgendamento() {
       hora_fim: horaFimRef.current?.value || formData.hora_fim
     }
     
-    console.log('📋 Dados para enviar:', dataToSubmit)
-    
     const fields = ['residente_id', 'profissional_id', 'data_agendamento', 'hora_inicio', 'hora_fim', 'tipo_atendimento', 'titulo']
     const newErrors = {}
     
     fields.forEach(field => {
       const error = validateField(field, dataToSubmit[field])
       if (error) {
-        console.log(`❌ Erro no campo ${field}:`, error)
         newErrors[field] = error
       }
     })
     
     if (Object.keys(newErrors).length > 0) {
-      console.log('❌ Erros encontrados:', newErrors)
       setErrors(newErrors)
       fields.forEach(field => setTouched(prev => ({ ...prev, [field]: true })))
       showError('Por favor, corrija os erros no formulário')
@@ -151,9 +147,7 @@ function CadastroAgendamento() {
     setLoading(true)
 
     try {
-      console.log('🚀 Enviando agendamento...')
       const response = await criarAgendamentoMutation.mutateAsync(dataToSubmit)
-      console.log('✅ Resposta:', response)
       success('Agendamento criado com sucesso! A lista será atualizada automaticamente.')
       handleReset()
     } catch (err) {

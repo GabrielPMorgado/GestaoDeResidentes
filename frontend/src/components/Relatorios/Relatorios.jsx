@@ -88,9 +88,9 @@ function Relatorios() {
       const residentesInativos = residentes.filter(r => r.status !== 'ativo')
 
       const porGenero = {
-        masculino: residentes.filter(r => r.genero?.toLowerCase() === 'masculino').length,
-        feminino: residentes.filter(r => r.genero?.toLowerCase() === 'feminino').length,
-        outro: residentes.filter(r => !['masculino', 'feminino'].includes(r.genero?.toLowerCase())).length
+        masculino: residentes.filter(r => r.sexo?.toLowerCase() === 'masculino').length,
+        feminino: residentes.filter(r => r.sexo?.toLowerCase() === 'feminino').length,
+        outro: residentes.filter(r => !['masculino', 'feminino'].includes(r.sexo?.toLowerCase())).length
       }
 
       const porFaixaEtaria = calcularFaixaEtaria(residentes)
@@ -226,8 +226,8 @@ function Relatorios() {
         })),
         profissionais: profissionaisAtivos
       })
-    } catch (error) {
-
+    } catch {
+      showError('Erro ao carregar relatório de despesas')
     } finally {
       setLoadingDespesas(false)
     }
@@ -270,8 +270,8 @@ function Relatorios() {
         totais,
         folha: folhaData
       })
-    } catch (error) {
-
+    } catch {
+      showError('Erro ao carregar folha de pagamento')
     } finally {
       setLoadingFolha(false)
     }

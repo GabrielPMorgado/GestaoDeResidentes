@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { criarResidente } from '../../api/axios'
 import { formatarCPF, formatarTelefone, formatarCEP } from '../../utils/formatters'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useCriarResidente } from '../../hooks'

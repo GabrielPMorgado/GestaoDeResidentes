@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require('../config/db')
-const Residente = require('./Residente')
 
 const PagamentoMensalidade = sequelize.define('PagamentoMensalidade', {
   id: {
@@ -66,11 +65,6 @@ const PagamentoMensalidade = sequelize.define('PagamentoMensalidade', {
       name: 'unique_mensalidade'
     }
   ]
-})
-
-PagamentoMensalidade.belongsTo(Residente, {
-  foreignKey: 'residente_id',
-  as: 'residente'
 })
 
 module.exports = PagamentoMensalidade

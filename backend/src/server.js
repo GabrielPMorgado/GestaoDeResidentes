@@ -105,7 +105,7 @@ const iniciarServidor = async () => {
   try {
     // Sincronizar tabelas sem apagar dados existentes
     console.log('🔄 Sincronizando banco de dados...');
-    await sequelize.sync({ alter: false });
+    await sequelize.sync({ alter: true });
     console.log('✅ Banco de dados sincronizado com sucesso!');
     console.log('📋 Tabelas: residentes, profissionais, agendamentos, historico_consultas');
     console.log('💰 Tabelas financeiras: despesas_gerais, pagamentos_mensalidades, pagamentos_salarios');

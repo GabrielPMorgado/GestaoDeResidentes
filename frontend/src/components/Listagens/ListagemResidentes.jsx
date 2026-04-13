@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from 'react'
-import api, { atualizarResidente } from '../../api/axios'
+import { useState, useMemo } from 'react'
+import api from '../../api/axios'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useResidentesAtivos, useEstatisticas, useInativarResidente, useAtualizarResidente } from '../../hooks'
 
@@ -233,18 +233,6 @@ function ListagemResidentes({ onVerHistorico }) {
               <i className="bi bi-people-fill text-2xl sm:text-3xl text-amber-400"></i>
             </div>
             <div>
-                              {residenteSelecionado && (
-                                <div>
-                                  <label className="block text-sm font-medium text-slate-300 mb-2">Valor da Mensalidade</label>
-                                  <input
-                                    type="text"
-                                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
-                                    value={residenteSelecionado.valor_mensalidade || ''}
-                                    onChange={e => setResidenteSelecionado({ ...residenteSelecionado, valor_mensalidade: e.target.value })}
-                                    placeholder="0,00"
-                                  />
-                                </div>
-                              )}
               <h1 className="text-2xl sm:text-3xl font-bold text-white">Listagem de Residentes</h1>
               <p className="text-sm text-slate-400">Gerenciamento completo dos residentes cadastrados</p>
             </div>
@@ -1005,6 +993,17 @@ function ListagemResidentes({ onVerHistorico }) {
                     className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                     value={residenteSelecionado.data_entrada?.split('T')[0] || ''}
                     onChange={(e) => setResidenteSelecionado({...residenteSelecionado, data_entrada: e.target.value})}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Valor da Mensalidade</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    value={residenteSelecionado.valor_mensalidade || ''}
+                    onChange={(e) => setResidenteSelecionado({...residenteSelecionado, valor_mensalidade: e.target.value})}
+                    placeholder="0,00"
                   />
                 </div>
 

@@ -79,8 +79,7 @@ exports.criar = async (req, res) => {
     
     res.status(500).json({
       success: false,
-      message: 'Erro ao cadastrar profissional',
-      error: error.message
+      message: 'Erro ao cadastrar profissional'
     });
   }
 };
@@ -115,12 +114,8 @@ exports.listar = async (req, res) => {
       ];
     }
     
-    console.log('🔍 Where clause:', JSON.stringify(where, null, 2));
-    
     // Paginação
     const offset = (page - 1) * limit;
-    
-    console.log('🔢 Paginação: offset=', offset, 'limit=', parseInt(limit));
     
     const { count, rows } = await Profissional.findAndCountAll({
       where,
@@ -129,9 +124,6 @@ exports.listar = async (req, res) => {
       order: [['id', 'ASC']],
       attributes: { exclude: ['senha'] }
     });
-    
-    console.log('✅ Profissionais encontrados:', count);
-    console.log('📄 Primeiros IDs:', rows.slice(0, 3).map(r => r.id));
     
     res.json({
       success: true,
@@ -147,12 +139,9 @@ exports.listar = async (req, res) => {
     });
   } catch (error) {
     console.error('❌ Erro ao listar profissionais:', error);
-    console.error('Stack:', error.stack);
     res.status(500).json({
       success: false,
-      message: 'Erro ao listar profissionais',
-      error: error.message,
-      details: error.stack
+      message: 'Erro ao listar profissionais'
     });
   }
 };
@@ -178,8 +167,7 @@ exports.buscarPorId = async (req, res) => {
     console.error('Erro ao buscar profissional:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao buscar profissional',
-      error: error.message
+      message: 'Erro ao buscar profissional'
     });
   }
 };
@@ -205,8 +193,7 @@ exports.buscarPorCpf = async (req, res) => {
     console.error('Erro ao buscar profissional:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao buscar profissional',
-      error: error.message
+      message: 'Erro ao buscar profissional'
     });
   }
 };
@@ -306,8 +293,7 @@ exports.atualizar = async (req, res) => {
     
     res.status(500).json({
       success: false,
-      message: 'Erro ao atualizar profissional',
-      error: error.message
+      message: 'Erro ao atualizar profissional'
     });
   }
 };
@@ -335,8 +321,7 @@ exports.deletar = async (req, res) => {
     console.error('Erro ao deletar profissional:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao inativar profissional',
-      error: error.message
+      message: 'Erro ao inativar profissional'
     });
   }
 };
@@ -372,8 +357,7 @@ exports.reativar = async (req, res) => {
     console.error('Erro ao reativar profissional:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao reativar profissional',
-      error: error.message
+      message: 'Erro ao reativar profissional'
     });
   }
 };
@@ -382,11 +366,8 @@ exports.reativar = async (req, res) => {
 exports.deletarPermanente = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log('=== DELETAR PROFISSIONAL PERMANENTE ===');
-    console.log('ID recebido:', id);
     
     const profissional = await Profissional.findByPk(id);
-    console.log('Profissional encontrado:', profissional ? 'SIM' : 'NÃO');
     
     if (!profissional) {
       return res.status(404).json({
@@ -396,38 +377,30 @@ exports.deletarPermanente = async (req, res) => {
     }
     
     // Primeiro, deletar todos os históricos de consulta relacionados
-    console.log('Deletando históricos de consulta do profissional...');
-    const historicoDeletados = await HistoricoConsulta.destroy({
+    await HistoricoConsulta.destroy({
       where: { profissional_id: id }
     });
-    console.log('Históricos deletados:', historicoDeletados);
     
     // Depois, deletar todos os agendamentos relacionados
-    console.log('Deletando agendamentos do profissional...');
-    const agendamentosDeletados = await Agendamento.destroy({
+    await Agendamento.destroy({
       where: { profissional_id: id }
     });
-    console.log('Agendamentos deletados:', agendamentosDeletados);
     
     // Por fim, deletar o profissional permanentemente do banco de dados
-    console.log('Deletando profissional...');
     await profissional.destroy();
-    console.log('Profissional deletado com sucesso!');
     
     res.json({
       success: true,
       message: 'Profissional e todos os registros relacionados foram deletados permanentemente do sistema!'
     });
   } catch (error) {
-    console.error('ERRO COMPLETO ao deletar profissional permanentemente:', error);
-    console.error('Stack trace:', error.stack);
+    console.error('Erro ao deletar profissional permanentemente:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao deletar profissional permanentemente',
-      error: error.message
+      message: 'Erro ao deletar profissional permanentemente'
     });
   }
-};;
+};
 
 // Estatísticas
 exports.estatisticas = async (req, res) => {
@@ -477,8 +450,7 @@ exports.estatisticas = async (req, res) => {
     console.error('Erro ao buscar estatísticas:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao buscar estatísticas',
-      error: error.message
+      message: 'Erro ao buscar estatísticas'
     });
   }
 };
@@ -600,8 +572,7 @@ exports.relatorioDespesas = async (req, res) => {
     console.error('Erro ao gerar relatório de despesas:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao gerar relatório de despesas',
-      error: error.message
+      message: 'Erro ao gerar relatório de despesas'
     });
   }
 };
@@ -667,8 +638,7 @@ exports.folhaPagamento = async (req, res) => {
     console.error('Erro ao gerar folha de pagamento:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao gerar folha de pagamento',
-      error: error.message
+      message: 'Erro ao gerar folha de pagamento'
     });
   }
 };

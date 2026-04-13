@@ -66,5 +66,45 @@ export const authService = {
   async alterarStatusUsuario(id, ativo) {
     const response = await axios.patch(`/auth/usuarios/${id}/status`, { ativo });
     return response.data;
+  },
+
+  // Atualizar usuário (email, tipo, nivel_acesso)
+  async atualizarUsuario(id, dados) {
+    const response = await axios.put(`/auth/usuarios/${id}`, dados);
+    return response.data;
+  },
+
+  // Redefinir senha de um usuário (admin)
+  async redefinirSenhaUsuario(id, novaSenha) {
+    const response = await axios.post(`/auth/usuarios/${id}/redefinir-senha`, { novaSenha });
+    return response.data;
+  },
+
+  // Excluir usuário
+  async excluirUsuario(id) {
+    const response = await axios.delete(`/auth/usuarios/${id}`);
+    return response.data;
+  },
+
+  // Recuperar senha
+  async recuperarSenha(email) {
+    const response = await axios.post('/auth/recuperar-senha', { email });
+    return response.data;
+  },
+
+  // Redefinir senha
+  async redefinirSenha(token, novaSenha) {
+    const response = await axios.post('/auth/redefinir-senha', { token, novaSenha });
+    return response.data;
+  },
+
+  // Trocar senha (usuário logado)
+  async trocarSenha(senhaAtual, novaSenha, confirmarSenha) {
+    const response = await axios.post('/auth/trocar-senha', { 
+      senhaAtual, 
+      novaSenha, 
+      confirmarSenha 
+    });
+    return response.data;
   }
 };

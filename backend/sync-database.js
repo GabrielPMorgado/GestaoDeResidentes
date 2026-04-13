@@ -1,41 +1,54 @@
 /**
  * Script para sincronizar todos os modelos com o banco de dados
  * Cria automaticamente todas as tabelas necessárias
+ * 
+ * USO: node sync-database.js         (sincroniza sem perder dados)
+ *      node sync-database.js --force  (APAGA tudo e recria - CUIDADO!)
  */
 
 const sequelize = require('./src/config/db');
 
-// Importar todos os modelos
-const Residente = require('./src/models/Residente');
-const Profissional = require('./src/models/Profissional');
-const Agendamento = require('./src/models/Agendamento');
-const HistoricoConsulta = require('./src/models/HistoricoConsulta');
-const DespesaGeral = require('./src/models/DespesaGeral');
-const PagamentoMensalidade = require('./src/models/PagamentoMensalidade');
-const PagamentoSalario = require('./src/models/PagamentoSalario');
+// Importar modelos COM os relacionamentos configurados
+const {
+  Residente,
+  Profissional,
+  Usuario,
+  Agendamento,
+  HistoricoConsulta,
+  DespesaGeral,
+  PagamentoMensalidade,
+  PagamentoSalario
+} = require('./src/models');
 
 async function syncDatabase() {
   try {
+    const forceMode = process.argv.includes('--force');
+    
     console.log('🔄 Iniciando sincronização do banco de dados...\n');
+    
+    if (forceMode) {
+      console.log('⚠️  MODO FORCE ATIVADO - Todas as tabelas serão recriadas!\n');
+    }
 
     // Testar conexão
     await sequelize.authenticate();
     console.log('✅ Conexão com MySQL estabelecida com sucesso!\n');
 
-    // Sincronizar modelos (force: true recria as tabelas)
+    // Sincronizar modelos
     console.log('📊 Sincronizando modelos...\n');
     
-    await sequelize.sync({ force: true, alter: false });
+    await sequelize.sync({ force: forceMode, alter: !forceMode });
     
     console.log('✅ Todos os modelos foram sincronizados com sucesso!\n');
-    console.log('📋 Tabelas criadas:');
+    console.log('📋 Tabelas sincronizadas:');
     console.log('   1. residentes');
     console.log('   2. profissionais');
-    console.log('   3. agendamentos');
-    console.log('   4. historico_consultas');
-    console.log('   5. despesas_gerais');
-    console.log('   6. pagamentos_mensalidades');
-    console.log('   7. pagamentos_salarios');
+    console.log('   3. usuarios');
+    console.log('   4. agendamentos');
+    console.log('   5. historico_consultas');
+    console.log('   6. despesas_gerais');
+    console.log('   7. pagamentos_mensalidades');
+    console.log('   8. pagamentos_salarios');
     console.log('\n✅ Banco de dados pronto para uso!\n');
 
   } catch (error) {

@@ -62,8 +62,7 @@ exports.listarHistoricoResidente = async (req, res) => {
     console.error('Erro ao listar histórico:', error)
     res.status(500).json({
       success: false,
-      message: 'Erro ao listar histórico de consultas',
-      error: error.message
+      message: 'Erro ao listar histórico de consultas'
     })
   }
 }
@@ -140,8 +139,7 @@ exports.criarHistoricoConsulta = async (req, res) => {
     console.error('Erro ao criar histórico de consulta:', error)
     res.status(500).json({
       success: false,
-      message: 'Erro ao registrar consulta no histórico',
-      error: error.message
+      message: 'Erro ao registrar consulta no histórico'
     })
   }
 }
@@ -181,8 +179,7 @@ exports.obterHistoricoConsulta = async (req, res) => {
     console.error('Erro ao obter histórico de consulta:', error)
     res.status(500).json({
       success: false,
-      message: 'Erro ao obter detalhes da consulta',
-      error: error.message
+      message: 'Erro ao obter detalhes da consulta'
     })
   }
 }
@@ -237,8 +234,7 @@ exports.atualizarHistoricoConsulta = async (req, res) => {
     console.error('Erro ao atualizar histórico de consulta:', error)
     res.status(500).json({
       success: false,
-      message: 'Erro ao atualizar consulta',
-      error: error.message
+      message: 'Erro ao atualizar consulta'
     })
   }
 }
@@ -267,8 +263,7 @@ exports.deletarHistoricoConsulta = async (req, res) => {
     console.error('Erro ao deletar histórico de consulta:', error)
     res.status(500).json({
       success: false,
-      message: 'Erro ao remover consulta do histórico',
-      error: error.message
+      message: 'Erro ao remover consulta do histórico'
     })
   }
 }
@@ -332,8 +327,7 @@ exports.listarHistoricoProfissional = async (req, res) => {
     console.error('Erro ao listar histórico do profissional:', error)
     res.status(500).json({
       success: false,
-      message: 'Erro ao listar histórico de consultas do profissional',
-      error: error.message
+      message: 'Erro ao listar histórico de consultas do profissional'
     })
   }
 }

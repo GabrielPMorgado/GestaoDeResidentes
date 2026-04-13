@@ -1,6 +1,5 @@
 const { DataTypes } = require('sequelize')
 const sequelize = require('../config/db')
-const Profissional = require('./Profissional')
 
 const PagamentoSalario = sequelize.define('PagamentoSalario', {
   id: {
@@ -76,11 +75,6 @@ const PagamentoSalario = sequelize.define('PagamentoSalario', {
       name: 'unique_salario'
     }
   ]
-})
-
-PagamentoSalario.belongsTo(Profissional, {
-  foreignKey: 'profissional_id',
-  as: 'profissional'
 })
 
 module.exports = PagamentoSalario

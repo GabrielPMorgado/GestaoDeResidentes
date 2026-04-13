@@ -3,6 +3,9 @@
  */
 
 module.exports = {
+  // JWT
+  JWT_SECRET: process.env.JWT_SECRET || 'seu_secret_key_aqui_mude_em_producao',
+
   // Status
   STATUS: {
     ATIVO: 'ativo',

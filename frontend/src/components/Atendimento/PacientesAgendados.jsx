@@ -41,7 +41,6 @@ function PacientesAgendados({ onIniciarAtendimento }) {
 
       console.log('📋 Carregando agendamentos com params:', params)
       const response = await api.get('/agendamentos', { params })
-      console.log('✅ Resposta:', response.data)
       
       if (response.data?.success) {
         const agendamentosData = response.data.data?.agendamentos || []

@@ -84,20 +84,6 @@ const Agendamento = sequelize.define('Agendamento', {
     type: DataTypes.TEXT,
     allowNull: true,
     comment: 'Motivo do cancelamento'
-  },
-  
-  // Timestamps
-  data_cadastro: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-    field: 'data_cadastro',
-    comment: 'Data de criação do registro'
-  },
-  data_atualizacao: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-    field: 'data_atualizacao',
-    comment: 'Data da última atualização'
   }
 }, {
   tableName: 'agendamentos',

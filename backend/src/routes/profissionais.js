@@ -11,11 +11,21 @@ router.get('/', (req, res, next) => {
   next();
 }, profissionalController.listar);
 
-// Rota para buscar profissional por ID
-router.get('/:id', profissionalController.buscarPorId);
+// Rotas com caminhos específicos ANTES das rotas com parâmetros dinâmicos
+// Rota para estatísticas
+router.get('/estatisticas/geral', profissionalController.estatisticas);
+
+// Rota para relatório de despesas
+router.get('/relatorio/despesas', profissionalController.relatorioDespesas);
+
+// Rota para folha de pagamento
+router.get('/relatorio/folha-pagamento', profissionalController.folhaPagamento);
 
 // Rota para buscar profissional por CPF
 router.get('/cpf/:cpf', profissionalController.buscarPorCpf);
+
+// Rota para buscar profissional por ID (DEVE vir DEPOIS das rotas específicas)
+router.get('/:id', profissionalController.buscarPorId);
 
 // Rota para atualizar profissional
 router.put('/:id', validarAtualizarProfissional, profissionalController.atualizar);
@@ -28,14 +38,5 @@ router.delete('/:id/permanente', profissionalController.deletarPermanente);
 
 // Rota para deletar profissional (soft delete)
 router.delete('/:id', profissionalController.deletar);
-
-// Rota para estatísticas
-router.get('/estatisticas/geral', profissionalController.estatisticas);
-
-// Rota para relatório de despesas
-router.get('/relatorio/despesas', profissionalController.relatorioDespesas);
-
-// Rota para folha de pagamento
-router.get('/relatorio/folha-pagamento', profissionalController.folhaPagamento);
 
 module.exports = router;

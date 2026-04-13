@@ -35,11 +35,25 @@ const Usuario = sequelize.define('Usuario', {
     defaultValue: 'profissional',
     comment: 'Tipo de usuário: admin (acesso total) ou profissional (acesso limitado)'
   },
+  nivel_acesso: {
+    type: DataTypes.ENUM('total', 'gerencial', 'operacional', 'visualizacao'),
+    allowNull: false,
+    defaultValue: 'operacional',
+    comment: 'Nível de acesso: total (tudo), gerencial (gerencia módulos), operacional (uso diário), visualizacao (somente leitura)'
+  },
   ativo: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
   },
   ultimo_acesso: {
+    type: DataTypes.DATE,
+    allowNull: true
+  },
+  token_recuperacao: {
+    type: DataTypes.STRING(255),
+    allowNull: true
+  },
+  token_recuperacao_expira: {
     type: DataTypes.DATE,
     allowNull: true
   }

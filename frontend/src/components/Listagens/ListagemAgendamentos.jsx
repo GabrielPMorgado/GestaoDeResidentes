@@ -1,10 +1,6 @@
 import { useState, useMemo } from 'react'
 import { useNotification } from '../../contexts/NotificationContext'
-import {
-  confirmarAgendamento,
-  buscarAgendamentoPorId,
-  atualizarAgendamento
-} from '../../api/axios'
+import { buscarAgendamentoPorId } from '../../api/axios'
 import { useAgendamentos, useCancelarAgendamento, useConfirmarAgendamento, useAtualizarAgendamento } from '../../hooks'
 
 function ListagemAgendamentos() {
@@ -15,11 +11,6 @@ function ListagemAgendamentos() {
   const cancelarMutation = useCancelarAgendamento()
   const confirmarMutation = useConfirmarAgendamento()
   const atualizarMutation = useAtualizarAgendamento()
-  
-  // Debug: verificar dados
-  console.log('📊 agendamentosData:', agendamentosData)
-  console.log('📊 Primeiro agendamento:', agendamentosData[0])
-  console.log('📊 isLoading:', loading)
   
   const [mostrarCancelados, setMostrarCancelados] = useState(false)
   
@@ -68,8 +59,8 @@ function ListagemAgendamentos() {
     if (filtros.busca) {
       const busca = filtros.busca.toLowerCase()
       dados = dados.filter(ag => 
-        ag.residente_nome?.toLowerCase().includes(busca) ||
-        ag.profissional_nome?.toLowerCase().includes(busca)
+        ag.residente?.nome_completo?.toLowerCase().includes(busca) ||
+        ag.profissional?.nome_completo?.toLowerCase().includes(busca)
       )
     }
     
@@ -103,9 +94,6 @@ function ListagemAgendamentos() {
     const confirmados = agendamentosData.filter(ag => ag.status === 'confirmado').length
     const concluidos = agendamentosData.filter(ag => ag.status === 'concluido').length
     const cancelados = agendamentosData.filter(ag => ag.status === 'cancelado').length
-    
-    console.log('📊 ESTATÍSTICAS:', { total, agendados, confirmados, concluidos, cancelados })
-    console.log('📊 Status dos agendamentos:', agendamentosData.map(ag => ag.status))
     
     return {
       total,
@@ -218,7 +206,6 @@ function ListagemAgendamentos() {
       agendado: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
       confirmado: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
       em_atendimento: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-      em_andamento: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
       concluido: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
       cancelado: 'bg-red-500/10 text-red-400 border-red-500/20',
       falta: 'bg-red-500/10 text-red-400 border-red-500/20'
@@ -227,7 +214,6 @@ function ListagemAgendamentos() {
       agendado: 'Agendado',
       confirmado: 'Confirmado',
       em_atendimento: 'Em Atendimento',
-      em_andamento: 'Em Andamento',
       concluido: 'Concluído',
       cancelado: 'Cancelado',
       falta: 'Falta'
@@ -250,6 +236,7 @@ function ListagemAgendamentos() {
   }
 
   const formatarData = (data) => {
+    if (!data) return '-'
     return new Date(data + 'T00:00:00').toLocaleDateString('pt-BR')
   }
 

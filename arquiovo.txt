@@ -1,0 +1,54 @@
+📊 Análise Completa do Sistema de Gestão de Residentes
+Este é um Sistema de Gerenciamento para Instituições de Longa Permanência para Idosos (ILPI) - um sistema full-stack completo.
+
+🏗️ Arquitetura
+Backend: Node.js + Express + Sequelize + MySQL
+Frontend: React 19 + Tailwind CSS + Vite
+Autenticação: JWT + BCrypt
+🎯 Funções Fundamentais por Módulo
+1. Gestão de Residentes
+Cadastro completo de idosos (dados pessoais, endereço, responsável)
+Controle de status (ativo/inativo/suspenso)
+Definição de valor de mensalidade por residente
+Busca por CPF, nome, telefone
+2. Gestão de Profissionais
+Cadastro de médicos, enfermeiros, fisioterapeutas, etc.
+Registro profissional (CRM, COREN, CRO)
+Controle de departamento, turno e salário
+Gestão de status (ativo/inativo/licença/férias)
+3. Agendamentos
+Agendamento de consultas e procedimentos
+8 tipos de atendimento (consulta médica, fisioterapia, psicologia, nutrição, etc.)
+Controle de status (agendado → confirmado → em atendimento → concluído)
+Visualização por profissional, residente ou período
+4. Histórico Clínico
+Registro de consultas realizadas
+Diagnóstico (com suporte a CID-10)
+Prescrições e medicamentos
+Histórico completo por residente
+5. Módulo Financeiro
+Função	Descrição
+Mensalidades	Geração, controle e pagamento de mensalidades dos residentes
+Salários	Folha de pagamento com bônus e descontos
+Despesas	Registro de despesas por categoria (Operacional, Alimentação, Saúde, etc.)
+Relatórios	Fluxo de caixa, balanço mensal, resumo financeiro
+6. Autenticação e Segurança
+Login com JWT
+Dois níveis de acesso: Admin (acesso total) e Profissional (acesso limitado)
+Profissionais só veem seus próprios agendamentos
+Rate limiting para proteção contra ataques
+📋 Entidades Principais
+Entidade	Propósito
+Residente	Idosos hospedados na instituição
+Profissional	Equipe de saúde e administrativa
+Agendamento	Consultas e procedimentos agendados
+HistoricoConsulta	Registros clínicos realizados
+PagamentoMensalidade	Controle financeiro dos residentes
+PagamentoSalario	Folha de pagamento da equipe
+DespesaGeral	Custos operacionais da instituição
+Usuario	Credenciais de acesso ao sistema
+🔄 Fluxos Principais
+Fluxo de Atendimento: Agendamento → Confirmação → Atendimento → Registro no Histórico Clínico
+Fluxo Financeiro: Cadastro de Residente → Geração de Mensalidade → Pagamento
+Fluxo de Pagamento: Cadastro de Profissional → Folha de Salário → Pagamento
+Este sistema oferece uma solução integrada para administração, operação clínica e controle financeiro de casas de repouso e instituições de cuidado a idosos.

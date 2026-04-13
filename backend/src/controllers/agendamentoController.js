@@ -18,8 +18,7 @@ exports.criar = async (req, res) => {
     console.error('Erro ao criar agendamento:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao criar agendamento',
-      error: error.message
+      message: 'Erro ao criar agendamento'
     });
   }
 };
@@ -45,11 +44,8 @@ exports.listar = async (req, res) => {
     // Se o usuário é profissional, filtrar apenas seus agendamentos
     if (req.filtrarPorProfissional) {
       where.profissional_id = req.filtrarPorProfissional;
-      console.log(`🔒 Filtrando agendamentos do profissional ID: ${req.filtrarPorProfissional}`);
     } else if (profissional_id) {
-      // Admin/Recepcionista pode filtrar por profissional específico
       where.profissional_id = profissional_id;
-      console.log(`🔍 Admin filtrando por profissional ID: ${profissional_id}`);
     }
     
     if (status) {
@@ -88,8 +84,6 @@ exports.listar = async (req, res) => {
     // Paginação
     const offset = (page - 1) * limit;
     
-    console.log('📊 Filtros aplicados:', JSON.stringify(where, null, 2));
-    
     const { count, rows } = await Agendamento.findAndCountAll({
       where,
       limit: parseInt(limit),
@@ -109,8 +103,6 @@ exports.listar = async (req, res) => {
       ]
     });
     
-    console.log(`✅ Encontrados ${count} agendamentos (retornando ${rows.length})`);
-    
     res.json({
       success: true,
       data: {
@@ -124,13 +116,10 @@ exports.listar = async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('❌ Erro ao listar agendamentos:', error);
-    console.error('Stack:', error.stack);
+    console.error('Erro ao listar agendamentos:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao listar agendamentos',
-      error: error.message,
-      details: error.stack
+      message: 'Erro ao listar agendamentos'
     });
   }
 };
@@ -170,8 +159,7 @@ exports.buscarPorId = async (req, res) => {
     console.error('Erro ao buscar agendamento:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao buscar agendamento',
-      error: error.message
+      message: 'Erro ao buscar agendamento'
     });
   }
 };
@@ -206,8 +194,7 @@ exports.buscarPorResidente = async (req, res) => {
     console.error('Erro ao buscar agendamentos do residente:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao buscar agendamentos do residente',
-      error: error.message
+      message: 'Erro ao buscar agendamentos do residente'
     });
   }
 };
@@ -242,18 +229,17 @@ exports.buscarPorProfissional = async (req, res) => {
       ]
     });
     
-    console.log(`✅ Encontrados ${agendamentos.length} agendamentos para profissional ${profissional_id}`);
+    console.log(`Encontrados ${agendamentos.length} agendamentos para profissional ${profissional_id}`);
     
     res.json({
       success: true,
       data: agendamentos
     });
   } catch (error) {
-    console.error('❌ Erro ao buscar agendamentos do profissional:', error);
+    console.error('Erro ao buscar agendamentos do profissional:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao buscar agendamentos do profissional',
-      error: error.message
+      message: 'Erro ao buscar agendamentos do profissional'
     });
   }
 };
@@ -308,8 +294,7 @@ exports.atualizar = async (req, res) => {
     console.error('Erro ao atualizar agendamento:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao atualizar agendamento',
-      error: error.message
+      message: 'Erro ao atualizar agendamento'
     });
   }
 };
@@ -338,8 +323,7 @@ exports.deletar = async (req, res) => {
     console.error('Erro ao deletar agendamento:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao deletar agendamento',
-      error: error.message
+      message: 'Erro ao deletar agendamento'
     });
   }
 };
@@ -373,8 +357,7 @@ exports.cancelar = async (req, res) => {
     console.error('Erro ao cancelar agendamento:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao cancelar agendamento',
-      error: error.message
+      message: 'Erro ao cancelar agendamento'
     });
   }
 };
@@ -404,8 +387,7 @@ exports.confirmar = async (req, res) => {
     console.error('Erro ao confirmar agendamento:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao confirmar agendamento',
-      error: error.message
+      message: 'Erro ao confirmar agendamento'
     });
   }
 };
@@ -450,8 +432,7 @@ exports.estatisticas = async (req, res) => {
     console.error('Erro ao buscar estatísticas:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao buscar estatísticas',
-      error: error.message
+      message: 'Erro ao buscar estatísticas'
     });
   }
 };
@@ -503,8 +484,7 @@ exports.verificarDisponibilidade = async (req, res) => {
     console.error('Erro ao verificar disponibilidade:', error);
     res.status(500).json({
       success: false,
-      message: 'Erro ao verificar disponibilidade',
-      error: error.message
+      message: 'Erro ao verificar disponibilidade'
     });
   }
 };

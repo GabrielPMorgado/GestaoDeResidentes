@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { atualizarProfissional, listarHistoricoConsultasProfissional, buscarAgendamentosPorProfissional } from '../../api/axios'
+import { listarHistoricoConsultasProfissional, buscarAgendamentosPorProfissional } from '../../api/axios'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useProfissionaisAtivos, useInativarProfissional, useAtualizarProfissional } from '../../hooks'
 
@@ -110,20 +110,16 @@ function ListagemProfissionais() {
     setAgendamentos([])
     
     try {
-      console.log('🔍 Buscando agendamentos para profissional ID:', profissional.id)
       const response = await buscarAgendamentosPorProfissional(profissional.id)
-      console.log('📋 Resposta da API:', response)
       
       if (response.success) {
         const dados = response.data || []
-        console.log('✅ Agendamentos encontrados:', dados.length, dados)
         setAgendamentos(dados)
       } else {
-        console.log('⚠️ API retornou sem sucesso:', response)
         setAgendamentos([])
       }
     } catch (error) {
-      console.error('❌ Erro ao buscar agendamentos:', error)
+      showError('Erro ao carregar agendamentos do profissional')
       setAgendamentos([])
     } finally {
       setLoadingAgendamentos(false)
@@ -184,7 +180,8 @@ function ListagemProfissionais() {
       } else {
         throw new Error(response.message || 'Erro ao carregar histórico')
       }
-    } catch {
+    } catch (error) {
+      showError('Erro ao carregar histórico de consultas')
       setHistoricoConsultas([])
     } finally {
       setLoadingHistorico(false)

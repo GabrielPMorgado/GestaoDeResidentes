@@ -9,6 +9,23 @@ function Login() {
     email: '',
     senha: ''
   });
+  const [showRecuperar, setShowRecuperar] = useState(false);
+  const [recuperarEmail, setRecuperarEmail] = useState('');
+  const [recuperarLoading, setRecuperarLoading] = useState(false);
+  const handleRecuperarSenha = async (e) => {
+    e.preventDefault();
+    setRecuperarLoading(true);
+    try {
+      const resp = await authService.recuperarSenha(recuperarEmail);
+      if (notification?.success) notification.success(resp.mensagem);
+      setShowRecuperar(false);
+      setRecuperarEmail('');
+    } catch (error) {
+      if (notification?.error) notification.error(error.response?.data?.erro || 'Erro ao solicitar recuperação de senha');
+    } finally {
+      setRecuperarLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -108,6 +125,16 @@ function Login() {
                   autoComplete="current-password"
                 />
               </div>
+              {/* Link Esqueci minha senha */}
+              <div className="text-right mt-2">
+                <button
+                  type="button"
+                  className="text-amber-400 hover:underline text-sm font-medium focus:outline-none"
+                  onClick={() => setShowRecuperar(true)}
+                >
+                  Esqueci minha senha
+                </button>
+              </div>
             </div>
 
             {/* Botão Submit */}
@@ -140,6 +167,56 @@ function Login() {
           </p>
         </div>
       </div>
+
+      {/* Modal de recuperação de senha */}
+      {showRecuperar && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800/50 backdrop-blur-xl border border-slate-700/50 p-6 rounded-2xl shadow-2xl w-full max-w-md relative">
+            <button 
+              className="absolute top-3 right-3 text-slate-400 hover:text-white text-2xl w-8 h-8 flex items-center justify-center transition-colors" 
+              onClick={() => setShowRecuperar(false)}
+              type="button"
+            >
+              ×
+            </button>
+            
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-white mb-2">Recuperar senha</h2>
+              <p className="text-slate-400 text-sm">Digite seu e-mail para receber as instruções de recuperação</p>
+            </div>
+            
+            <form onSubmit={handleRecuperarSenha} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">E-mail</label>
+                <input
+                  type="email"
+                  className="w-full px-4 py-3 rounded-xl bg-slate-900/60 border border-slate-700/50 text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
+                  placeholder="seu@email.com"
+                  value={recuperarEmail}
+                  onChange={e => setRecuperarEmail(e.target.value)}
+                  required
+                  autoFocus
+                />
+              </div>
+              
+              <button
+                type="submit"
+                disabled={recuperarLoading}
+                className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-xl transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {recuperarLoading ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    Enviando...
+                  </span>
+                ) : (
+                  'Enviar instruções'
+                )}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

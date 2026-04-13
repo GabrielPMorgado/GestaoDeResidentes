@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
-
-const JWT_SECRET = process.env.JWT_SECRET || 'seu_secret_key_aqui_mude_em_producao';
+const { JWT_SECRET } = require('../config/constants');
 
 // Middleware para verificar autenticação
 const verificarAutenticacao = (req, res, next) => {
