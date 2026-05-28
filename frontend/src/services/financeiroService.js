@@ -29,6 +29,11 @@ const financeiroService = {
   },
 
   // Mensalidades
+  gerarMensalidades: async (dados) => {
+    const response = await api.post('/financeiro/mensalidades/gerar', dados);
+    return response.data;
+  },
+
   criarMensalidade: async (mensalidade) => {
     const response = await api.post('/financeiro/mensalidades', mensalidade);
     return response.data;
@@ -56,6 +61,11 @@ const financeiroService = {
   },
 
   // Salários
+  gerarSalarios: async (dados) => {
+    const response = await api.post('/financeiro/salarios/gerar', dados);
+    return response.data;
+  },
+
   criarSalario: async (salario) => {
     const response = await api.post('/financeiro/salarios', salario);
     return response.data;

@@ -57,20 +57,32 @@ api.interceptors.response.use(
       );
       
       switch (status) {
-        case 401:
-          logger.warn('Não autorizado', data.message);
+        case 401: {
+          logger.warn('Não autorizado', data.erro || data.message);
+          // Se não for rota de login/recuperação/trocar-senha, força logout e redireciona
+          const url = error.config?.url || '';
+          const isAuthRoute = url.includes('/auth/login') || 
+                              url.includes('/auth/recuperar-senha') || 
+                              url.includes('/auth/redefinir-senha') ||
+                              url.includes('/auth/trocar-senha');
+          if (!isAuthRoute && localStorage.getItem('token')) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('usuario');
+            window.location.href = '/';
+          }
           break;
+        }
         case 403:
-          logger.warn('Acesso negado', data.message);
+          logger.warn('Acesso negado', data.erro || data.message);
           break;
         case 404:
-          logger.warn('Recurso não encontrado', data.message);
+          logger.warn('Recurso não encontrado', data.erro || data.message);
           break;
         case 500:
-          logger.error('Erro no servidor', data.message);
+          logger.error('Erro no servidor', data.erro || data.message);
           break;
         default:
-          logger.error('Erro na requisição', data.message);
+          logger.error('Erro na requisição', data.erro || data.message);
       }
     } else if (error.request) {
       logger.error('Servidor não respondeu. Verifique sua conexão.', error);

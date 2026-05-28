@@ -50,7 +50,10 @@ function GestaoFinanceira() {
   // Modal states
   const [modalNovaDespesa, setModalNovaDespesa] = useState(false)
   const [modalPagamento, setModalPagamento] = useState(false)
+  const [modalGerarMensalidades, setModalGerarMensalidades] = useState(false)
+  const [modalGerarSalarios, setModalGerarSalarios] = useState(false)
   const [itemSelecionado, setItemSelecionado] = useState(null)
+  const [gerando, setGerando] = useState(false)
 
   // Form states
   const [novaDespesa, setNovaDespesa] = useState({
@@ -68,6 +71,9 @@ function GestaoFinanceira() {
     status: 'todos',
     tipo: 'todos'
   })
+
+  const [diaVencimento, setDiaVencimento] = useState(10)
+  const [metodoPagamento, setMetodoPagamento] = useState('Dinheiro')
 
   useEffect(() => {
     carregarDadosFinanceiros()
@@ -131,7 +137,12 @@ function GestaoFinanceira() {
       const transacoesData = [...mensalidadesData, ...salariosData, ...despesasData]
         .sort((a, b) => new Date(b.dataVencimento) - new Date(a.dataVencimento))
 
-      setResumoFinanceiro(resumo)
+      setResumoFinanceiro({
+        receitaTotal: parseFloat(resumo.receitaTotal) || 0,
+        despesaTotal: parseFloat(resumo.despesaTotal) || 0,
+        saldo: parseFloat(resumo.saldo) || 0,
+        margemLucro: parseFloat(resumo.margemLucro) || 0
+      })
       setMensalidades(mensalidadesData)
       setSalarios(salariosData)
       setDespesas(despesasData)
@@ -195,11 +206,11 @@ function GestaoFinanceira() {
     try {
       const dadosPagamento = {
         data_pagamento: new Date().toISOString().split('T')[0],
-        metodo_pagamento: 'Dinheiro',
+        metodo_pagamento: metodoPagamento,
         observacoes: 'Pagamento confirmado'
       }
 
-      const itemId = itemSelecionado.id.toString().replace(/^[MSD]-/, '')
+      const itemId = itemSelecionado.id
 
       if (itemSelecionado.tipo === 'receita') {
         await financeiroService.pagarMensalidade(itemId, dadosPagamento)
@@ -218,10 +229,66 @@ function GestaoFinanceira() {
 
       setModalPagamento(false)
       setItemSelecionado(null)
+      setMetodoPagamento('Dinheiro')
       await carregarDadosFinanceiros()
     } catch (error) {
       console.error('Erro ao confirmar pagamento:', error)
-      showError('Erro ao confirmar pagamento: ' + error.message)
+      showError('Erro ao confirmar pagamento: ' + (error.response?.data?.error || error.message))
+    }
+  }
+
+  const handleGerarMensalidades = async () => {
+    try {
+      setGerando(true)
+      const resultado = await financeiroService.gerarMensalidades({
+        mes_referencia: filtros.mes,
+        ano_referencia: filtros.ano,
+        dia_vencimento: diaVencimento
+      })
+
+      let msg = resultado.message
+      if (resultado.jaExistem.length > 0) {
+        msg += ` | Já existiam: ${resultado.jaExistem.length}`
+      }
+      if (resultado.semValor.length > 0) {
+        msg += ` | Sem valor definido: ${resultado.semValor.join(', ')}`
+      }
+
+      showSuccess(msg)
+      setModalGerarMensalidades(false)
+      await carregarDadosFinanceiros()
+    } catch (error) {
+      console.error('Erro ao gerar mensalidades:', error)
+      showError('Erro ao gerar mensalidades: ' + (error.response?.data?.error || error.message))
+    } finally {
+      setGerando(false)
+    }
+  }
+
+  const handleGerarSalarios = async () => {
+    try {
+      setGerando(true)
+      const resultado = await financeiroService.gerarSalarios({
+        mes_referencia: filtros.mes,
+        ano_referencia: filtros.ano
+      })
+
+      let msg = resultado.message
+      if (resultado.jaExistem.length > 0) {
+        msg += ` | Já existiam: ${resultado.jaExistem.length}`
+      }
+      if (resultado.semSalario.length > 0) {
+        msg += ` | Sem salário definido: ${resultado.semSalario.join(', ')}`
+      }
+
+      showSuccess(msg)
+      setModalGerarSalarios(false)
+      await carregarDadosFinanceiros()
+    } catch (error) {
+      console.error('Erro ao gerar salários:', error)
+      showError('Erro ao gerar salários: ' + (error.response?.data?.error || error.message))
+    } finally {
+      setGerando(false)
     }
   }
 
@@ -589,9 +656,12 @@ function GestaoFinanceira() {
                   Mensalidades do Mês
                 </h3>
                 <div className="flex gap-2">
-                  <button className="px-4 py-2 bg-slate-700/50 hover:bg-slate-700 text-slate-300 rounded-lg text-sm transition-colors">
-                    <i className="bi bi-funnel mr-2"></i>
-                    Filtrar
+                  <button 
+                    onClick={() => setModalGerarMensalidades(true)}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm transition-colors font-medium flex items-center gap-2"
+                  >
+                    <i className="bi bi-plus-circle"></i>
+                    Gerar Mensalidades
                   </button>
                 </div>
               </div>
@@ -666,12 +736,21 @@ function GestaoFinanceira() {
         {abaSelecionada === 'salarios' && (
           <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 overflow-hidden">
             <div className="p-6 border-b border-slate-700/50">
-              <h3 className="text-xl font-semibold text-white flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
-                  <i className="bi bi-wallet2 text-lg text-blue-400"></i>
-                </div>
-                Salários dos Profissionais
-              </h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-white flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                    <i className="bi bi-wallet2 text-lg text-blue-400"></i>
+                  </div>
+                  Salários dos Profissionais
+                </h3>
+                <button 
+                  onClick={() => setModalGerarSalarios(true)}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm transition-colors font-medium flex items-center gap-2"
+                >
+                  <i className="bi bi-plus-circle"></i>
+                  Gerar Salários
+                </button>
+              </div>
             </div>
 
             <div className="overflow-x-auto">
@@ -1049,6 +1128,23 @@ function GestaoFinanceira() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Método de Pagamento</label>
+                <select
+                  className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  value={metodoPagamento}
+                  onChange={(e) => setMetodoPagamento(e.target.value)}
+                >
+                  <option value="Dinheiro">Dinheiro</option>
+                  <option value="PIX">PIX</option>
+                  <option value="Cartão de Crédito">Cartão de Crédito</option>
+                  <option value="Cartão de Débito">Cartão de Débito</option>
+                  <option value="Transferência Bancária">Transferência Bancária</option>
+                  <option value="Boleto">Boleto</option>
+                  <option value="Cheque">Cheque</option>
+                </select>
+              </div>
+
               <p className="text-slate-400 text-center text-sm">
                 Deseja confirmar este pagamento?
               </p>
@@ -1066,6 +1162,185 @@ function GestaoFinanceira() {
                 >
                   <i className="bi bi-check-circle"></i>
                   Confirmar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Modal Gerar Mensalidades */}
+      {modalGerarMensalidades && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 max-w-md w-full">
+            <div className="bg-emerald-600 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+              <h3 className="text-xl font-semibold text-white flex items-center gap-3">
+                <i className="bi bi-receipt text-2xl"></i>
+                Gerar Mensalidades
+              </h3>
+              <button 
+                onClick={() => setModalGerarMensalidades(false)}
+                className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+              >
+                <i className="bi bi-x text-white text-2xl"></i>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
+                <p className="text-sm text-slate-300">
+                  Serão geradas mensalidades para <strong className="text-emerald-400">todos os residentes ativos</strong> que ainda não possuem mensalidade para o período selecionado.
+                </p>
+                <p className="text-sm text-slate-400 mt-2">
+                  O valor será o <strong>valor_mensalidade</strong> cadastrado em cada residente.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Mês</label>
+                  <select
+                    className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    value={filtros.mes}
+                    disabled
+                  >
+                    <option value={filtros.mes}>
+                      {new Date(2025, filtros.mes - 1).toLocaleDateString('pt-BR', { month: 'long' })}
+                    </option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Ano</label>
+                  <input
+                    type="number"
+                    className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    value={filtros.ano}
+                    disabled
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Dia de Vencimento</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="28"
+                  className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  value={diaVencimento}
+                  onChange={(e) => setDiaVencimento(parseInt(e.target.value) || 10)}
+                />
+              </div>
+
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setModalGerarMensalidades(false)}
+                  className="flex-1 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={handleGerarMensalidades}
+                  disabled={gerando}
+                  className="flex-1 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-800 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  {gerando ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Gerando...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-check-circle"></i>
+                      Gerar Mensalidades
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Gerar Salários */}
+      {modalGerarSalarios && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-800 rounded-2xl border border-slate-700 max-w-md w-full">
+            <div className="bg-blue-600 px-6 py-4 flex items-center justify-between rounded-t-2xl">
+              <h3 className="text-xl font-semibold text-white flex items-center gap-3">
+                <i className="bi bi-wallet2 text-2xl"></i>
+                Gerar Salários
+              </h3>
+              <button 
+                onClick={() => setModalGerarSalarios(false)}
+                className="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+              >
+                <i className="bi bi-x text-white text-2xl"></i>
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4">
+                <p className="text-sm text-slate-300">
+                  Serão gerados registros de salário para <strong className="text-blue-400">todos os profissionais ativos</strong> que ainda não possuem salário para o período selecionado.
+                </p>
+                <p className="text-sm text-slate-400 mt-2">
+                  O valor será o <strong>salário base</strong> cadastrado em cada profissional.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Mês</label>
+                  <select
+                    className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={filtros.mes}
+                    disabled
+                  >
+                    <option value={filtros.mes}>
+                      {new Date(2025, filtros.mes - 1).toLocaleDateString('pt-BR', { month: 'long' })}
+                    </option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Ano</label>
+                  <input
+                    type="number"
+                    className="w-full px-4 py-3 bg-slate-900/50 border border-slate-700 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={filtros.ano}
+                    disabled
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setModalGerarSalarios(false)}
+                  className="flex-1 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-medium transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button 
+                  onClick={handleGerarSalarios}
+                  disabled={gerando}
+                  className="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
+                >
+                  {gerando ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Gerando...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-check-circle"></i>
+                      Gerar Salários
+                    </>
+                  )}
                 </button>
               </div>
             </div>

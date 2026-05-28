@@ -213,7 +213,153 @@ exports.pagarMensalidade = async (req, res) => {
   }
 }
 
+// Gerar mensalidades para todos residentes ativos
+exports.gerarMensalidades = async (req, res) => {
+  try {
+    const { mes_referencia, ano_referencia, dia_vencimento } = req.body
+
+    if (!mes_referencia || !ano_referencia) {
+      return res.status(400).json({ error: 'Mês e ano de referência são obrigatórios' })
+    }
+
+    const residentes = await Residente.findAll({
+      where: { status: 'ativo' },
+      attributes: ['id', 'nome_completo', 'valor_mensalidade']
+    })
+
+    if (residentes.length === 0) {
+      return res.status(400).json({ error: 'Nenhum residente ativo encontrado' })
+    }
+
+    const criadas = []
+    const jaExistem = []
+    const semValor = []
+
+    for (const residente of residentes) {
+      if (!residente.valor_mensalidade || parseFloat(residente.valor_mensalidade) <= 0) {
+        semValor.push(residente.nome_completo)
+        continue
+      }
+
+      const existente = await PagamentoMensalidade.findOne({
+        where: {
+          residente_id: residente.id,
+          mes_referencia,
+          ano_referencia
+        }
+      })
+
+      if (existente) {
+        jaExistem.push(residente.nome_completo)
+        continue
+      }
+
+      const diaVenc = dia_vencimento || 10
+      const dataVencimento = new Date(ano_referencia, mes_referencia - 1, diaVenc)
+
+      const mensalidade = await PagamentoMensalidade.create({
+        residente_id: residente.id,
+        valor_mensalidade: residente.valor_mensalidade,
+        mes_referencia,
+        ano_referencia,
+        data_vencimento: dataVencimento,
+        status: 'pendente'
+      })
+
+      criadas.push({
+        id: mensalidade.id,
+        residente: residente.nome_completo,
+        valor: residente.valor_mensalidade
+      })
+    }
+
+    res.status(201).json({
+      message: `${criadas.length} mensalidade(s) gerada(s) com sucesso`,
+      criadas,
+      jaExistem,
+      semValor,
+      total: residentes.length
+    })
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Erro ao gerar mensalidades', 
+      detalhes: error.message 
+    })
+  }
+}
+
 // ==================== SALÁRIOS ====================
+
+// Gerar salários para todos profissionais ativos
+exports.gerarSalarios = async (req, res) => {
+  try {
+    const { mes_referencia, ano_referencia } = req.body
+
+    if (!mes_referencia || !ano_referencia) {
+      return res.status(400).json({ error: 'Mês e ano de referência são obrigatórios' })
+    }
+
+    const profissionais = await Profissional.findAll({
+      where: { status: 'ativo' },
+      attributes: ['id', 'nome_completo', 'salario']
+    })
+
+    if (profissionais.length === 0) {
+      return res.status(400).json({ error: 'Nenhum profissional ativo encontrado' })
+    }
+
+    const criados = []
+    const jaExistem = []
+    const semSalario = []
+
+    for (const prof of profissionais) {
+      if (!prof.salario || parseFloat(prof.salario) <= 0) {
+        semSalario.push(prof.nome_completo)
+        continue
+      }
+
+      const existente = await PagamentoSalario.findOne({
+        where: {
+          profissional_id: prof.id,
+          mes_referencia,
+          ano_referencia
+        }
+      })
+
+      if (existente) {
+        jaExistem.push(prof.nome_completo)
+        continue
+      }
+
+      const salario = await PagamentoSalario.create({
+        profissional_id: prof.id,
+        valor: prof.salario,
+        mes_referencia,
+        ano_referencia,
+        status: 'pendente'
+      })
+
+      criados.push({
+        id: salario.id,
+        profissional: prof.nome_completo,
+        valor: prof.salario
+      })
+    }
+
+    res.status(201).json({
+      message: `${criados.length} salário(s) gerado(s) com sucesso`,
+      criados,
+      jaExistem,
+      semSalario,
+      total: profissionais.length
+    })
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Erro ao gerar salários', 
+      detalhes: error.message 
+    })
+  }
+}
 
 exports.criarSalario = async (req, res) => {
   try {

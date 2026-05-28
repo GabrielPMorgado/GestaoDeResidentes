@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { listarResidentes, listarProfissionais } from '../../api/axios'
 import { useNotification } from '../../contexts/NotificationContext'
 import { LoadingSpinner } from '../Common'
@@ -10,11 +10,58 @@ function CadastroAgendamento() {
   const dateInputRef = useRef(null)
   const horaInicioRef = useRef(null)
   const horaFimRef = useRef(null)
+
+  const hoje = useMemo(() => {
+    const d = new Date()
+    d.setHours(0, 0, 0, 0)
+    return d
+  }, [])
+
+  const formatDate = (date) => {
+    const y = date.getFullYear()
+    const m = String(date.getMonth() + 1).padStart(2, '0')
+    const d = String(date.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+
+  const diasRapidos = useMemo(() => {
+    const dias = []
+    const nomesDia = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(hoje)
+      d.setDate(hoje.getDate() + i)
+      let label = nomesDia[d.getDay()] + ' ' + String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0')
+      if (i === 0) label = 'Hoje'
+      if (i === 1) label = 'Amanhã'
+      dias.push({ date: formatDate(d), label, dayName: nomesDia[d.getDay()], isWeekend: d.getDay() === 0 || d.getDay() === 6 })
+    }
+    return dias
+  }, [hoje])
+
+  const horariosDisponiveis = useMemo(() => {
+    const slots = []
+    for (let h = 7; h <= 18; h++) {
+      slots.push(`${String(h).padStart(2, '0')}:00`)
+      if (h < 18) slots.push(`${String(h).padStart(2, '0')}:30`)
+    }
+    return slots
+  }, [])
+
+  const calcularHoraFim = (horaInicio, duracao = 60) => {
+    const [h, m] = horaInicio.split(':').map(Number)
+    const totalMin = h * 60 + m + duracao
+    const fh = Math.floor(totalMin / 60)
+    const fm = totalMin % 60
+    if (fh > 23) return '23:59'
+    return `${String(fh).padStart(2, '0')}:${String(fm).padStart(2, '0')}`
+  }
+
+  const [duracaoMinutos, setDuracaoMinutos] = useState(60)
   
   const [formData, setFormData] = useState({
     residente_id: '',
     profissional_id: '',
-    data_agendamento: '',
+    data_agendamento: formatDate(hoje),
     hora_inicio: '',
     hora_fim: '',
     tipo_atendimento: '',
@@ -97,13 +144,36 @@ function CadastroAgendamento() {
     }
   }
 
+  const selecionarData = (dateStr) => {
+    setFormData(prev => ({ ...prev, data_agendamento: dateStr }))
+    if (dateInputRef.current) dateInputRef.current.value = dateStr
+    setErrors(prev => ({ ...prev, data_agendamento: '' }))
+    setTouched(prev => ({ ...prev, data_agendamento: true }))
+  }
+
+  const selecionarHoraInicio = (hora) => {
+    const fim = calcularHoraFim(hora, duracaoMinutos)
+    setFormData(prev => ({ ...prev, hora_inicio: hora, hora_fim: fim }))
+    if (horaInicioRef.current) horaInicioRef.current.value = hora
+    if (horaFimRef.current) horaFimRef.current.value = fim
+    setErrors(prev => ({ ...prev, hora_inicio: '', hora_fim: '' }))
+    setTouched(prev => ({ ...prev, hora_inicio: true, hora_fim: true }))
+  }
+
+  const alterarDuracao = (min) => {
+    setDuracaoMinutos(min)
+    if (formData.hora_inicio) {
+      const fim = calcularHoraFim(formData.hora_inicio, min)
+      setFormData(prev => ({ ...prev, hora_fim: fim }))
+      if (horaFimRef.current) horaFimRef.current.value = fim
+    }
+  }
+
   const handleChange = (e) => {
     const { name, value } = e.target
     
-    // Atualizar formData normalmente para todos os campos
     setFormData(prev => ({ ...prev, [name]: value }))
     
-    // Limpar erro ao começar a digitar
     if (touched[name] && errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }))
     }
@@ -119,13 +189,7 @@ function CadastroAgendamento() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
-    // Capturar valores dos refs para campos de data/hora
-    const dataToSubmit = {
-      ...formData,
-      data_agendamento: dateInputRef.current?.value || formData.data_agendamento,
-      hora_inicio: horaInicioRef.current?.value || formData.hora_inicio,
-      hora_fim: horaFimRef.current?.value || formData.hora_fim
-    }
+    const dataToSubmit = { ...formData }
     
     const fields = ['residente_id', 'profissional_id', 'data_agendamento', 'hora_inicio', 'hora_fim', 'tipo_atendimento', 'titulo']
     const newErrors = {}
@@ -160,12 +224,13 @@ function CadastroAgendamento() {
 
   const handleReset = () => {
     setFormData({
-      residente_id: '', profissional_id: '', data_agendamento: '', hora_inicio: '',
+      residente_id: '', profissional_id: '', data_agendamento: formatDate(hoje), hora_inicio: '',
       hora_fim: '', tipo_atendimento: '', titulo: '', descricao: '', local: '', observacoes: ''
     })
-    if (dateInputRef.current) dateInputRef.current.value = ''
+    if (dateInputRef.current) dateInputRef.current.value = formatDate(hoje)
     if (horaInicioRef.current) horaInicioRef.current.value = ''
     if (horaFimRef.current) horaFimRef.current.value = ''
+    setDuracaoMinutos(60)
     setErrors({})
     setTouched({})
   }
@@ -304,41 +369,119 @@ function CadastroAgendamento() {
               />
             </div>
 
-            {/* Data e Horários */}
+            {/* Data e Horários - Melhorado */}
             <div className="p-6 bg-slate-900/30 rounded-xl border border-slate-700">
               <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
                 <i className="bi bi-clock text-amber-400"></i>
                 Data e Horário
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label htmlFor="data_agendamento" className="block text-sm font-medium text-slate-300 mb-2">
-                    Data <span className="text-amber-400">*</span>
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="date"
-                      id="data_agendamento"
-                      name="data_agendamento"
-                      ref={dateInputRef}
-                      defaultValue={new Date().toISOString().split('T')[0]}
-                      min={new Date().toISOString().split('T')[0]}
-                      max="2025-12-31"
-                      onBlur={handleBlur}
-                      className={`w-full px-4 py-3 bg-slate-900/60 border ${
-                        errors.data_agendamento && touched.data_agendamento
-                          ? 'border-red-500/50 focus:ring-red-500/50' 
-                          : 'border-slate-700/50 focus:ring-amber-500/50 focus:border-amber-500/50'
-                      } rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all [color-scheme:dark]`}
-                    />
-                  </div>
-                  {errors.data_agendamento && touched.data_agendamento && (
-                    <p className="mt-1.5 text-sm text-red-400">
-                      {errors.data_agendamento}
-                    </p>
+
+              {/* Seleção rápida de data */}
+              <div className="mb-5">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Selecione a Data <span className="text-amber-400">*</span>
+                </label>
+                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+                  {diasRapidos.map((dia) => (
+                    <button
+                      key={dia.date}
+                      type="button"
+                      onClick={() => selecionarData(dia.date)}
+                      className={`flex-shrink-0 px-3 py-2 rounded-xl text-sm font-medium transition-all border ${
+                        formData.data_agendamento === dia.date
+                          ? 'bg-amber-500 text-white border-amber-400 shadow-lg shadow-amber-500/30'
+                          : dia.isWeekend
+                            ? 'bg-slate-800/60 text-slate-500 border-slate-700/50 hover:border-slate-600'
+                            : 'bg-slate-800/60 text-slate-300 border-slate-700/50 hover:border-amber-500/50 hover:text-amber-300'
+                      }`}
+                    >
+                      {dia.label}
+                    </button>
+                  ))}
+                </div>
+                {/* Input de data oculto para acessibilidade + fallback */}
+                <div className="mt-2 flex items-center gap-3">
+                  <span className="text-xs text-slate-500">Ou escolha manualmente:</span>
+                  <input
+                    type="date"
+                    id="data_agendamento"
+                    name="data_agendamento"
+                    ref={dateInputRef}
+                    value={formData.data_agendamento}
+                    min={formatDate(hoje)}
+                    onChange={(e) => selecionarData(e.target.value)}
+                    className="px-3 py-1.5 bg-slate-900/60 border border-slate-700/50 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all [color-scheme:dark]"
+                  />
+                  {formData.data_agendamento && (
+                    <span className="text-sm text-amber-400 font-medium">
+                      <i className="bi bi-calendar-check mr-1"></i>
+                      {new Date(formData.data_agendamento + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+                    </span>
                   )}
                 </div>
+                {errors.data_agendamento && touched.data_agendamento && (
+                  <p className="mt-1.5 text-sm text-red-400">{errors.data_agendamento}</p>
+                )}
+              </div>
 
+              {/* Duração do atendimento */}
+              <div className="mb-5">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Duração do Atendimento
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    { min: 15, label: '15 min' },
+                    { min: 30, label: '30 min' },
+                    { min: 45, label: '45 min' },
+                    { min: 60, label: '1 hora' },
+                    { min: 90, label: '1h30' },
+                    { min: 120, label: '2 horas' },
+                  ].map(({ min, label }) => (
+                    <button
+                      key={min}
+                      type="button"
+                      onClick={() => alterarDuracao(min)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
+                        duracaoMinutos === min
+                          ? 'bg-blue-500/20 text-blue-300 border-blue-500/50'
+                          : 'bg-slate-800/60 text-slate-400 border-slate-700/50 hover:border-blue-500/30 hover:text-blue-300'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Grade de horários */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-slate-300 mb-2">
+                  Horário de Início <span className="text-amber-400">*</span>
+                </label>
+                <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+                  {horariosDisponiveis.map((hora) => (
+                    <button
+                      key={hora}
+                      type="button"
+                      onClick={() => selecionarHoraInicio(hora)}
+                      className={`px-2 py-2.5 rounded-lg text-sm font-medium transition-all border text-center ${
+                        formData.hora_inicio === hora
+                          ? 'bg-amber-500 text-white border-amber-400 shadow-lg shadow-amber-500/30'
+                          : 'bg-slate-800/60 text-slate-300 border-slate-700/50 hover:border-amber-500/50 hover:text-amber-300'
+                      }`}
+                    >
+                      {hora}
+                    </button>
+                  ))}
+                </div>
+                {errors.hora_inicio && touched.hora_inicio && (
+                  <p className="mt-1.5 text-sm text-red-400">{errors.hora_inicio}</p>
+                )}
+              </div>
+
+              {/* Horários manuais (início e fim) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4 pt-4 border-t border-slate-700/50">
                 <div>
                   <label htmlFor="hora_inicio" className="block text-sm font-medium text-slate-300 mb-2">
                     Hora Início <span className="text-amber-400">*</span>
@@ -348,20 +491,22 @@ function CadastroAgendamento() {
                     id="hora_inicio"
                     name="hora_inicio"
                     ref={horaInicioRef}
+                    value={formData.hora_inicio}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      const fim = calcularHoraFim(val, duracaoMinutos)
+                      setFormData(prev => ({ ...prev, hora_inicio: val, hora_fim: fim }))
+                      if (horaFimRef.current) horaFimRef.current.value = fim
+                      setErrors(prev => ({ ...prev, hora_inicio: '', hora_fim: '' }))
+                    }}
                     onBlur={handleBlur}
                     className={`w-full px-4 py-3 bg-slate-900/60 border ${
                       errors.hora_inicio && touched.hora_inicio
                         ? 'border-red-500/50 focus:ring-red-500/50' 
                         : 'border-slate-700/50 focus:ring-amber-500/50 focus:border-amber-500/50'
-                    } rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all`}
+                    } rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all [color-scheme:dark]`}
                   />
-                  {errors.hora_inicio && touched.hora_inicio && (
-                    <p className="mt-1.5 text-sm text-red-400">
-                      {errors.hora_inicio}
-                    </p>
-                  )}
                 </div>
-
                 <div>
                   <label htmlFor="hora_fim" className="block text-sm font-medium text-slate-300 mb-2">
                     Hora Término <span className="text-amber-400">*</span>
@@ -371,20 +516,42 @@ function CadastroAgendamento() {
                     id="hora_fim"
                     name="hora_fim"
                     ref={horaFimRef}
+                    value={formData.hora_fim}
+                    onChange={(e) => {
+                      setFormData(prev => ({ ...prev, hora_fim: e.target.value }))
+                    }}
                     onBlur={handleBlur}
                     className={`w-full px-4 py-3 bg-slate-900/60 border ${
                       errors.hora_fim && touched.hora_fim
                         ? 'border-red-500/50 focus:ring-red-500/50' 
                         : 'border-slate-700/50 focus:ring-amber-500/50 focus:border-amber-500/50'
-                    } rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all`}
+                    } rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all [color-scheme:dark]`}
                   />
                   {errors.hora_fim && touched.hora_fim && (
-                    <p className="mt-1.5 text-sm text-red-400">
-                      {errors.hora_fim}
-                    </p>
+                    <p className="mt-1.5 text-sm text-red-400">{errors.hora_fim}</p>
                   )}
                 </div>
               </div>
+
+              {/* Resumo visual */}
+              {formData.data_agendamento && formData.hora_inicio && formData.hora_fim && (
+                <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl flex items-center gap-3">
+                  <i className="bi bi-check-circle-fill text-amber-400 text-xl"></i>
+                  <div className="text-sm">
+                    <span className="text-amber-300 font-medium">Agendamento: </span>
+                    <span className="text-white">
+                      {new Date(formData.data_agendamento + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' })}
+                      {' · '}
+                      {formData.hora_inicio} às {formData.hora_fim}
+                      {' · '}
+                      {duracaoMinutos >= 60 
+                        ? `${Math.floor(duracaoMinutos / 60)}h${duracaoMinutos % 60 > 0 ? duracaoMinutos % 60 + 'min' : ''}`
+                        : `${duracaoMinutos} min`
+                      }
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Detalhes do Atendimento */}

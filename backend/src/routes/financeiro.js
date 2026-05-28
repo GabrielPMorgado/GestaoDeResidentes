@@ -10,6 +10,7 @@ router.put('/despesas/:id', financeiroController.atualizarDespesa)
 router.delete('/despesas/:id', financeiroController.excluirDespesa)
 
 // Mensalidades
+router.post('/mensalidades/gerar', financeiroController.gerarMensalidades)
 router.post('/mensalidades', financeiroController.criarMensalidade)
 router.get('/mensalidades', financeiroController.listarMensalidades)
 router.get('/mensalidades/:id', financeiroController.obterMensalidade)
@@ -17,6 +18,7 @@ router.put('/mensalidades/:id', financeiroController.atualizarMensalidade)
 router.post('/mensalidades/:id/pagar', financeiroController.pagarMensalidade)
 
 // Salários
+router.post('/salarios/gerar', financeiroController.gerarSalarios)
 router.post('/salarios', financeiroController.criarSalario)
 router.get('/salarios', financeiroController.listarSalarios)
 router.get('/salarios/:id', financeiroController.obterSalario)
