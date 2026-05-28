@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { formatarCPF, formatarTelefone, formatarCEP } from '../../utils/formatters'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useCriarResidente } from '../../hooks'
+import { HelpButton } from '../Common'
 
 // Componente Input fora para evitar recriação
 const Input = ({ label, name, type = 'text', required = false, icon, formData, errors, touched, handleChange, handleBlur, ...props }) => (
@@ -775,6 +776,38 @@ function CadastroResidentes() {
           </form>
         </div>
       </div>
+
+      {/* Botão de Ajuda */}
+      <HelpButton
+        title="Como Cadastrar Residentes"
+        content="Esta tela permite o cadastro completo de novos residentes na instituição. O processo é dividido em 4 etapas para facilitar o preenchimento."
+        steps={[
+          {
+            title: "Dados Pessoais",
+            description: "Preencha nome completo, CPF, RG, data de nascimento e informações básicas do residente."
+          },
+          {
+            title: "Dados de Contato",
+            description: "Informe telefone, email e endereço completo para localização e comunicação."
+          },
+          {
+            title: "Dados do Responsável",
+            description: "Cadastre o responsável ou contato de emergência com nome, telefone e email."
+          },
+          {
+            title: "Informações Adicionais",
+            description: "Adicione dados médicos, mensalidade e observações importantes sobre o residente."
+          }
+        ]}
+        tips={[
+          "CPF e RG devem ser únicos no sistema",
+          "Campos marcados com * são obrigatórios",
+          "Use Tab para navegar entre os campos rapidamente",
+          "O CEP pode ser preenchido automaticamente ao digitar",
+          "Revise todos os dados antes de finalizar o cadastro",
+          "Após salvar, o residente estará disponível para agendamentos"
+        ]}
+      />
     </div>
   )
 }

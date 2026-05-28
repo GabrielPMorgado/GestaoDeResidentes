@@ -15,6 +15,7 @@ import {
 } from 'chart.js'
 import { Line, Doughnut } from 'react-chartjs-2'
 import financeiroService from '../../services/financeiroService'
+import { HelpButton } from '../Common'
 
 ChartJS.register(
   CategoryScale,
@@ -1347,6 +1348,41 @@ function GestaoFinanceira() {
           </div>
         </div>
       )}
+
+      {/* Botão de Ajuda */}
+      <HelpButton
+        title="Gestão Financeira"
+        content="Esta tela permite gerenciar todas as operações financeiras da instituição, incluindo mensalidades, salários e despesas gerais."
+        steps={[
+          {
+            title: "Selecionar Aba",
+            description: "Escolha entre Mensalidades, Salários ou Despesas Gerais para gerenciar cada tipo de movimentação."
+          },
+          {
+            title: "Registrar Pagamentos",
+            description: "Use os botões de ação para registrar pagamento de mensalidades ou salários."
+          },
+          {
+            title: "Lançar Despesas",
+            description: "Na aba Despesas Gerais, adicione novas despesas operacionais da instituição."
+          },
+          {
+            title: "Filtrar Registros",
+            description: "Use os filtros de período, status e categoria para buscar registros específicos."
+          },
+          {
+            title: "Visualizar Estatísticas",
+            description: "Os cards no topo mostram resumos financeiros e gráficos de evolução."
+          }
+        ]}
+        tips={[
+          "Mensalidades não pagas ficam com status 'Pendente' ou 'Atrasado'",
+          "Salários são calculados automaticamente baseado no cadastro do profissional",
+          "Despesas são categorizadas para facilitar relatórios",
+          "Use os gráficos para identificar tendências financeiras",
+          "Registros financeiros não podem ser excluídos, apenas marcados como cancelados"
+        ]}
+      />
     </div>
   )
 }

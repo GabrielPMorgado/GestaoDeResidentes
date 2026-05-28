@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { listarHistoricoConsultasProfissional, buscarAgendamentosPorProfissional } from '../../api/axios'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useProfissionaisAtivos, useInativarProfissional, useAtualizarProfissional } from '../../hooks'
+import { HelpButton } from '../Common'
 
 function ListagemProfissionais() {
   const { success, error: showError } = useNotification()
@@ -1200,6 +1201,40 @@ function ListagemProfissionais() {
           </div>
         </div>
       )}
+
+      {/* Botão de Ajuda */}
+      <HelpButton
+        title="Gerenciar Profissionais"
+        content="Esta tela permite visualizar, editar e gerenciar profissionais ativos da instituição."
+        steps={[
+          {
+            title: "Buscar Profissional",
+            description: "Use a barra de busca para encontrar profissionais por nome, CPF ou profissão. Filtre por profissão ou departamento."
+          },
+          {
+            title: "Visualizar Detalhes",
+            description: "Clique no ícone de visualizar para ver todas as informações do profissional."
+          },
+          {
+            title: "Editar Cadastro",
+            description: "Use o botão Editar para atualizar informações do profissional. Dados protegidos como CPF não podem ser alterados."
+          },
+          {
+            title: "Ver Histórico",
+            description: "Acesse o histórico de consultas e agendamentos realizados pelo profissional."
+          },
+          {
+            title: "Inativar Profissional",
+            description: "Use o botão Inativar para desativar o profissional. Ele será movido para a lista de profissionais inativos."
+          }
+        ]}
+        tips={[
+          "Profissionais inativos podem ser visualizados na tela 'Profissionais Inativos'",
+          "O histórico mostra todas as consultas e agendamentos do profissional",
+          "Use os filtros para encontrar profissionais específicos rapidamente",
+          "A paginação está disponível quando há muitos registros"
+        ]}
+      />
     </div>
   )
 }

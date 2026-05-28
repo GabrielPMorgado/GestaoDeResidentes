@@ -15,6 +15,7 @@ const agendamentosRoutes = require('./routes/agendamentos');
 const historicoConsultasRoutes = require('./routes/historicoConsultas');
 const financeiroRoutes = require('./routes/financeiro');
 const atendimentosRoutes = require('./routes/atendimentos');
+const relatoriosRoutes = require('./routes/relatorios');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -93,6 +94,7 @@ app.use('/api/agendamentos', agendamentosRoutes);
 app.use('/api/historico-consultas', historicoConsultasRoutes);
 app.use('/api/financeiro', financeiroRoutes);
 app.use('/api/atendimentos', atendimentosRoutes);
+app.use('/api/relatorios', relatoriosRoutes);
 
 // Middleware para rotas não encontradas (404)
 app.use(notFound);

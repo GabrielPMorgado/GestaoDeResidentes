@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import api from '../../api/axios'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useResidentesAtivos, useEstatisticas, useInativarResidente, useAtualizarResidente } from '../../hooks'
+import { HelpButton } from '../Common'
 
 function ListagemResidentes({ onVerHistorico }) {
   const { success, error: showError } = useNotification()
@@ -1381,6 +1382,41 @@ function ListagemResidentes({ onVerHistorico }) {
           </div>
         </div>
       )}
+
+      {/* Botão de Ajuda */}
+      <HelpButton
+        title="Como Gerenciar Residentes"
+        content="Esta tela exibe todos os residentes ativos da instituição. Você pode visualizar, editar, inativar e consultar o histórico de cada residente."
+        steps={[
+          {
+            title: "Buscar Residentes",
+            description: "Use a barra de busca para filtrar por nome, CPF ou telefone."
+          },
+          {
+            title: "Visualizar Detalhes",
+            description: "Clique no ícone de olho para ver todas as informações do residente."
+          },
+          {
+            title: "Editar Cadastro",
+            description: "Use o ícone de lápis para modificar dados do residente."
+          },
+          {
+            title: "Ver Histórico",
+            description: "Clique no ícone de relógio para consultar o histórico de consultas."
+          },
+          {
+            title: "Inativar Residente",
+            description: "Use o ícone de lixeira para inativar (não exclui, apenas desativa)."
+          }
+        ]}
+        tips={[
+          "Residentes inativos podem ser consultados na tela 'Residentes Inativos'",
+          "Use os filtros para encontrar residentes rapidamente",
+          "O histórico mostra todas as consultas realizadas",
+          "Estatísticas são atualizadas automaticamente",
+          "Dados críticos são validados ao editar"
+        ]}
+      />
     </div>
   )
 }

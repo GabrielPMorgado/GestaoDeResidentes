@@ -4,6 +4,9 @@
 
 import React from 'react';
 import './common.css';
+import HelpButton from './HelpButton';
+
+export { HelpButton };
 
 /**
  * Loading Spinner

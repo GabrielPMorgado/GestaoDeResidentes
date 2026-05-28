@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { listarResidentes, listarProfissionais } from '../../api/axios'
 import { useNotification } from '../../contexts/NotificationContext'
-import { LoadingSpinner } from '../Common'
+import { LoadingSpinner, HelpButton } from '../Common'
 import { useCriarAgendamento } from '../../hooks'
 
 function CadastroAgendamento() {
@@ -659,6 +659,38 @@ function CadastroAgendamento() {
           </form>
         </div>
       </div>
+
+      {/* Botão de Ajuda */}
+      <HelpButton
+        title="Como Agendar Consultas"
+        content="Esta tela permite criar agendamentos de consultas e procedimentos para os residentes. O processo é rápido e intuitivo."
+        steps={[
+          {
+            title: "Selecionar Residente",
+            description: "Escolha o residente que irá realizar a consulta ou procedimento."
+          },
+          {
+            title: "Escolher Profissional",
+            description: "Selecione o profissional que irá realizar o atendimento."
+          },
+          {
+            title: "Definir Data e Horário",
+            description: "Use os botões de dias rápidos ou selecione uma data específica. Escolha horário de início e fim."
+          },
+          {
+            title: "Tipo e Observações",
+            description: "Defina o tipo de atendimento e adicione observações importantes."
+          }
+        ]}
+        tips={[
+          "Verifique a disponibilidade do profissional antes de agendar",
+          "Use os botões de dias rápidos para agendar rapidamente",
+          "Respeite o horário de expediente da instituição",
+          "Adicione observações importantes sobre o agendamento",
+          "Não é possível agendar em datas passadas",
+          "Após criar, o agendamento pode ser editado ou cancelado"
+        ]}
+      />
     </div>
   )
 }

@@ -3,6 +3,7 @@ import { criarProfissional } from '../../api/axios'
 import { formatarCPF, formatarCelular, formatarCEP } from '../../utils/formatters'
 import { useNotification } from '../../contexts/NotificationContext'
 import { useCriarProfissional } from '../../hooks'
+import { HelpButton } from '../Common'
 
 // Componente Input fora para evitar recriação
 const Input = ({ label, name, type = 'text', required = false, icon, formData, errors, touched, handleChange, handleBlur, ...props }) => (
@@ -694,6 +695,34 @@ function CadastroProfissionais() {
           </form>
         </div>
       </div>
+
+      {/* Botão de Ajuda */}
+      <HelpButton
+        title="Como Cadastrar Profissionais"
+        content="Esta tela permite o cadastro completo de profissionais da equipe. O formulário está dividido em 3 etapas para organizar as informações."
+        steps={[
+          {
+            title: "Dados Pessoais",
+            description: "Preencha nome completo, CPF, RG, data de nascimento e contatos do profissional."
+          },
+          {
+            title: "Dados Profissionais",
+            description: "Informe profissão, registro profissional (CRM, COREN, etc), departamento e turno de trabalho."
+          },
+          {
+            title: "Dados de Vínculo",
+            description: "Defina salário, data de admissão e informações sobre criação de usuário no sistema."
+          }
+        ]}
+        tips={[
+          "CPF deve ser único no sistema",
+          "O registro profissional é obrigatório para algumas profissões",
+          "Se marcar 'Criar usuário', será gerado acesso ao sistema",
+          "O email será usado para login se criar usuário",
+          "O salário pode ser editado posteriormente",
+          "Profissionais inativos não aparecem para agendamentos"
+        ]}
+      />
     </div>
   )
 }

@@ -19,6 +19,7 @@ import {
   useProfissionais,
   useAgendamentos
 } from '../../hooks'
+import { HelpButton } from '../Common'
 
 // Registrar componentes do Chart.js
 ChartJS.register(
@@ -622,6 +623,36 @@ function Dashboard() {
           </p>
         </div>
       </div>
+
+      {/* Botão de Ajuda */}
+      <HelpButton
+        title="Dashboard Analítico"
+        content="Visão geral e estatísticas em tempo real da instituição. Acompanhe métricas importantes e indicadores de desempenho."
+        steps={[
+          {
+            title: "Métricas Principais",
+            description: "Os cards no topo mostram resumo de residentes, profissionais, agendamentos e ocupação."
+          },
+          {
+            title: "Gráficos Interativos",
+            description: "Visualize tendências e distribuições através de gráficos de linha, barras e pizza."
+          },
+          {
+            title: "Ações Rápidas",
+            description: "Use os botões de ação rápida para acessar funcionalidades principais do sistema."
+          },
+          {
+            title: "Dados em Tempo Real",
+            description: "Todas as informações são atualizadas automaticamente quando há mudanças no sistema."
+          }
+        ]}
+        tips={[
+          "Clique nos cards para ver mais detalhes",
+          "Os gráficos respondem a filtros de período",
+          "A taxa de ocupação é calculada automaticamente",
+          "Use o Dashboard para uma visão rápida do status da instituição"
+        ]}
+      />
     </div>
   )
 }

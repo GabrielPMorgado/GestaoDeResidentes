@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { useNotification } from '../../contexts/NotificationContext'
 import { buscarAgendamentoPorId } from '../../api/axios'
 import { useAgendamentos, useCancelarAgendamento, useConfirmarAgendamento, useAtualizarAgendamento } from '../../hooks'
+import { HelpButton } from '../Common'
 
 function ListagemAgendamentos() {
   const { success, error: showError } = useNotification()
@@ -889,6 +890,40 @@ function ListagemAgendamentos() {
           </div>
         </div>
       )}
+
+      {/* Botão de Ajuda */}
+      <HelpButton
+        title="Gerenciar Agendamentos"
+        content="Esta tela permite visualizar, editar e gerenciar todos os agendamentos da instituição."
+        steps={[
+          {
+            title: "Filtrar Agendamentos",
+            description: "Use os filtros para buscar agendamentos por status, tipo, profissional, residente ou data."
+          },
+          {
+            title: "Visualizar Detalhes",
+            description: "Clique no ícone de visualizar para ver todas as informações do agendamento."
+          },
+          {
+            title: "Editar Agendamento",
+            description: "Use o botão Editar para alterar data, horário ou observações do agendamento."
+          },
+          {
+            title: "Confirmar Agendamento",
+            description: "Confirme agendamentos pendentes para indicar que o residente comparecerá."
+          },
+          {
+            title: "Cancelar Agendamento",
+            description: "Cancele agendamentos quando necessário. É possível adicionar um motivo de cancelamento."
+          }
+        ]}
+        tips={[
+          "Agendamentos cancelados são mantidos no histórico",
+          "Use o filtro de data para ver agendamentos futuros ou passados",
+          "O status do agendamento é atualizado automaticamente",
+          "Cada residente pode ter múltiplos agendamentos com diferentes profissionais"
+        ]}
+      />
     </div>
   )
 }

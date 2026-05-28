@@ -17,7 +17,7 @@ import ListagemAgendamentos from './components/Listagens/ListagemAgendamentos'
 import ResidentesInativos from './components/Listagens/ResidentesInativos'
 import ProfissionaisInativos from './components/Listagens/ProfissionaisInativos'
 import HistoricoConsultasResidente from './components/Listagens/HistoricoConsultasResidente'
-import Relatorios from './components/Relatorios/Relatorios'
+import { RelatoriosAvancados } from './components/Relatorios'
 import Dashboard from './components/Dashboard/Dashboard'
 import GestaoFinanceira from './components/Financeiro/GestaoFinanceira'
 import GerenciarAcessos from './components/Admin/GerenciarAcessos'
@@ -239,7 +239,7 @@ function AppContent() {
           />
         ) : <ListagemResidentes />
       case 'relatorios':
-        return <Relatorios />
+        return <RelatoriosAvancados />
       case 'dashboard-analytics':
         return <Dashboard />
       case 'gestao-financeira':
