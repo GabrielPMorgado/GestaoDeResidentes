@@ -144,7 +144,7 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
               <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center">
                 <i className="bi bi-hospital text-amber-400 text-lg"></i>
               </div>
-              <span className="font-semibold text-white text-base">Sistema Residencial</span>
+              <span className="font-semibold text-white text-base">Lar dos Idosos de Quatá</span>
             </div>
           ) : (
             <div className="w-8 h-8 rounded-lg bg-amber-500/10 flex items-center justify-center mx-auto">
