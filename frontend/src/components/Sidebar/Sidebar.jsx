@@ -5,7 +5,7 @@ import { useNotification } from '../../contexts/NotificationContext'
 function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
   const { isAdmin, logout, user } = useAuth()
   const { success: showSuccess } = useNotification()
-  const [activeItem, setActiveItem] = useState('dashboard')
+  const [activeItem, setActiveItem] = useState('')
   const [expandedSections, setExpandedSections] = useState({
     cadastros: false,
     listagens: false,
@@ -36,12 +36,6 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
 
   // Menu para Administrador (completo)
   const menuAdmin = [
-    {
-      id: 'main',
-      items: [
-        { id: 'dashboard', label: 'Início', page: 'dashboard', icon: 'bi-house-door-fill' }
-      ]
-    },
     {
       id: 'cadastros',
       title: 'Cadastros',
@@ -117,12 +111,6 @@ function Sidebar({ isOpen, setIsOpen, setCurrentPage }) {
 
   // Menu para Recepcionista
   const menuRecepcionista = [
-    {
-      id: 'main',
-      items: [
-        { id: 'dashboard-recep', label: 'Dashboard', page: 'dashboard-recepcionista', icon: 'bi-house-door-fill' }
-      ]
-    },
     {
       id: 'agendamentos',
       title: 'Agendamentos',

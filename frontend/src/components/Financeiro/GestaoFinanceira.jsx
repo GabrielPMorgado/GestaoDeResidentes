@@ -407,65 +407,57 @@ function GestaoFinanceira() {
           {/* Cards de Resumo */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {/* Receita Total */}
-            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 hover:border-emerald-500/50 transition-all duration-300">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+            <div className="card-clean">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
                   <i className="bi bi-arrow-down-circle text-2xl text-emerald-400"></i>
                 </div>
-                <span className="text-xs px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded-lg">
-                  Receita
-                </span>
+                <div>
+                  <p className="text-xs text-slate-400">Receita Total</p>
+                  <h3 className="text-2xl font-bold text-white">{formatarMoeda(resumoFinanceiro.receitaTotal)}</h3>
+                </div>
               </div>
-              <p className="text-sm text-slate-400 mb-1">Receita Total</p>
-              <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">{formatarMoeda(resumoFinanceiro.receitaTotal)}</h3>
-              <p className="text-xs text-slate-500">Mensalidades dos residentes</p>
             </div>
 
             {/* Despesa Total */}
-            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 hover:border-red-500/50 transition-all duration-300">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center">
+            <div className="card-clean">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-lg bg-red-500/10 flex items-center justify-center flex-shrink-0">
                   <i className="bi bi-arrow-up-circle text-2xl text-red-400"></i>
                 </div>
-                <span className="text-xs px-2 py-1 bg-red-500/10 text-red-400 rounded-lg">
-                  Despesa
-                </span>
+                <div>
+                  <p className="text-xs text-slate-400">Despesa Total</p>
+                  <h3 className="text-2xl font-bold text-white">{formatarMoeda(resumoFinanceiro.despesaTotal)}</h3>
+                </div>
               </div>
-              <p className="text-sm text-slate-400 mb-1">Despesa Total</p>
-              <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">{formatarMoeda(resumoFinanceiro.despesaTotal)}</h3>
-              <p className="text-xs text-slate-500">Salários + Operacional</p>
             </div>
 
             {/* Saldo do Mês */}
-            <div className={`bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 ${resumoFinanceiro.saldo >= 0 ? 'hover:border-blue-500/50' : 'hover:border-orange-500/50'} transition-all duration-300`}>
-              <div className="flex items-start justify-between mb-4">
-                <div className={`w-12 h-12 rounded-xl ${resumoFinanceiro.saldo >= 0 ? 'bg-blue-500/10' : 'bg-orange-500/10'} flex items-center justify-center`}>
+            <div className="card-clean">
+              <div className="flex items-center gap-3 mb-4">
+                <div className={`w-12 h-12 rounded-lg ${resumoFinanceiro.saldo >= 0 ? 'bg-blue-500/10' : 'bg-orange-500/10'} flex items-center justify-center flex-shrink-0`}>
                   <i className={`bi bi-wallet2 text-2xl ${resumoFinanceiro.saldo >= 0 ? 'text-blue-400' : 'text-orange-400'}`}></i>
                 </div>
-                <span className={`text-xs px-2 py-1 ${resumoFinanceiro.saldo >= 0 ? 'bg-blue-500/10 text-blue-400' : 'bg-orange-500/10 text-orange-400'} rounded-lg`}>
-                  {resumoFinanceiro.saldo >= 0 ? 'Superávit' : 'Déficit'}
-                </span>
+                <div>
+                  <p className="text-xs text-slate-400">Saldo do Mês</p>
+                  <h3 className={`text-2xl font-bold ${resumoFinanceiro.saldo >= 0 ? 'text-blue-400' : 'text-orange-400'}`}>
+                    {formatarMoeda(resumoFinanceiro.saldo)}
+                  </h3>
+                </div>
               </div>
-              <p className="text-sm text-slate-400 mb-1">Saldo do Mês</p>
-              <h3 className={`text-2xl sm:text-3xl font-bold mb-2 ${resumoFinanceiro.saldo >= 0 ? 'text-blue-400' : 'text-orange-400'}`}>
-                {formatarMoeda(resumoFinanceiro.saldo)}
-              </h3>
-              <p className="text-xs text-slate-500">Balanço do período</p>
             </div>
 
             {/* Margem de Lucro */}
-            <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6 hover:border-purple-500/50 transition-all duration-300">
-              <div className="flex items-start justify-between mb-4">
-                <div className="w-12 h-12 rounded-xl bg-purple-500/10 flex items-center justify-center">
+            <div className="card-clean">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-lg bg-purple-500/10 flex items-center justify-center flex-shrink-0">
                   <i className="bi bi-graph-up-arrow text-2xl text-purple-400"></i>
                 </div>
-                <span className="text-xs px-2 py-1 bg-purple-500/10 text-purple-400 rounded-lg">
-                  Margem
-                </span>
+                <div>
+                  <p className="text-xs text-slate-400">Margem de Lucro</p>
+                  <h3 className="text-2xl font-bold text-white">{resumoFinanceiro.margemLucro}%</h3>
+                </div>
               </div>
-              <p className="text-sm text-slate-400 mb-1">Margem de Lucro</p>
-              <h3 className="text-2xl sm:text-3xl font-bold text-white mb-2">{resumoFinanceiro.margemLucro}%</h3>
-              <p className="text-xs text-slate-500">Lucro líquido do período</p>
             </div>
           </div>
         </div>
@@ -547,13 +539,11 @@ function GestaoFinanceira() {
             {/* Gráficos */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Fluxo de Caixa */}
-              <div className="lg:col-span-2 bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                    <i className="bi bi-graph-up text-lg text-emerald-400"></i>
-                  </div>
-                  <h3 className="text-lg font-semibold text-white">Fluxo de Caixa Anual</h3>
-                </div>
+              <div className="lg:col-span-2 card-clean">
+                <h3 className="heading-3 mb-6 flex items-center gap-2">
+                  <i className="bi bi-graph-up text-emerald-400"></i>
+                  Fluxo de Caixa Anual
+                </h3>
                 <div className="h-[300px]">
                   <Line 
                     data={dadosGraficoFluxoCaixa}
@@ -573,11 +563,11 @@ function GestaoFinanceira() {
                             color: '#94a3b8',
                             callback: (value) => formatarMoeda(value)
                           },
-                          grid: { color: '#334155' }
+                          grid: { color: 'rgba(148, 163, 184, 0.1)' }
                         },
                         x: {
                           ticks: { color: '#94a3b8' },
-                          grid: { color: '#334155' }
+                          grid: { color: 'rgba(148, 163, 184, 0.1)' }
                         }
                       }
                     }}
@@ -586,13 +576,11 @@ function GestaoFinanceira() {
               </div>
 
               {/* Despesas por Categoria */}
-              <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-purple-500/10 flex items-center justify-center">
-                    <i className="bi bi-pie-chart text-lg text-purple-400"></i>
-                  </div>
-                  <h3 className="text-lg font-semibold text-white">Despesas por Categoria</h3>
-                </div>
+              <div className="card-clean">
+                <h3 className="heading-3 mb-6 flex items-center gap-2">
+                  <i className="bi bi-pie-chart text-purple-400"></i>
+                  Despesas por Categoria
+                </h3>
                 <div className="h-[300px] flex items-center justify-center">
                   <Doughnut 
                     data={dadosGraficoDespesasPorCategoria}
@@ -617,10 +605,10 @@ function GestaoFinanceira() {
 
             {/* Resumo Rápido */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
+              <div className="card-clean">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-white">Mensalidades Pendentes</h3>
-                  <span className="px-3 py-1 bg-amber-500/10 text-amber-400 rounded-lg text-sm font-medium">
+                  <h3 className="heading-3">Mensalidades Pendentes</h3>
+                  <span className="badge-clean badge-warning">
                     {mensalidades.filter(m => m.status === 'pendente').length}
                   </span>
                 </div>
@@ -630,10 +618,10 @@ function GestaoFinanceira() {
                 <p className="text-sm text-slate-400">Valor total a receber</p>
               </div>
 
-              <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl border border-slate-700/50 p-6">
+              <div className="card-clean">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-white">Despesas Pendentes</h3>
-                  <span className="px-3 py-1 bg-red-500/10 text-red-400 rounded-lg text-sm font-medium">
+                  <h3 className="heading-3">Despesas Pendentes</h3>
+                  <span className="badge-clean badge-danger">
                     {[...salarios, ...despesas].filter(d => d.status === 'pendente').length}
                   </span>
                 </div>

@@ -225,7 +225,7 @@ function ListagemResidentes({ onVerHistorico }) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-3 sm:p-4 md:p-6">
+    <div className="min-h-screen bg-slate-950 p-3 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6 sm:mb-8">
@@ -234,7 +234,7 @@ function ListagemResidentes({ onVerHistorico }) {
               <i className="bi bi-people-fill text-2xl sm:text-3xl text-amber-400"></i>
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-white">Listagem de Residentes</h1>
+              <h1 className="heading-1">Listagem de Residentes</h1>
               <p className="text-sm text-slate-400">Gerenciamento completo dos residentes cadastrados</p>
             </div>
           </div>
@@ -242,7 +242,7 @@ function ListagemResidentes({ onVerHistorico }) {
           {/* Estatísticas */}
           {estatisticas && (
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 hover:border-amber-500/30 transition-all">
+              <div className="card-clean">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center flex-shrink-0">
                     <i className="bi bi-people-fill text-xl text-amber-400"></i>
@@ -254,7 +254,7 @@ function ListagemResidentes({ onVerHistorico }) {
                 </div>
               </div>
 
-              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 hover:border-emerald-500/30 transition-all">
+              <div className="card-clean">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
                     <i className="bi bi-check-circle-fill text-xl text-emerald-400"></i>
@@ -266,7 +266,7 @@ function ListagemResidentes({ onVerHistorico }) {
                 </div>
               </div>
 
-              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 hover:border-slate-500/30 transition-all">
+              <div className="card-clean">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-slate-500/10 flex items-center justify-center flex-shrink-0">
                     <i className="bi bi-x-circle-fill text-xl text-slate-400"></i>
@@ -278,7 +278,7 @@ function ListagemResidentes({ onVerHistorico }) {
                 </div>
               </div>
 
-              <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 hover:border-orange-500/30 transition-all">
+              <div className="card-clean">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center flex-shrink-0">
                     <i className="bi bi-exclamation-triangle-fill text-xl text-orange-400"></i>
@@ -294,16 +294,16 @@ function ListagemResidentes({ onVerHistorico }) {
         </div>
 
         {/* Filtros */}
-        <div className="bg-slate-800/50 backdrop-blur-xl rounded-xl border border-slate-700/50 p-4 sm:p-6 mb-6">
-          <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center gap-2">
+        <div className="card-clean mb-6">
+          <h3 className="heading-3 mb-4 flex items-center gap-2">
             <i className="bi bi-funnel text-amber-400"></i>
             Filtros
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
             <div className="lg:col-span-1">
-              <label className="block text-sm font-medium text-slate-300 mb-2">Status</label>
+              <label className="label-clean">Status</label>
               <select 
-                className="w-full px-4 py-2.5 bg-slate-900/60 border border-slate-700/50 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
+                className="input-clean"
                 value={filtros.status}
                 onChange={(e) => setFiltros(prev => ({ ...prev, status: e.target.value }))}
               >
@@ -318,7 +318,7 @@ function ListagemResidentes({ onVerHistorico }) {
               <label className="block text-sm font-medium text-slate-300 mb-2">Buscar</label>
               <input
                 type="text"
-                className="w-full px-4 py-2.5 bg-slate-900/60 border border-slate-700/50 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500/50 transition-all"
+                className="input-clean"
                 placeholder="Nome, CPF ou quarto..."
                 value={filtros.busca}
                 onChange={(e) => setFiltros(prev => ({ ...prev, busca: e.target.value }))}
@@ -342,7 +342,7 @@ function ListagemResidentes({ onVerHistorico }) {
 
             <div className="lg:col-span-1 flex items-end gap-2">
               <button 
-                className="flex-1 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl transition-all shadow-lg shadow-amber-500/20 font-medium"
+                className="flex-1 btn-primary-clean"
                 onClick={aplicarFiltros}
               >
                 <i className="bi bi-search"></i>

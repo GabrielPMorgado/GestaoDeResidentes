@@ -7,7 +7,7 @@ import { HelpButton } from '../Common'
 // Componente Input fora para evitar recriação
 const Input = ({ label, name, type = 'text', required = false, icon, formData, errors, touched, handleChange, handleBlur, ...props }) => (
   <div>
-    <label htmlFor={name} className="block text-sm font-medium text-slate-300 mb-2">
+    <label htmlFor={name} className="label-clean">
       {label} {required && <span className="text-amber-400">*</span>}
     </label>
     <input
@@ -17,11 +17,11 @@ const Input = ({ label, name, type = 'text', required = false, icon, formData, e
       value={formData[name] || ''}
       onChange={handleChange}
       onBlur={handleBlur}
-      className={`w-full px-4 py-3 bg-slate-900/60 border ${
+      className={`input-clean ${
         errors[name] && touched[name] 
           ? 'border-red-500/50 focus:ring-red-500/50' 
-          : 'border-slate-700/50 focus:ring-amber-500/50 focus:border-amber-500/50'
-      } rounded-xl text-white placeholder-slate-500 focus:outline-none focus:ring-2 transition-all`}
+          : ''
+      }`}
       {...props}
     />
     {errors[name] && touched[name] && (
@@ -35,7 +35,7 @@ const Input = ({ label, name, type = 'text', required = false, icon, formData, e
 // Componente Select fora para evitar recriação
 const Select = ({ label, name, options, required = false, icon, formData, errors, touched, handleChange, handleBlur }) => (
   <div>
-    <label htmlFor={name} className="block text-sm font-medium text-slate-300 mb-2">
+    <label htmlFor={name} className="label-clean">
       {label} {required && <span className="text-amber-400">*</span>}
     </label>
     <div className="relative">
@@ -45,11 +45,11 @@ const Select = ({ label, name, options, required = false, icon, formData, errors
         value={formData[name] || ''}
         onChange={handleChange}
         onBlur={handleBlur}
-        className={`w-full px-4 pr-10 py-3 bg-slate-900/60 border ${
+        className={`input-clean appearance-none pr-10 ${
           errors[name] && touched[name]
             ? 'border-red-500/50 focus:ring-red-500/50'
-            : 'border-slate-700/50 focus:ring-amber-500/50 focus:border-amber-500/50'
-        } rounded-xl text-white focus:outline-none focus:ring-2 transition-all appearance-none`}
+            : ''
+        }`}
       >
         <option value="">Selecione...</option>
         {options.map(opt => (
@@ -349,7 +349,7 @@ function CadastroResidentes() {
         </div>
 
         {/* Form Card */}
-        <div className="bg-slate-800/50 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-700/50 p-6 sm:p-8">
+        <div className="card-clean">
           <form onSubmit={handleSubmit}>
             {/* Step 1: Dados Pessoais */}
             {currentStep === 1 && (
@@ -732,7 +732,7 @@ function CadastroResidentes() {
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-slate-700/50 hover:bg-slate-700 text-white text-sm sm:text-base font-medium rounded-xl transition-all flex items-center justify-center gap-2"
+                  className="flex-1 sm:flex-none btn-ghost-clean"
                 >
                   <i className="bi bi-arrow-clockwise"></i>
                   <span className="hidden xs:inline">Limpar</span>
@@ -743,7 +743,7 @@ function CadastroResidentes() {
                   <button
                     type="button"
                     onClick={nextStep}
-                    className="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-sm sm:text-base font-medium rounded-xl shadow-lg shadow-amber-500/30 transition-all flex items-center justify-center gap-2"
+                    className="flex-1 sm:flex-none btn-primary-clean"
                   >
                     <span>Próximo</span>
                     <i className="bi bi-arrow-right"></i>
@@ -752,7 +752,7 @@ function CadastroResidentes() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 sm:flex-none px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-sm sm:text-base font-semibold rounded-xl shadow-lg shadow-amber-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 sm:flex-none btn-primary-clean disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {loading ? (
                       <>
